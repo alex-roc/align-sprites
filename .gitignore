@@ -36,5 +36,3 @@ playwright-report/
 tools/godot-validate/out/
 tools/godot-validate/.godot/
 
-# Alex's own assets: local regression only, not published
-samples/real/
