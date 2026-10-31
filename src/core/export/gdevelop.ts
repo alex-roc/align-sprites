@@ -1,5 +1,7 @@
-// GDevelop 5 has no spritesheet import: one folder per animation, PNGs ordered by name, plus a README with the steps.
-import type { ExportFile, SpriteResult } from '../types.ts';
+// GDevelop 5: one folder of numbered PNGs per animation (added with multi-select), plus one horizontal
+// spritesheet strip per animation for the built-in Piskel editor ("Import as spritesheet"), and a README.
+import { blit, createImage } from '../image.ts';
+import type { ExportFile, RGBAImage, SpriteResult } from '../types.ts';
 import { animFrames, animSlugs, feetOrigin, fl, slug } from './common.ts';
 import { encodePng } from './png.ts';
 
@@ -7,7 +9,18 @@ function pad(i: number, n: number): string {
   return String(i).padStart(n, '0');
 }
 
-/** GDevelop 5: `<name>/<anim>/<anim>_00.png…` + README.txt (en + es) with import steps, origin point and fps. */
+/** Frames side by side in one row (Piskel slices it with the frame size). */
+function strip(frames: RGBAImage[]): RGBAImage {
+  const w = frames[0]?.width ?? 0, h = frames[0]?.height ?? 0;
+  const out = createImage(w * frames.length, h);
+  frames.forEach((f, i) => blit(out, f, i * w, 0));
+  return out;
+}
+
+/**
+ * GDevelop 5: `<name>/<anim>/<anim>_00.png…`, `<name>/spritesheets/<anim>.png` (one row, for Piskel) and
+ * README.txt (en + es) with both import methods, the origin point and fps.
+ */
 export function gdevelopFrames(r: SpriteResult): ExportFile[] {
   const name = slug(r.name);
   const { sheet } = r;
@@ -22,6 +35,7 @@ export function gdevelopFrames(r: SpriteResult): ExportFile[] {
     frames[k]!.forEach((img, i) => {
       files.push({ path: `${name}/${slugs[k]}/${slugs[k]}_${pad(i, digits)}.png`, data: encodePng(img) });
     });
+    if (frames[k]!.length) files.push({ path: `${name}/spritesheets/${slugs[k]}.png`, data: encodePng(strip(frames[k]!)) });
     const interval = fl(1 / Math.max(a.fps, 0.001));
     table.push(`  ${slugs[k]}: ${a.count} frames, ${fl(a.fps)} fps (time between frames ${interval} s), loop ${a.loop ? 'ON' : 'OFF'}`);
   });
@@ -35,10 +49,13 @@ ${anims}
 Frame size: ${sheet.cell.w}x${sheet.cell.h} px. Origin point: (${o.x}, ${o.y}) (feet).
 
 [EN]
-GDevelop cannot import spritesheets, so every animation is a folder of numbered PNGs.
-1. Create a new object of type "Sprite" and name it "${name}".
-2. For each animation: add an animation, click "Add a frame"/"Add images from files", open the
-   animation's folder and select ALL its images at once (multi-select). They are added ordered by name.
+Two ways to add each animation (pick one):
+A) Frames: create a "Sprite" object named "${name}". For each animation, add an animation, click
+   "Add images" and select ALL the PNGs of that animation's folder at once (multi-select). They are
+   added ordered by name.
+B) Spritesheet with Piskel: add an animation and open it with "Edit with Piskel". In Piskel use
+   Import > choose spritesheets/<animation>.png > "Import as spritesheet" with a frame size of
+   ${sheet.cell.w}x${sheet.cell.h}, then save and close Piskel: the frames appear in the animation.
 3. Set the time between frames to 1/fps (see the list above) and enable or disable "Loop" as listed.
 4. Open the "Points" editor and set the point "Origin" to (${o.x}, ${o.y}) (the same for all frames:
    tick "Apply the same points to all frames"). The origin is at the feet, so an instance
@@ -47,11 +64,13 @@ ${pixel ? `5. Pixel art: in Project properties, set "Scale mode (also called sam
    and enable "Pixel rounding" if the camera moves.` : `5. Smooth art: keep the default scale mode ("Linear").`}
 
 [ES]
-GDevelop no puede importar spritesheets, así que cada animación es una carpeta de PNG numerados.
-1. Crea un objeto nuevo de tipo "Sprite" y llámalo "${name}".
-2. Por cada animación: añade una animación, pulsa "Añadir un fotograma"/"Añadir imágenes desde archivos",
-   abre la carpeta de la animación y selecciona TODAS sus imágenes a la vez (selección múltiple).
-   Se añaden ordenadas por nombre.
+Dos formas de añadir cada animación (elige una):
+A) Frames: crea un objeto "Sprite" llamado "${name}". Por cada animación, añade una animación, pulsa
+   "Añadir imágenes" y selecciona TODOS los PNG de la carpeta de esa animación a la vez (selección
+   múltiple). Se añaden ordenados por nombre.
+B) Spritesheet con Piskel: añade una animación y ábrela con "Editar con Piskel". En Piskel usa
+   Importar > elige spritesheets/<animación>.png > "Importar como spritesheet" con un tamaño de frame de
+   ${sheet.cell.w}x${sheet.cell.h}; guarda y cierra Piskel: los frames aparecen en la animación.
 3. Pon el tiempo entre fotogramas en 1/fps (ver lista arriba) y activa o desactiva "Bucle" según la lista.
 4. Abre el editor de "Puntos" y pon el punto "Origin" (Origen) en (${o.x}, ${o.y}) (igual en todos los
    fotogramas: marca "Aplicar los mismos puntos a todos los fotogramas"). El origen está en los pies,

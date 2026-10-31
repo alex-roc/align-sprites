@@ -111,12 +111,18 @@ describe('godot', () => {
 
 describe('gdevelop', () => {
   it('writes <name>/<anim>/<anim>_NN.png + README', () => {
-    const files = gdevelopFrames(makeResult('hero'));
+    const r = makeResult('hero');
+    const files = gdevelopFrames(r);
     const paths = files.map((f) => f.path);
     expect(paths).toContain('hero/idle/idle_00.png');
     expect(paths).toContain('hero/idle/idle_03.png');
     expect(paths).toContain('hero/attack/attack_02.png');
-    expect(paths).toHaveLength(4 + 3 + 1);
+    // 4 + 3 frames, one Piskel strip per animation, README.
+    expect(paths).toHaveLength(4 + 3 + 2 + 1);
+    expect(paths).toContain('hero/spritesheets/idle.png');
+    const strip = decodePng(files.find((f) => f.path === 'hero/spritesheets/idle.png')!.data as Uint8Array);
+    expect(strip.height).toBe(r.sheet.cell.h);
+    expect(strip.width).toBe(r.sheet.cell.w * 4);
     const readme = text(files, 'hero/README.txt');
     expect(readme).toContain('[EN]');
     expect(readme).toContain('[ES]');
