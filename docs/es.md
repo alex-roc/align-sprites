@@ -65,7 +65,7 @@ También puedes usar solo `<nombre>.tres` (un recurso `SpriteFrames`) en tu prop
 
 ### GDevelop 5
 
-El ZIP trae una carpeta por imagen con sus frames ya cortados (`<nombre>/<nombre>_<animación>_00.png`, `_01.png`…) y un `README.txt` con el origen y los fps.
+Descomprime el ZIP **dentro de la carpeta de tu proyecto** de GDevelop (por ejemplo en `sprites/`) y elige las imágenes desde ahí: si las eliges desde fuera, GDevelop las copia y, si ya existe un archivo con ese nombre, las renombra y puede repetir o mezclar frames. El ZIP trae una carpeta por imagen con sus frames ya cortados (`<nombre>/<nombre>_<animación>_00.png`, `_01.png`…) y un `README.txt` con el origen y los fps.
 
 - **Frames**: crea un objeto **Sprite**, añade una animación, pulsa *Añadir imágenes* y selecciona de una vez todos los PNG de esa animación.
 - **Spritesheet con Piskel** (opcional: marca *Incluir también spritesheets para Piskel* antes de descargar): añade una animación, ábrela con *Editar con Piskel*, elige *Importar*, escoge `<nombre>/spritesheets/<nombre>_<animación>.png` y *Importar como spritesheet* con tu tamaño de frame.

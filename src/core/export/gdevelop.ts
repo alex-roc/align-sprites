@@ -40,6 +40,8 @@ function gdevelopStatic(r: SpriteResult): ExportFile[] {
 Static sprite: ${sheet.cell.w}x${sheet.cell.h} px. Origin point: (${o.x}, ${o.y}) (feet).
 
 [EN]
+0. Unzip into your GDevelop project folder (next to its .json, e.g. in sprites/) and pick the image there,
+   so GDevelop does not copy or rename it. To update it later, unzip again on top.
 1. Create a "Sprite" object named "${name}", open its (single) animation, click "Add images" and select ${name}.png.
 2. Open the "Points" editor and set the point "Origin" to (${o.x}, ${o.y}). The origin is at the feet,
    so an instance positioned at (x, y) stands on that spot.
@@ -47,6 +49,8 @@ ${pixel ? `3. Pixel art: in Project properties, set "Scale mode (also called sam
    and enable "Pixel rounding" if the camera moves.` : `3. Smooth art: keep the default scale mode ("Linear").`}
 
 [ES]
+0. Descomprime dentro de la carpeta de tu proyecto de GDevelop (junto a su .json, por ejemplo en sprites/)
+   y elige la imagen desde ahí, así GDevelop no la copia ni la renombra. Para actualizarla, descomprime encima.
 1. Crea un objeto "Sprite" llamado "${name}", abre su (única) animación, pulsa "Añadir imágenes" y selecciona ${name}.png.
 2. Abre el editor de "Puntos" y pon el punto "Origin" (Origen) en (${o.x}, ${o.y}). El origen está en los pies,
    así que una instancia colocada en (x, y) pisa ese punto.
@@ -96,13 +100,15 @@ ${anims}
 Frame size: ${sheet.cell.w}x${sheet.cell.h} px. Origin point: (${o.x}, ${o.y}) (feet).
 
 [EN]
+0. Unzip into your GDevelop project folder (next to its .json, e.g. in sprites/), so GDevelop uses the
+   files where they are instead of copying and renaming them. To update the sprite, unzip again on top.
 1. Create a "Sprite" object named "${name}".
 2. For each animation, add an animation, click "Add images" and select ALL its PNGs at once
    (multi-select, see the list above). They are added ordered by name.${opts.spritesheets ? `
    Or with Piskel: open the animation with "Edit with Piskel", Import > spritesheets/<file>.png >
    "Import as spritesheet" with a frame size of ${sheet.cell.w}x${sheet.cell.h}; save and close Piskel.` : ''}
-   GDevelop identifies images by file name: if you import an animation again, first delete its old images
-   from the project (Resources), or the frames get mixed up.
+   Pick them INSIDE your project folder (step 0): an image picked from outside is copied into the project,
+   and when a file with that name already exists GDevelop renames the copies and can repeat or mix frames.
 3. Set the time between frames to 1/fps (see the list above) and enable or disable "Loop" as listed.
 4. Open the "Points" editor and set the point "Origin" to (${o.x}, ${o.y}) (the same for all frames:
    tick "Apply the same points to all frames"). The origin is at the feet, so an instance
@@ -111,13 +117,15 @@ ${pixel ? `5. Pixel art: in Project properties, set "Scale mode (also called sam
    and enable "Pixel rounding" if the camera moves.` : `5. Smooth art: keep the default scale mode ("Linear").`}
 
 [ES]
+0. Descomprime dentro de la carpeta de tu proyecto de GDevelop (junto a su .json, por ejemplo en sprites/),
+   así GDevelop usa los archivos donde están en vez de copiarlos y renombrarlos. Para actualizar, descomprime encima.
 1. Crea un objeto "Sprite" llamado "${name}".
 2. Por cada animación, añade una animación, pulsa "Añadir imágenes" y selecciona TODOS sus PNG a la vez
    (selección múltiple, mira la lista de arriba). Se añaden ordenados por nombre.${opts.spritesheets ? `
    O con Piskel: abre la animación con "Editar con Piskel", Importar > spritesheets/<archivo>.png >
    "Importar como spritesheet" con un tamaño de frame de ${sheet.cell.w}x${sheet.cell.h}; guarda y cierra Piskel.` : ''}
-   GDevelop reconoce las imágenes por su nombre: si vuelves a importar una animación, borra antes sus
-   imágenes viejas del proyecto (Recursos), o los frames se mezclan.
+   Elígelos DENTRO de la carpeta del proyecto (paso 0): una imagen elegida desde fuera se copia al proyecto,
+   y si ya hay un archivo con ese nombre GDevelop renombra las copias y puede repetir o mezclar frames.
 3. Pon el tiempo entre fotogramas en 1/fps (ver lista arriba) y activa o desactiva "Bucle" según la lista.
 4. Abre el editor de "Puntos" y pon el punto "Origin" (Origen) en (${o.x}, ${o.y}) (igual en todos los
    fotogramas: marca "Aplicar los mismos puntos a todos los fotogramas"). El origen está en los pies,
