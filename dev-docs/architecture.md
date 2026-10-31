@@ -55,6 +55,14 @@ One ZIP, folder per target: `godot/<name>/` (png + SpriteFrames .tres + Animated
 - Theme: CSS `light-dark()` + `data-theme` on `<html>`; language and theme are the only persisted UI state (localStorage).
 - Examples for "Try an example" live in `public/examples/` (copies of `samples/real/`).
 
+## Tiles (src/core/tiles)
+
+**Atlas normalizer** (`atlas.ts`): `detectTileGrid` builds column/row profiles of "content" (not transparent, not within ΔE 25 of the border colour), takes the interior gutter runs (profile <= 35 %) and picks the LARGEST cell count for which a chain of gutters with plausible cell sizes (0.5-1.6x the average) exists. That tolerates objects crossing a gutter and non-uniform AI cells, and rejects multiples of the true count. `gridCutsFor` does the same for a user-given count (fallback: uniform cuts snapped within ±20 %). `normalizeTileAtlas` removes the background once, then reduces every cell window to EXACTLY T×T in one resample (pixel: unfake `downscaleGrid` with period window/T, dominant colour, binary alpha; cartoon: area filter). The window has the same size for every cell (75th percentile of the solid content boxes); full-bleed tiles (sky, ground) are cut from the untouched sheet so clouds touching the edge survive the white flood. Export: `tileAtlasGodot` (`TileSetAtlasSource` .tres) and `tileAtlasTiled` (.tsx; GDevelop's Tilemap object reads Tiled).
+
+**Terrain compositor** (`terrain.ts`): one scalar field per tile = Gaussian blur of (signed distance to the A/B edge - margin), plus periodic (period T) value noise, thresholded at 0. blob47 uses a 3T×3T canvas of the 8-neighbour mask, dual16 a 2T×2T canvas of the 4 corners (the tile is offset half a tile from the data cells). Canvas origins are multiples of T from the world origin, so neighbouring tiles agree; `renderTerrainMap` renders a whole map in one go and tests compare a tile-assembled map with it (dual16: exact; blob47: exact at T=16 pixel, a few stray pixels elsewhere where the "diagonal only counts with both sides" rule changes the blur of a corner). Style requirement: margin + blur + noiseAmp + 2 < T/2 (clamped with `warn.edgeStyleClamped`). Godot: `godotTerrainTileSet` (blob47 = terrain set mode 0 with ONE terrain, A has no terrain; dual16 = mode 1, terrains A/B). Validated headless with `pnpm test:godot:tiles` (Godot 4.4.1: the TileMapLayer terrain solver picks the expected tile for every painted cell).
+
+Warning keys: `warn.tileGridUncertain {confidence}`, `warn.tileUpscaled {count, to}`, `warn.notSeamless {which, score}`, `warn.edgeStyleClamped {margin, blur, noiseAmp}`, `warn.dualOddTile {tileSize}`.
+
 ## Conventions
 
 - Core functions never mutate their inputs; they return new images.

@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:godot": "node scripts/godot-validate.mjs"
+    "test:godot": "node scripts/godot-validate.mjs",
+    "test:godot:tiles": "node scripts/godot-validate-tiles.mjs"
   },
   "dependencies": {
     "comlink": "^4.4.2",
