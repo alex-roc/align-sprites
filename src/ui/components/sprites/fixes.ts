@@ -30,6 +30,8 @@ export function useSpriteFixes(asset: Asset, result: SpriteResult): (w: Warning)
         return { label: t('fix.lowerTolerance'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { bg: { ...asset.bg, tolerance: Math.min(60, asset.bg.tolerance + 12) } } }) };
       case 'warn.animRange':
         return { label: t('fix.resetAnims'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { anims: [{ ...asset.anims[0], name: 'default', frames: '', fps: 8, loop: true, flipX: false }] } }) };
+      case 'warn.heightSpread':
+        return { label: t('fix.tallest'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { heightRef: 'tallest' } }) };
       case 'warn.bigDownscale':
         return { label: t('fix.learnMore'), href: hrefFor('guide', 'generate') };
       case 'warn.noGrid':

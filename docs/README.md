@@ -118,6 +118,7 @@ The **Kit** tab joins your sprites and tiles so they share one scale.
 |---|---|
 | Detected as the wrong type | Change **Image type**: sprite sheet or single sprite. |
 | Wrong number of frames | Use *Grid* with the rows × columns of the image, raise the tolerance if specks of background became frames, or draw the boxes with **Edit boxes**. |
+| The jump comes out bigger than the other animations | Most of its frames are crouched: press **Measure the tallest frames** and compare in **All together**; adjust the **Relative size** if needed. |
 | A part of the character disappears | The background removal took it: lower the tolerance, or use *Only from the edges*. Next time, use the green key. |
 | A frame is cut by the frame edge | Use a bigger frame size or *Automatic*, or a smaller sprite size. |
 | Player and enemy have different sizes | Pick one common sprite size. |

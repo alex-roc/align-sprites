@@ -87,7 +87,7 @@ export function buildJobs(assets: Asset[], g: GlobalSettings, frameCounts: Recor
     segmentation: buildSegmentation(a),
     animations: buildAnimations(a, frameCounts[a.id]),
     cell: g.cellAuto ? 'auto' : { w: g.cellW, h: g.cellH, padBottom: g.padBottom },
-    scale: g.targetHeight ? { kind: 'targetHeight', px: g.targetHeight, relative: a.relative } : { kind: 'native' },
+    scale: g.targetHeight ? { kind: 'targetHeight', px: g.targetHeight, relative: a.relative, ...(a.heightRef === 'tallest' ? { reference: 'tallest' as const } : {}) } : { kind: 'native' },
     maxColors: reduce > 0 ? reduce : undefined,
     anchorX: g.anchorX,
     ...(palette ? { palette } : {}),

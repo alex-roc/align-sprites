@@ -43,6 +43,29 @@ what the tool has to fix.
 | `hero-idle-pixel.png` | pixel art, «reposo», 4 frames, 2×2, ~64 art px, side view, #FF00FF, + reference | 1254×1254 | Pixel period 3.0 → ≈190 art px tall, not 64: the model copies the detail level of the reference image instead of the requested size (the tool warns "big downscale" at 128 px). Background `244..248, 3..7, 247..249` with noise. The idle motion is tiny: frame 4 ≈ frame 1 (flagged as duplicates, which is right for a loop). Characters sit left of the cell centre in the left column. |
 | `hero-run-pixel.png` | pixel art, «correr», 6 frames, 3×2, ~64 art px, side view, #FF00FF, + reference | 1536×1024 | **Redrew the guide's cell borders** as faint darker-magenta lines (`≈202,4,202`, ΔE≈19 from the key, just over the default tolerance 18): before the fix they survived background removal and became a 290-px-tall extra "frame". Fixed in `bg` (`keyShade`: a lighter/darker shade of a chroma key is background). Period 3.0 (≈150 art px). Bottom row close to the top row but not duplicated. Heights 117–129 px at 128 (crouch frames are legitimately shorter). |
 
+## Third batch: jump, single sprite, Andean tiles, and two informal prompts
+
+- **Inputs:** `manifest-hero-2.json` (exact manifest). Guided items use `buildSpritePrompt` / `buildTilePrompt`
+  (Spanish, pixel art, magenta key, character reference). The two `casual-*` items use an informal prompt on
+  purpose (“crea una hoja de sprites… 8 cuadros en una sola fila… Fondo blanco”, reference only, no guide), to
+  match Alex's older course assets; they now live in `samples/real/Reposo.png` and `samples/real/Saltar.png`.
+- **Date / cost:** 2026-10-31, one `batch` session of 6 images, 15,091 codex text tokens (~2,500 per image) plus
+  six gpt-image-2 generations; 214 s.
+- **Drive:** guided ones in `…/Mis assets/Visuales/bien-generados/`, informal ones next to `Correr.png`.
+
+| File | Request | Output | Defects |
+|---|---|---|---|
+| `hero-jump-pixel.png` | pixel art, «saltar», 6 frames, 3×2, + reference | 1536×1024 | Faint guide borders again (removed by `keyShade`). Heights 113–151 px at period 3: most frames are crouched, so the median (default reference) made the character ≈15 % bigger than in idle; the tool now warns (`warn.heightSpread`) and offers **Measure the tallest frames** (`ScalePolicy.reference = 'tallest'`, 90th percentile), which matches the idle size. Frame 6 ≈ frame 1 (crouch), flagged as duplicates. |
+| `hero-single-pixel.png` | single sprite, «reposo», guide 1×1, + reference | 1254×1254 | Period 8 → ≈137 art px (asked 64). Clean, centred, feet near the baseline. |
+| `andes-grass-pixel.png` | seamless top-down puna grass (ichu), 32×32 art px | 1254×1254 | Finer than 32 art px; seamless. |
+| `andes-earth-pixel.png` | seamless top-down red Andean earth with pebbles, 32×32 art px | 1254×1254 | The texture is internally a 2×2 repeat of one pattern (visible repetition), seamless. |
+| `casual-Reposo` → `samples/real/Reposo.png` | informal: idle, 8 frames in one row, white bg | 1536×1024 | No guide: 8 frames side by side with tiny gaps, white background; detection still finds 8. Idle motion almost nil: 3 duplicate groups. |
+| `casual-Saltar` → `samples/real/Saltar.png` | informal: jump, 8 frames in one row, white bg | 1536×1024 | Draws the jump **arc** in place (the character rises across the strip); aligning the feet removes it, which is what a game wants (physics moves the body). Period 5; heights 93–151 px at 128 → height-spread warning. |
+
+Known limit: separate generations do not keep the character's proportions exactly. At 128 px `hero-run` comes
+out slightly bigger than `hero-idle` (the AI drew a bigger head while running); **Relative size** (e.g. 0.9)
+fixes it by eye in **All together**.
+
 ## Prompts
 
 Each item's text is the output of `buildSpritePrompt` / `buildTilePrompt` (the wrapper only appends one

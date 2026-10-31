@@ -158,15 +158,33 @@ export function SpriteSettings({ asset }: { asset: Asset }) {
       </Fold>
     ),
   });
-  if (batch && g.targetHeight !== null) {
+  // How this image is sized against the common height: which frames measure the character, and a multiplier.
+  const showRef = asset.kind === 'sheet';
+  if (g.targetHeight !== null && (batch || showRef)) {
     items.push({
       scope: 'one',
       key: 'relative',
       node: (
         <Section title={t('size.relative')}>
-          <Field label={t('size.relativeLabel')} hint={t('size.relativeHint')}>
-            <NumberInput value={asset.relative} min={0.1} max={5} step={0.05} onChange={(relative) => patchA({ relative })} />
-          </Field>
+          {showRef && (
+            <Field label={t('size.heightRef')} hint={t('size.heightRefHint')}>
+              <Segmented<Asset['heightRef']>
+                name={`heightref-${asset.id}`}
+                label={t('size.heightRef')}
+                value={asset.heightRef}
+                onChange={(heightRef) => patchA({ heightRef })}
+                options={[
+                  { value: 'median', label: t('size.heightRef.median') },
+                  { value: 'tallest', label: t('size.heightRef.tallest') },
+                ]}
+              />
+            </Field>
+          )}
+          {batch && (
+            <Field label={t('size.relativeLabel')} hint={t('size.relativeHint')}>
+              <NumberInput value={asset.relative} min={0.1} max={5} step={0.05} onChange={(relative) => patchA({ relative })} />
+            </Field>
+          )}
         </Section>
       ),
     });

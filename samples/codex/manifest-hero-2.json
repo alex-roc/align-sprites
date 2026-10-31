@@ -1,0 +1,49 @@
+{
+  "out": ".",
+  "items": [
+    {
+      "name": "hero-jump-pixel",
+      "aspect": "landscape",
+      "references": [
+        "guides/guide-3x2-magenta.png",
+        "reference/personaje.png"
+      ],
+      "subject": "Crea UNA sola imagen de hoja de sprites de un niño andino con pelo castaño largo y alborotado, vincha roja y amarilla, túnica crema con franjas rojas, faja roja, bolso de cuero cruzado y sandalias de cuero atadas a las piernas con la animación «saltar»: 6 cuadros en una cuadrícula de 3 columnas × 2 filas, exactamente como la imagen guía adjunta.\nSe adjuntan dos imágenes: la guía (la cuadrícula sobre el color clave plano) y la referencia del personaje. Usa exactamente el personaje de la referencia adjunta: mismo diseño, colores, proporciones y vestimenta. Toma de ella solo el personaje, no su fondo ni su tamaño.\n\nDisposición:\n- Un cuadro por celda, en orden de lectura (de izquierda a derecha y de arriba abajo), con la misma cuadrícula y proporción que la guía.\n- Personaje centrado horizontalmente en su celda, con los pies (o su punto más bajo) apoyados en la línea base dibujada en la guía.\n- Nada toca ni cruza los bordes de la celda; deja un margen libre alrededor del personaje.\n- La guía es solo una plantilla: no dibujes sus líneas ni sus números en el resultado.\n\nCoherencia:\n- El mismo personaje en todos los cuadros: misma escala, misma altura, misma paleta, mismas proporciones.\n- Vista lateral estricta (de perfil), mirando a la derecha, en todos los cuadros.\n\nAnimación:\n  - Cuadro 1: agachado: rodillas flexionadas, preparando el salto\n  - Cuadro 2: despegue: se impulsa, las piernas se estiran\n  - Cuadro 3: ascenso: cuerpo estirado hacia arriba\n  - Cuadro 4: cima: piernas recogidas en el punto más alto\n  - Cuadro 5: caída: las piernas buscan el suelo\n  - Cuadro 6: aterrizaje: rodillas flexionadas absorbiendo el impacto\n\nEstilo: pixel art auténtico. El personaje mide unos 64 píxeles de arte de alto; cada píxel de arte es un bloque cuadrado del mismo tamaño sobre una sola cuadrícula. Bordes nítidos, sin antialiasing, sin desenfoque, sin degradados, paleta limitada (unos 16 colores).\n\nFondo: un único color sólido y plano, exactamente #FF00FF (magenta puro), que llene cada celda de borde a borde. Sin degradados, sombras, suelo, línea de suelo, escenario, texto ni etiquetas. No uses magenta, rosado ni morado en ninguna parte del personaje, su contorno o sus efectos."
+    },
+    {
+      "name": "hero-single-pixel",
+      "aspect": "square",
+      "references": [
+        "guides/guide-1x1-magenta.png",
+        "reference/personaje.png"
+      ],
+      "subject": "Crea UNA sola imagen de sprite de un niño andino con pelo castaño largo y alborotado, vincha roja y amarilla, túnica crema con franjas rojas, faja roja, bolso de cuero cruzado y sandalias de cuero atadas a las piernas, en pose de reposo, con la disposición de la imagen guía adjunta (una sola celda).\nSe adjuntan dos imágenes: la guía (la cuadrícula sobre el color clave plano) y la referencia del personaje. Usa exactamente el personaje de la referencia adjunta: mismo diseño, colores, proporciones y vestimenta. Toma de ella solo el personaje, no su fondo ni su tamaño.\n\nDisposición:\n- Personaje centrado horizontalmente en su celda, con los pies (o su punto más bajo) apoyados en la línea base dibujada en la guía.\n- Nada toca ni cruza los bordes de la celda; deja un margen libre alrededor del personaje.\n- La guía es solo una plantilla: no dibujes sus líneas ni sus números en el resultado.\n- Vista lateral estricta (de perfil), mirando a la derecha.\n\nEstilo: pixel art auténtico. El personaje mide unos 64 píxeles de arte de alto; cada píxel de arte es un bloque cuadrado del mismo tamaño sobre una sola cuadrícula. Bordes nítidos, sin antialiasing, sin desenfoque, sin degradados, paleta limitada (unos 16 colores).\n\nFondo: un único color sólido y plano, exactamente #FF00FF (magenta puro), que llene cada celda de borde a borde. Sin degradados, sombras, suelo, línea de suelo, escenario, texto ni etiquetas. No uses magenta, rosado ni morado en ninguna parte del personaje, su contorno o sus efectos."
+    },
+    {
+      "name": "andes-grass-pixel",
+      "aspect": "square",
+      "subject": "Crea UNA sola textura cuadrada y continua (seamless) de pasto de puna andina: matas de paja brava (ichu) verde amarillenta sobre tierra para un tile de juego 2D.\n- Repetible en ambos ejes: el borde izquierdo continúa en el derecho y el superior en el inferior, sin costuras visibles.\n- Vista: cenital, vista directamente desde arriba.\n- Llena todo el cuadrado de forma uniforme con el material: sin borde, sin marco, sin viñeta, sin objetos destacados ni puntos focales, sin transiciones a otros materiales.\n- Iluminación plana y uniforme: sin sombras proyectadas ni luz que venga de un lado.\n- Estilo: pixel art auténtico, exactamente 32×32 píxeles de arte; cada píxel de arte es un bloque cuadrado del mismo tamaño. Bordes nítidos, sin antialiasing, sin desenfoque, paleta limitada (de 8 a 16 colores).\n- Sin texto ni etiquetas."
+    },
+    {
+      "name": "andes-earth-pixel",
+      "aspect": "square",
+      "subject": "Crea UNA sola textura cuadrada y continua (seamless) de tierra andina rojiza y seca con piedritas para un tile de juego 2D.\n- Repetible en ambos ejes: el borde izquierdo continúa en el derecho y el superior en el inferior, sin costuras visibles.\n- Vista: cenital, vista directamente desde arriba.\n- Llena todo el cuadrado de forma uniforme con el material: sin borde, sin marco, sin viñeta, sin objetos destacados ni puntos focales, sin transiciones a otros materiales.\n- Iluminación plana y uniforme: sin sombras proyectadas ni luz que venga de un lado.\n- Estilo: pixel art auténtico, exactamente 32×32 píxeles de arte; cada píxel de arte es un bloque cuadrado del mismo tamaño. Bordes nítidos, sin antialiasing, sin desenfoque, paleta limitada (de 8 a 16 colores).\n- Sin texto ni etiquetas."
+    },
+    {
+      "name": "casual-Reposo",
+      "aspect": "landscape",
+      "references": [
+        "reference/personaje.png"
+      ],
+      "subject": "Usando el personaje de la imagen adjunta, crea una hoja de sprites en pixel art con la animación de reposo (idle), respirando quieto: 8 cuadros en una sola fila horizontal, el personaje de perfil mirando a la derecha. Fondo blanco."
+    },
+    {
+      "name": "casual-Saltar",
+      "aspect": "landscape",
+      "references": [
+        "reference/personaje.png"
+      ],
+      "subject": "Usando el personaje de la imagen adjunta, crea una hoja de sprites en pixel art con la animación de saltar: 8 cuadros en una sola fila horizontal, el personaje de perfil mirando a la derecha. Fondo blanco."
+    }
+  ]
+}

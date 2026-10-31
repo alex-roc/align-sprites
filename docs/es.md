@@ -118,6 +118,7 @@ La pestaña **Kit** junta tus sprites y tiles para que compartan una escala.
 |---|---|
 | Se detectó con el tipo equivocado | Cambia **Tipo de imagen**: hoja de sprites o sprite único. |
 | El número de frames no es el correcto | Usa *Cuadrícula* con las filas × columnas de la imagen, sube la tolerancia si unas manchas del fondo se convirtieron en frames, o dibuja los recuadros con **Editar recuadros**. |
+| El salto sale más grande que las otras animaciones | La mayoría de sus frames están agachados: pulsa **Medir los frames más altos** y compara en **Todas juntas**; si hace falta, ajusta el **Tamaño relativo**. |
 | Desaparece una parte del personaje | La quitó el borrado del fondo: baja la tolerancia, o usa *Solo desde los bordes*. La próxima vez, genera con la clave verde. |
 | Un frame se corta en el borde del frame | Usa un tamaño de frame más grande o *Automático*, o un tamaño de sprite menor. |
 | Jugador y enemigo tienen tamaños distintos | Elige un tamaño de sprite común. |

@@ -38,7 +38,7 @@ tools/godot-validate/    headless Godot 4 project that loads and checks exported
    - pixel mode → binary alpha; cartoon mode → soft alpha + despill.
 2. **Segmentation** on the alpha: `sliceGrid` (rows×cols, cut lines snapped to empty gutters), `findFrames` (connected components, merge, reading order), `single`, or manual rects.
 3. **Pixel grid** (pixel mode only): `detectGrid` ONCE on the whole sheet → period P. Each frame crop is downscaled with `gridForScale(crop, P)` (phase re-fitted per frame) + `downscaleGrid(..., 'dominant')`, then alpha binarized. The dominant vote also kills 1-px magenta/white halos.
-4. **Scale**: refHeight = median bbox height of the first animation's frames. One scale per character:
+4. **Scale**: refHeight = median bbox height of the first animation's frames (or the 90th percentile with `ScalePolicy.reference = 'tallest'`, for jumps and crouches; when the heights spread more than 20 % around the median the pipeline warns `warn.heightSpread`). One scale per character:
    - pixel: native unless `targetHeight` differs by > 10 %; then re-downscale **from the original crop** with period `P · refHeightNative / target` (single resample, no double scaling);
    - cartoon: `resampleScale(crop, target / refHeightSource)` with premultiplied area filter.
    In a batch every job shares `targetHeight` (times its `relative`), so all characters end up at the same scale.

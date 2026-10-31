@@ -10,10 +10,10 @@ export interface Example {
 
 /** The type (sprite sheet or single sprite) is detected on upload like for any other image. */
 export const EXAMPLES: Example[] = [
-  { id: 'run', files: ['run-cycle.png'], labelKey: 'upload.exampleRun' },
-  { id: 'single', files: ['single-character.png'], labelKey: 'upload.exampleSingle' },
-  // Made with the "Make with AI" prompts + guide and the single sprite as reference (samples/codex/README.md).
-  { id: 'hero', files: ['single-character.png', 'hero-idle.png', 'hero-run.png'], labelKey: 'upload.exampleHero' },
+  // All made with the "Make with AI" prompts + guide images (samples/codex/README.md, second and third batch).
+  { id: 'run', files: ['hero-run.png'], labelKey: 'upload.exampleRun' },
+  { id: 'single', files: ['hero.png'], labelKey: 'upload.exampleSingle' },
+  { id: 'hero', files: ['hero.png', 'hero-idle.png', 'hero-run.png', 'hero-jump.png'], labelKey: 'upload.exampleHero' },
 ];
 
 export async function fetchExample(ex: Example): Promise<{ name: string; blob: Blob }[]> {

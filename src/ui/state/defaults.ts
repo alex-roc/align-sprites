@@ -92,6 +92,7 @@ export function makeAsset(fileName: string, image: RGBAImage, detected: Detected
     colorMap: {},
     detected,
     relative: 1,
+    heightRef: 'median',
     autoBg,
   };
 }

@@ -153,6 +153,19 @@ describe('sprite pipeline (real AI assets)', () => {
     }
   });
 
+  it('codex hero jump: a wide height spread warns, and reference "tallest" sizes the stretched frames instead', () => {
+    const img = loadPng('samples/codex/hero-jump-pixel.png');
+    const base = { bg: autoBgOptions(img, 'pixel'), segmentation: { kind: 'auto' } as const, cell: 'auto' as const };
+    const med = runSpriteJob(core, job('jump', img, { ...base, scale: { kind: 'targetHeight', px: 128 } }));
+    expect(med.frames.length).toBe(6);
+    expect(med.diag.warnings.map((w) => w.key)).toContain('warn.heightSpread');
+    const tall = runSpriteJob(core, job('jump', img, { ...base, scale: { kind: 'targetHeight', px: 128, reference: 'tallest' } }));
+    expect(tall.diag.warnings.map((w) => w.key)).not.toContain('warn.heightSpread');
+    expect(Math.abs(tall.diag.refHeight - 128)).toBeLessThanOrEqual(0.5);
+    expect(Math.max(...tall.diag.metrics.map((m) => m.bbox.h))).toBeLessThanOrEqual(129);
+    expectAligned(tall, 2);
+  });
+
   it('Personaje_model.png: 4 views on white, tunic survives', () => {
     const img = loadPng('samples/real/Personaje_model.png');
     const r = runSpriteJob(core, job('views', img, { bg: autoBgOptions(img, 'pixel'), scale: { kind: 'targetHeight', px: 96 } }));

@@ -84,8 +84,13 @@ export type AnchorXMethod = 'medianColumn' | 'centroid' | 'bboxCenter';
 export type ScalePolicy =
   /** Pixel art: 1 art pixel = 1 output pixel. Cartoon: keep source size. */
   | { kind: 'native' }
-  /** Reference character height in output px (shared by every asset in a batch); relative = per-asset multiplier (boss = 1.5). */
-  | { kind: 'targetHeight'; px: number; relative?: number };
+  /**
+   * Reference character height in output px (shared by every asset in a batch); relative = per-asset multiplier
+   * (boss = 1.5). reference = which frame heights stand for "the character's height": 'median' (default, robust
+   * to a sword or a stray frame) or 'tallest' (90th percentile: jumps and crouching attacks, where most frames are
+   * shorter than the character standing).
+   */
+  | { kind: 'targetHeight'; px: number; relative?: number; reference?: 'median' | 'tallest' };
 
 export interface AnimSpec {
   name: string;

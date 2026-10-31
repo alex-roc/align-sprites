@@ -70,6 +70,8 @@ export interface Asset {
   detected: Detected | null;
   /** Size multiplier relative to the batch height (boss = 1.5). */
   relative: number;
+  /** Which frames give the character's height: the median (default) or the tallest (jumps, crouches). */
+  heightRef: 'median' | 'tallest';
   autoBg: AutoBg | null;
 }
 

@@ -24,6 +24,8 @@ import type {
 
 /** A target height is met when the reference (median) height is within half a pixel. */
 const HEIGHT_EPS = 0.5;
+/** Height spread ((max - min) / reference) of the reference frames above which 'median' is probably not the standing height. */
+const HEIGHT_SPREAD = 0.2;
 /** Period corrections allowed to hit the target height exactly (each re-samples the original crops). */
 const HEIGHT_PASSES = 4;
 
@@ -75,6 +77,20 @@ function desiredHeight(job: SpriteJob): number | null {
   return job.scale.kind === 'targetHeight' ? Math.max(1, Math.round(job.scale.px * (job.scale.relative ?? 1))) : null;
 }
 
+/** Statistic of the reference frames that stands for the character's height (see ScalePolicy.reference). */
+function heightStat(job: SpriteJob): 'median' | 'p90' {
+  return job.scale.kind === 'targetHeight' && job.scale.reference === 'tallest' ? 'p90' : 'median';
+}
+
+/** Jumps, crouches: the reference frames' heights vary so much that their median is not the standing height. */
+function spreadWarning(job: SpriteJob, ms: FrameMetrics[], warnings: Warning[]): void {
+  if (job.scale.kind !== 'targetHeight' || heightStat(job) !== 'median' || ms.length < 3) return;
+  const hs = ms.map((m) => m.bbox.h).filter((h) => h > 0);
+  const ref = referenceHeight(ms);
+  const min = Math.min(...hs), max = Math.max(...hs);
+  if (ref > 0 && (max - min) / ref > HEIGHT_SPREAD) warnings.push({ key: 'warn.heightSpread', params: { min, max } });
+}
+
 /** Steps 1-6 of the pipeline for one job: returns normalized (unpacked) frames. */
 export function normalizeJob(core: UnfakeCore | null, job: SpriteJob): NormalizedJob {
   const warnings: Warning[] = [];
@@ -87,6 +103,8 @@ export function normalizeJob(core: UnfakeCore | null, job: SpriteJob): Normalize
   const anims = resolveAnims(job.animations, regions.length, warnings);
   const refIdx = anims[0].frames;
   const want = desiredHeight(job);
+  const stat = heightStat(job);
+  const refOf = (ms: FrameMetrics[]) => referenceHeight(refIdx.map((i) => ms[i]), stat);
 
   if (job.mode === 'pixel') {
     if (!core) throw new Error('Pixel mode needs the unfake core');
@@ -109,7 +127,7 @@ export function normalizeJob(core: UnfakeCore | null, job: SpriteJob): Normalize
     const crops = isolateRegions(clean, regions, pad);
     let frames = crops.map((c) => frameToArt(core, c, period));
     let metrics = frames.map((f) => measureFrame(f, { anchorX: job.anchorX }));
-    let refHeight = referenceHeight(refIdx.map((i) => metrics[i]));
+    let refHeight = refOf(metrics);
     let effPeriod = period;
     if (want && refHeight > 0 && Math.abs(refHeight - want) > HEIGHT_EPS) {
       if (want < refHeight * 0.85) warnings.push({ key: 'warn.bigDownscale', params: { from: refHeight, to: want } });
@@ -119,21 +137,23 @@ export function normalizeJob(core: UnfakeCore | null, job: SpriteJob): Normalize
         effPeriod = (effPeriod * refHeight) / want;
         frames = crops.map((c) => frameToArt(core, c, effPeriod, effPeriod < period ? 'nearest' : 'dominant'));
         metrics = frames.map((f) => measureFrame(f, { anchorX: job.anchorX }));
-        refHeight = referenceHeight(refIdx.map((i) => metrics[i]));
+        refHeight = refOf(metrics);
       }
       if (effPeriod < 1) warnings.push({ key: 'warn.upscale', params: { from: refHeight, to: want } });
     }
+    spreadWarning(job, refIdx.map((i) => metrics[i]), warnings);
     return { job, frames, metrics, anims, regions, grid, scale: 1 / effPeriod, refHeight, warnings };
   }
 
   // Cartoon: one shared scale factor from the reference height in source px.
   const crops = isolateRegions(clean, regions, 2);
   const srcMetrics = crops.map((c) => measureFrame(c, { anchorX: job.anchorX }));
-  const srcRef = referenceHeight(refIdx.map((i) => srcMetrics[i]));
+  const srcRef = refOf(srcMetrics);
   const s = want && srcRef > 0 ? want / srcRef : 1;
   const frames = s === 1 ? crops : crops.map((c) => resampleScale(c, s));
   const metrics = frames.map((f) => measureFrame(f, { anchorX: job.anchorX }));
-  return { job, frames, metrics, anims, regions, scale: s, refHeight: referenceHeight(refIdx.map((i) => metrics[i])), warnings };
+  spreadWarning(job, refIdx.map((i) => metrics[i]), warnings);
+  return { job, frames, metrics, anims, regions, scale: s, refHeight: refOf(metrics), warnings };
 }
 
 /** Pack a normalized job into its sheet. */

@@ -43,7 +43,7 @@ Radii: 14px for top-level regions (stage, settings column, export), 8px for cont
 
 ```
 header   [▣ align-sprites]   Sprites  Tiles  Kit  Make with AI  Guide        EN|ES  ◐
-assets   [thumb run-cycle ×] [thumb hero ×] [+ Add images]          (only when there are images)
+assets   [thumb hero-run ×] [thumb hero ×] [+ Add images]          (only when there are images)
 ┌ settings 360px (scrolls) ┐ ┌ stage (sticky) ───────────────────────────────────────┐
 │ Art style  Pixel|Cartoon │ │ All together | Animation | Final sheet | Original      │
 │ Sprite size  8…128 Other │ │ ┌──────────────── dark stage ──────────────────────┐  │

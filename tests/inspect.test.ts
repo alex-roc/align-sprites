@@ -17,6 +17,10 @@ describe('inspectImage (real assets)', () => {
     ['samples/codex/knight-walk-pixel.png', 'sheet', 6],
     ['samples/codex/hero-run-pixel.png', 'sheet', 6], // faint guide lines redrawn by the AI must not count as frames
     ['samples/codex/hero-idle-pixel.png', 'sheet', 4],
+    ['samples/codex/hero-jump-pixel.png', 'sheet', 6],
+    ['samples/codex/hero-single-pixel.png', 'single', 1],
+    ['samples/real/Reposo.png', 'sheet', 8], // white bg, 8 in a row, no guide
+    ['samples/real/Saltar.png', 'sheet', 8], // white bg, jump arc drawn in place
   ];
   for (const [file, kind, count] of cases) {
     it(`${file}: ${kind} (${count})`, () => {
