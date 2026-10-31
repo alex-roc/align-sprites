@@ -80,6 +80,22 @@ describe('guide content (en / es)', () => {
     }
   });
 
+  it('credits keep the unfake.js MIT attribution and the licence links', () => {
+    for (const g of [guideEn, guideEs]) {
+      const text = g.credits.lines.join('\n');
+      expect(text).toContain('https://github.com/jenissimo/unfake.js/blob/main/LICENSE');
+      expect(text).toContain('Eugeniy Smirnov');
+      expect(text).toContain('MIT');
+      expect(text).toContain('GPL-3.0');
+      expect(text).toContain('Alex Ojeda Copa');
+    }
+  });
+
+  it('does not use the old "cell" wording (it is the frame size now)', () => {
+    for (const s of strings(guideEn)) expect(s.replace(/Grid By Cell Size/g, '')).not.toMatch(/\bcells?\b/i);
+    for (const s of strings(guideEs)) expect(s).not.toMatch(/\bceldas?\b/i);
+  });
+
   it('every image of the guide exists in public/guide', async () => {
     const { existsSync } = await import('node:fs');
     const srcs = guideEn.sections.flatMap((s) =>

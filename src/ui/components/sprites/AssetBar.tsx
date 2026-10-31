@@ -2,10 +2,9 @@ import { useRef } from 'react';
 import { useI18n } from '../../../i18n/index.ts';
 import { cx } from '../../cx.ts';
 import { useApp } from '../../state/context.ts';
-import type { AssetKind } from '../../state/types.ts';
 import { RgbaCanvas } from '../common/RgbaCanvas.tsx';
 
-/** Strip of the loaded images: pick one to edit, rename it inline, set its type, remove it, add more. */
+/** Strip of the loaded images: pick one to edit, rename it inline, remove it, add more. */
 export function AssetBar({ onFiles }: { onFiles: (files: File[]) => void }) {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
@@ -15,6 +14,7 @@ export function AssetBar({ onFiles }: { onFiles: (files: File[]) => void }) {
       <ul>
         {state.assets.map((a) => {
           const selected = a.id === state.selectedId;
+          const frames = state.run.frameCounts[a.id] ?? a.detected?.frameCount;
           return (
             <li key={a.id} className={cx('asset', selected && 'is-selected')}>
               <button type="button" className="asset-thumb" aria-pressed={selected} aria-label={t('assets.select', { name: a.name })} onClick={() => dispatch({ type: 'asset/select', id: a.id })}>
@@ -29,15 +29,7 @@ export function AssetBar({ onFiles }: { onFiles: (files: File[]) => void }) {
                   onFocus={() => dispatch({ type: 'asset/select', id: a.id })}
                   onChange={(e) => dispatch({ type: 'asset/patch', id: a.id, patch: { name: e.target.value } })}
                 />
-                <select
-                  className="asset-kind"
-                  value={a.kind}
-                  aria-label={t('assets.kind')}
-                  onChange={(e) => dispatch({ type: 'asset/patch', id: a.id, patch: { kind: e.target.value as AssetKind } })}
-                >
-                  <option value="sheet">{t('assets.kind.sheet')}</option>
-                  <option value="single">{t('assets.kind.single')}</option>
-                </select>
+                <span className="asset-kind">{a.kind === 'single' ? t('kind.single') : frames ? t('assets.sheetFrames', { count: frames }) : t('kind.sheet')}</span>
               </div>
               <button type="button" className="icon-btn icon-btn-sm" onClick={() => dispatch({ type: 'asset/remove', id: a.id })} aria-label={t('assets.remove', { name: a.name })} title={t('assets.removeTitle')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>

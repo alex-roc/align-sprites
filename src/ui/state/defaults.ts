@@ -1,7 +1,8 @@
-import type { Asset, AnimDraft, AppState, AssetKind, AutoBg, EdgeStyleForm, GlobalSettings, TerrainState, TileSheetState } from './types.ts';
+import type { Asset, AnimDraft, AppState, AutoBg, Detected, EdgeStyleForm, GlobalSettings, TerrainState, TileSheetState } from './types.ts';
 import type { RGBAImage } from '../../core/types.ts';
+import { PALETTES } from '../../core/palette/index.ts';
 import { defaultEdgeStyle } from '../../core/tiles/index.ts';
-import { loadJSON } from '../persist.ts';
+import { DEFAULT_GAME_TILE, GAME_TILES, loadJSON, parsePaletteChoice } from '../persist.ts';
 import type { ExportTarget } from '../../core/types.ts';
 
 let seq = 0;
@@ -14,7 +15,9 @@ export const DEFAULT_GLOBAL: GlobalSettings = {
   cellH: 64,
   padBottom: 0,
   targetHeight: null,
-  maxColors: 0,
+  maxColors: 16,
+  palette: { kind: 'original' },
+  gameTile: DEFAULT_GAME_TILE,
   anchorX: 'medianColumn',
 };
 
@@ -35,7 +38,12 @@ export function loadGlobal(): GlobalSettings {
   if (isNum(r.cellH, 8, 1024)) g.cellH = r.cellH;
   if (isNum(r.padBottom, 0, 256)) g.padBottom = r.padBottom;
   if (r.targetHeight === null || isNum(r.targetHeight, 4, 1024)) g.targetHeight = r.targetHeight as number | null;
-  if (isNum(r.maxColors, 0, 256)) g.maxColors = r.maxColors;
+  if (isNum(r.maxColors, 2, 256)) g.maxColors = r.maxColors;
+  const palette = parsePaletteChoice(r.palette, PALETTES.map((p) => p.id));
+  if (palette) g.palette = palette;
+  // Before palettes existed `maxColors > 0` meant "reduce"; keep that choice for returning visitors.
+  else if (isNum(r.maxColors, 1, 256) && r.palette === undefined) g.palette = { kind: 'reduce' };
+  if (typeof r.gameTile === 'number' && GAME_TILES.includes(r.gameTile)) g.gameTile = r.gameTile;
   if (r.anchorX === 'medianColumn' || r.anchorX === 'centroid' || r.anchorX === 'bboxCenter') g.anchorX = r.anchorX;
   return g;
 }
@@ -55,32 +63,42 @@ export const DEFAULT_ANIM_NAME = 'default';
 export const DEFAULT_FPS = 8;
 
 export function defaultAnim(): AnimDraft {
-  return { id: newId('a'), name: DEFAULT_ANIM_NAME, frames: '', fps: DEFAULT_FPS, loop: true };
+  return { id: newId('a'), name: DEFAULT_ANIM_NAME, frames: '', fps: DEFAULT_FPS, loop: true, flipX: false };
 }
 
 /** The untouched default animation: the core builds it itself ("default", all frames). */
 export function isPristineAnims(anims: AnimDraft[]): boolean {
   const a = anims[0];
-  return anims.length === 1 && a.name === DEFAULT_ANIM_NAME && a.frames.trim() === '' && a.fps === DEFAULT_FPS && a.loop;
+  return anims.length === 1 && a.name === DEFAULT_ANIM_NAME && a.frames.trim() === '' && a.fps === DEFAULT_FPS && a.loop && !a.flipX;
 }
 
 export function baseName(fileName: string): string {
   return fileName.replace(/\.[^.]+$/, '') || 'sprite';
 }
 
-export function makeAsset(fileName: string, image: RGBAImage, kind: AssetKind, autoBg: AutoBg | null): Asset {
+/** A new asset: the type comes from the upload inspection (sheet when it failed). */
+export function makeAsset(fileName: string, image: RGBAImage, detected: Detected | null, autoBg: AutoBg | null): Asset {
   return {
     id: newId('s'),
     fileName,
     name: baseName(fileName),
-    kind,
+    kind: detected?.kind ?? 'sheet',
     image,
     bg: { strategy: 'auto', custom: false, color: autoBg ? [autoBg.color[0], autoBg.color[1], autoBg.color[2]] : [255, 0, 255], tolerance: 18 },
     seg: { mode: 'auto', rows: 1, cols: 4 },
+    regions: null,
     anims: [defaultAnim()],
+    frameOffsets: {},
+    colorMap: {},
+    detected,
     relative: 1,
     autoBg,
   };
+}
+
+/** Another image of the batch with the same source and settings (its own ids, so it can diverge: colours, frames…). */
+export function cloneAsset(a: Asset, name: string): Asset {
+  return { ...a, id: newId('s'), name, anims: a.anims.map((d) => ({ ...d, id: newId('a') })), colorMap: { ...a.colorMap }, frameOffsets: { ...a.frameOffsets } };
 }
 
 export const DEFAULT_TILE_SIZE = 32;

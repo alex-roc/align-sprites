@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { cx } from '../../cx.ts';
 
 /** Labelled control: the label wraps the control, so it is associated without ids. */
@@ -89,6 +89,37 @@ export function Segmented<T extends string>({ name, value, options, onChange, la
           <span>{o.label}</span>
         </label>
       ))}
+    </div>
+  );
+}
+
+/** Range slider with a value readout and optional tick marks (browsers that support `list` draw them). */
+export function Slider({ label, value, min, max, step, ticks, unit = 'px', onChange }: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  /** Values that get a tick mark (for example every multiple of 32). */
+  ticks?: number[];
+  unit?: string;
+  onChange: (n: number) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="field slider">
+      <label className="field-label slider-head" htmlFor={id}>
+        <span>{label}</span>
+        <output htmlFor={id}>{value} {unit}</output>
+      </label>
+      <input id={id} type="range" min={min} max={max} step={step} value={Math.min(max, Math.max(min, value))} list={ticks ? `${id}-ticks` : undefined} onChange={(e) => onChange(Number(e.target.value))} />
+      {ticks && (
+        <datalist id={`${id}-ticks`}>
+          {ticks.filter((v) => v >= min && v <= max).map((v) => (
+            <option key={v} value={v} />
+          ))}
+        </datalist>
+      )}
     </div>
   );
 }

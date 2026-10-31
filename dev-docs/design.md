@@ -6,7 +6,7 @@ Subject: a workbench where course students turn messy AI images into game-ready 
 
 1. **The stage is the hero.** The result (the animation standing on its ground line) is the biggest, most stable thing on screen. Everything else is quieter and serves it.
 2. **Colour means something.** Magenta = chroma key / detected frames (what the tool takes away or finds). Yellow = ground line and origin (where the feet go). Cobalt = what you can act on. Nothing else is coloured.
-3. **Settings in the order you think.** Style → frames → size → animations → finish (colours, background). Scope ("this image" vs "all images") is shown only when the batch has more than one image.
+3. **Settings in the order you think.** Style (compact switch in the column header) → sprite size → frame size → image type, frames, animations → folded finishing touches (colours, background, advanced). Scope is shown only when the batch has more than one image: the column then splits in "For all images (N)" and "Only «name»".
 4. **Every warning carries its fix.** A warning is a sentence plus a button that applies the fix (bigger cell, switch to grid, lower tolerance).
 5. **Teach in place.** Short hints next to controls, the full explanation one click away in the Guide tab (`#/guide/<section>`).
 
@@ -42,24 +42,26 @@ Radii: 14px for top-level regions (stage, settings column, export), 8px for cont
 ## Layout
 
 ```
-header   [▣ align-sprites]   Sprites  Tiles  Make with AI  Guide            EN|ES  ◐
+header   [▣ align-sprites]   Sprites  Tiles  Kit  Make with AI  Guide        EN|ES  ◐
 assets   [thumb run-cycle ×] [thumb hero ×] [+ Add images]          (only when there are images)
 ┌ settings 360px (scrolls) ┐ ┌ stage (sticky) ───────────────────────────────────────┐
-│ Art style  Pixel|Cartoon │ │ Animation | Sheet | Original                          │
-│ Frames     Auto|Grid|One │ │ ┌──────────────── dark stage ──────────────────────┐  │
-│ Size       height, cell  │ │ │      sprite on the yellow ground line, cell box   │  │
-│ Animations list          │ │ └───────────────────────────────────────────────────┘  │
-│ Colours                  │ │ ▶  fps  zoom  onion   frame strip (thumbnails)        │
-│ ▸ Background (Auto ✓)    │ │ 8 frames · pixel grid 9 px · cell 32×32 · height 32  │
-│ ▸ Advanced               │ │ warnings with fix buttons                            │
-└──────────────────────────┘ ├ export ───────────────────────────────────────────────┤
-                             │ Godot | GDevelop | Kaplay | Other   (one engine)      │
-                             │ 3 import steps for that engine · link to guide        │
-                             │ [Download for Godot]  [PNG only]                      │
+│ Art style  Pixel|Cartoon │ │ All together | Animation | Final sheet | Original      │
+│ Sprite size  8…128 Other │ │ ┌──────────────── dark stage ──────────────────────┐  │
+│ Frame size  Auto|Custom  │ │ │  sprite(s) on the yellow ground line, frame box   │  │
+│ Image type, Frames,      │ │ └───────────────────────────────────────────────────┘  │
+│ Animations (sheet only)  │ │ ▶ fps zoom onion   frame strip (whole-frame thumbs)    │
+│ ▸ Colours (palette)      │ │ frame editor: move, duplicate, remove, nudge           │
+│ ▸ Background (Auto ✓)    │ │ frames 8 · AI pixel 9 px · frame size 32×32 · height 32│
+│ ▸ Advanced               │ │ warnings with fix buttons                              │
+│ Colour variants          │ ├ export ───────────────────────────────────────────────┤
+└──────────────────────────┘ │ Godot | GDevelop | Kaplay | Other   (one engine)       │
+                             │ import steps · [Download the 2 images for Godot 4]     │
                              └───────────────────────────────────────────────────────┘
 ```
 
 - Empty state: the stage itself is the drop zone, with the two examples and a three-step "how it works" line.
 - Below 1000px: settings stack under the stage; the stage is no longer sticky.
 - Tiles uses the same frame (settings left, stage right, export below). Make with AI: form left, prompt + guide image right, then "Open the result in Sprites".
-- Routing by hash: `#/sprites`, `#/tiles`, `#/ai`, `#/guide`, `#/guide/<section>`.
+- A single sprite hides everything animated (fps, play, onion skin, strip, counter, animations, frames, Final sheet); views are Sprite | Original.
+- Kit (`#/kit`): game tile size and shared palette on the left; summary, a real-scale preview (sprites on a row of the kit's tiles) and one download per engine on the right.
+- Routing by hash: `#/sprites`, `#/tiles`, `#/kit`, `#/ai`, `#/guide`, `#/guide/<section>`.

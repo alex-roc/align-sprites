@@ -1,8 +1,8 @@
-// Hash routing: #/sprites, #/tiles, #/ai, #/guide, #/guide/<section>. Back/forward work for free.
+// Hash routing: #/sprites, #/tiles, #/kit, #/ai, #/guide, #/guide/<section>. Back/forward work for free.
 import { useMemo, useSyncExternalStore } from 'react';
 
-export type TabId = 'sprites' | 'tiles' | 'ai' | 'guide';
-export const TABS: readonly TabId[] = ['sprites', 'tiles', 'ai', 'guide'];
+export type TabId = 'sprites' | 'tiles' | 'kit' | 'ai' | 'guide';
+export const TABS: readonly TabId[] = ['sprites', 'tiles', 'kit', 'ai', 'guide'];
 
 export interface Route {
   tab: TabId;

@@ -3,7 +3,7 @@ import { useI18n } from '../../../i18n/index.ts';
 import { Check, Segmented, type SegOption } from './Field.tsx';
 
 /** Export panel shared by Sprites and Tiles: pick ONE target, read its import steps, download. */
-export function ExportCard<T extends string>({ name, options, value, onChange, steps, guideHref, all, onAll, allLabel, primaryLabel, onPrimary, secondaryLabel, onSecondary, busy, disabled, error, note }: {
+export function ExportCard<T extends string>({ name, options, value, onChange, steps, guideHref, all, onAll, allLabel, primaryLabel, onPrimary, secondaryLabel, onSecondary, busy, disabled, error, note, extra }: {
   name: string;
   options: SegOption<T>[];
   value: T;
@@ -22,6 +22,8 @@ export function ExportCard<T extends string>({ name, options, value, onChange, s
   disabled?: boolean;
   error?: string | null;
   note?: ReactNode;
+  /** More action buttons after the secondary one. */
+  extra?: ReactNode;
 }) {
   const { t } = useI18n();
   return (
@@ -42,6 +44,7 @@ export function ExportCard<T extends string>({ name, options, value, onChange, s
         {secondaryLabel && onSecondary && (
           <button type="button" className="btn" disabled={disabled} onClick={onSecondary}>{secondaryLabel}</button>
         )}
+        {extra}
         <a className="link" href={guideHref}>{t('export.fullGuide')}</a>
         {onAll && <Check checked={!!all} onChange={onAll} label={allLabel ?? t('export.all')} />}
       </div>

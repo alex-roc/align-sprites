@@ -22,8 +22,10 @@ import type {
   Warning,
 } from '../types.ts';
 
-/** Native-height tolerance: within ±3 % of the target we keep the art untouched (pixel mode). */
-const KEEP_NATIVE_TOLERANCE = 0.03;
+/** A target height is met when the reference (median) height is within half a pixel. */
+const HEIGHT_EPS = 0.5;
+/** Period corrections allowed to hit the target height exactly (each re-samples the original crops). */
+const HEIGHT_PASSES = 4;
 
 /** Result of the per-job normalization, before packing. */
 export interface NormalizedJob {
@@ -109,14 +111,17 @@ export function normalizeJob(core: UnfakeCore | null, job: SpriteJob): Normalize
     let metrics = frames.map((f) => measureFrame(f, { anchorX: job.anchorX }));
     let refHeight = referenceHeight(refIdx.map((i) => metrics[i]));
     let effPeriod = period;
-    if (want && refHeight > 0 && Math.abs(refHeight - want) / want > KEEP_NATIVE_TOLERANCE) {
-      // Re-sample ONCE from the original crops so the art is not scaled twice.
-      effPeriod = (period * refHeight) / want;
+    if (want && refHeight > 0 && Math.abs(refHeight - want) > HEIGHT_EPS) {
       if (want < refHeight * 0.85) warnings.push({ key: 'warn.bigDownscale', params: { from: refHeight, to: want } });
+      // Re-sample from the ORIGINAL crops (never scale twice). The grid phase and the feet row make the result
+      // land ±1 px off, so correct the period a couple of times until the reference height is exact.
+      for (let pass = 0; pass < HEIGHT_PASSES && Math.abs(refHeight - want) > HEIGHT_EPS; pass++) {
+        effPeriod = (effPeriod * refHeight) / want;
+        frames = crops.map((c) => frameToArt(core, c, effPeriod, effPeriod < period ? 'nearest' : 'dominant'));
+        metrics = frames.map((f) => measureFrame(f, { anchorX: job.anchorX }));
+        refHeight = referenceHeight(refIdx.map((i) => metrics[i]));
+      }
       if (effPeriod < 1) warnings.push({ key: 'warn.upscale', params: { from: refHeight, to: want } });
-      frames = crops.map((c) => frameToArt(core, c, effPeriod, effPeriod < period ? 'nearest' : 'dominant'));
-      metrics = frames.map((f) => measureFrame(f, { anchorX: job.anchorX }));
-      refHeight = referenceHeight(refIdx.map((i) => metrics[i]));
     }
     return { job, frames, metrics, anims, regions, grid, scale: 1 / effPeriod, refHeight, warnings };
   }

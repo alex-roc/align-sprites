@@ -1,14 +1,21 @@
 import { useI18n } from '../../../i18n/index.ts';
+import { mirrorDraft } from '../../lib/frameOps.ts';
 import { parseFrames } from '../../lib/frames.ts';
-import { newId } from '../../state/defaults.ts';
+import { DEFAULT_FPS, newId } from '../../state/defaults.ts';
 import type { AnimDraft } from '../../state/types.ts';
 import { Check, NumberInput } from '../common/Field.tsx';
 
-/** Editable animation list: name, frame range ("0-5", "0,2,4-6", blank = all), fps, loop. */
+/** Editable animation list: name, frame range ("0-5", "0,2,4-6", blank = all), fps, loop, mirror (flipX). */
 export function AnimationsEditor({ anims, frameCount, onChange }: { anims: AnimDraft[]; frameCount?: number; onChange: (a: AnimDraft[]) => void }) {
   const { t } = useI18n();
   const update = (id: string, patch: Partial<AnimDraft>) => onChange(anims.map((a) => (a.id === id ? { ...a, ...patch } : a)));
-  const add = () => onChange([...anims, { id: newId('a'), name: `anim${anims.length + 1}`, frames: '', fps: 8, loop: true }]);
+  const add = () => onChange([...anims, { id: newId('a'), name: `anim${anims.length + 1}`, frames: '', fps: DEFAULT_FPS, loop: true, flipX: false }]);
+  // The mirrored copy goes right after its source.
+  const mirror = (a: AnimDraft) => {
+    const copy = mirrorDraft(a, newId('a'), anims.map((x) => x.name));
+    const at = anims.findIndex((x) => x.id === a.id);
+    onChange([...anims.slice(0, at + 1), copy, ...anims.slice(at + 1)]);
+  };
   return (
     <div className="anims">
       {frameCount !== undefined && frameCount > 0 && <p className="hint">{t('anims.detected', { count: frameCount, last: frameCount - 1 })}</p>}
@@ -31,6 +38,12 @@ export function AnimationsEditor({ anims, frameCount, onChange }: { anims: AnimD
               </label>
               <div className="anim-actions">
                 <Check checked={a.loop} onChange={(loop) => update(a.id, { loop })} label={t('anims.loop')} />
+                <Check checked={a.flipX} onChange={(flipX) => update(a.id, { flipX })} label={t('anims.flip')} />
+              </div>
+              <div className="anim-actions">
+                <button type="button" className="btn btn-sm" onClick={() => mirror(a)} aria-label={t('anims.mirrorNamed', { name: a.name })}>
+                  {t('anims.mirror')}
+                </button>
                 <button type="button" className="btn btn-ghost btn-sm" disabled={anims.length === 1} onClick={() => onChange(anims.filter((x) => x.id !== a.id))} aria-label={t('anims.removeNamed', { name: a.name })}>
                   {t('anims.remove')}
                 </button>

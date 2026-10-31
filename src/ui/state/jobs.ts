@@ -1,7 +1,8 @@
-// Maps UI settings → SpriteJob[]. GLOBAL settings (mode, cell, height, colours, padding, anchor) are applied to every
-// job, which is what keeps characters of one batch at the same scale; PER-ASSET settings (background, segmentation,
-// animations, relative size) only affect their own job.
-import type { AnimSpec, BgOptions, Segmentation, SpriteJob } from '../../core/types.ts';
+// Maps UI settings → SpriteJob[]. GLOBAL settings (mode, sprite size, frame size, palette, padding, anchor) are applied
+// to every job, which is what keeps characters of one batch at the same scale; PER-ASSET settings (type, background,
+// segmentation, animations, offsets, recolour, relative size) only affect their own job.
+import { PALETTES } from '../../core/palette/index.ts';
+import type { AnimSpec, ArtMode, BgOptions, RGBA8, Segmentation, SpriteJob } from '../../core/types.ts';
 import { parseFrames } from '../lib/frames.ts';
 import { isPristineAnims } from './defaults.ts';
 import type { Asset, GlobalSettings } from './types.ts';
@@ -40,8 +41,19 @@ function buildBg(a: Asset, g: GlobalSettings): BgOptions {
   return bg;
 }
 
+/** The fixed palette (preset or taken from an image) every pixel snaps to; undefined for 'original' and 'reduce'. */
+export function fixedPalette(g: GlobalSettings, mode: ArtMode = g.mode): RGBA8[] | undefined {
+  if (mode !== 'pixel') return undefined;
+  if (g.palette.kind === 'preset') {
+    const id = g.palette.id;
+    return PALETTES.find((p) => p.id === id)?.colors;
+  }
+  return g.palette.kind === 'image' ? g.palette.colors : undefined;
+}
+
 function buildSegmentation(a: Asset): Segmentation {
-  if (a.kind === 'single' || a.seg.mode === 'single') return { kind: 'single' };
+  if (a.kind === 'single') return { kind: 'single' };
+  if (a.regions) return { kind: 'manual', regions: a.regions };
   if (a.seg.mode === 'grid') return { kind: 'grid', rows: Math.max(1, a.seg.rows), cols: Math.max(1, a.seg.cols) };
   return { kind: 'auto' };
 }
@@ -58,13 +70,15 @@ function buildAnimations(a: Asset, frameCount: number | undefined): AnimSpec[] {
     if (!p.ok) continue;
     const frames = p.all ? (frameCount ? [...Array(frameCount).keys()] : []) : p.indices;
     if (!frames.length) continue;
-    out.push({ name: d.name.trim() || 'anim', frames, fps: Math.max(1, d.fps), loop: d.loop });
+    out.push({ name: d.name.trim() || 'anim', frames, fps: Math.max(1, d.fps), loop: d.loop, ...(d.flipX ? { flipX: true } : {}) });
   }
   return out;
 }
 
 export function buildJobs(assets: Asset[], g: GlobalSettings, frameCounts: Record<string, number>): JobBundle {
   const names = exportNames(assets);
+  const palette = fixedPalette(g);
+  const reduce = g.mode === 'pixel' && g.palette.kind === 'reduce' ? g.maxColors : 0;
   const jobs = assets.map<SpriteJob>((a) => ({
     name: names.get(a.id) ?? a.name,
     source: a.image,
@@ -74,8 +88,11 @@ export function buildJobs(assets: Asset[], g: GlobalSettings, frameCounts: Recor
     animations: buildAnimations(a, frameCounts[a.id]),
     cell: g.cellAuto ? 'auto' : { w: g.cellW, h: g.cellH, padBottom: g.padBottom },
     scale: g.targetHeight ? { kind: 'targetHeight', px: g.targetHeight, relative: a.relative } : { kind: 'native' },
-    maxColors: g.mode === 'pixel' && g.maxColors > 0 ? g.maxColors : undefined,
+    maxColors: reduce > 0 ? reduce : undefined,
     anchorX: g.anchorX,
+    ...(palette ? { palette } : {}),
+    ...(a.kind === 'sheet' && Object.keys(a.frameOffsets).length ? { frameOffsets: a.frameOffsets } : {}),
+    ...(Object.keys(a.colorMap).length ? { colorMap: a.colorMap } : {}),
   }));
   return { jobs, assetIds: assets.map((a) => a.id) };
 }

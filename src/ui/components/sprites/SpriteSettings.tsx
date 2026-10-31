@@ -1,27 +1,46 @@
+import type { ReactNode } from 'react';
 import { useI18n } from '../../../i18n/index.ts';
 import type { AnchorXMethod, ArtMode } from '../../../core/types.ts';
 import { hexToRgb, rgbToHex } from '../../lib/image.ts';
 import { useApp } from '../../state/context.ts';
-import type { Asset, BgStrategy, GlobalSettings, SegMode } from '../../state/types.ts';
+import type { Asset, AssetKind, BgStrategy, GlobalSettings, SegMode } from '../../state/types.ts';
 import { Check, Field, NumberInput, Segmented } from '../common/Field.tsx';
-import { Fold, Section } from '../common/Section.tsx';
+import { PaletteField } from '../common/PaletteField.tsx';
+import { usePaletteSummary } from '../../state/usePaletteSummary.ts';
+import { Fold, ScopeGroup, Section } from '../common/Section.tsx';
 import { AnimationsEditor } from './AnimationsEditor.tsx';
-import { CellSizeField } from './CellSizeField.tsx';
+import { ColorVariants } from './ColorVariants.tsx';
+import { FrameSizeField } from './FrameSizeField.tsx';
+import { SpriteSizeField } from './SpriteSizeField.tsx';
 
 const ANCHORS: AnchorXMethod[] = ['medianColumn', 'centroid', 'bboxCenter'];
 
-/** Settings column, in the order you think: style, frames, size, animations, then colours, background, advanced. */
+interface Item {
+  /** 'all' = applies to every image; 'one' = only the active one. */
+  scope: 'all' | 'one';
+  key: string;
+  node: ReactNode;
+}
+
+/**
+ * Settings column, in the order you think: art style (header), sprite size, frame size, then the image itself (type,
+ * frames, animations), then the folded finishing touches. With 2+ images the column splits in "for all images" and
+ * "only this image"; with one image no scope is shown at all.
+ */
 export function SpriteSettings({ asset }: { asset: Asset }) {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
+  const paletteSummary = usePaletteSummary();
   const g = state.global;
   const batch = state.assets.length > 1;
+  const sheet = asset.kind === 'sheet';
   const patchG = (p: Partial<GlobalSettings>) => dispatch({ type: 'global/patch', patch: p });
   const patchA = (p: Partial<Asset>) => dispatch({ type: 'asset/patch', id: asset.id, patch: p });
   const bg = asset.bg;
   const setBg = (p: Partial<typeof bg>) => patchA({ bg: { ...bg, ...p } });
   const seg = asset.seg;
-  const setSeg = (p: Partial<typeof seg>) => patchA({ seg: { ...seg, ...p } });
+  // Picking auto or grid drops any hand-drawn boxes: the choice is explicit.
+  const setSeg = (p: Partial<typeof seg>) => patchA({ seg: { ...seg, ...p }, regions: null });
 
   const detected = asset.autoBg?.color;
   const shown = bg.custom ? bg.color : detected;
@@ -34,97 +53,91 @@ export function SpriteSettings({ asset }: { asset: Asset }) {
     </span>
   );
 
-  return (
-    <div className="settings-in">
-      <Section title={t('set.style')} scope="all" showScope={batch}>
-        <Segmented<ArtMode>
-          name="mode"
-          label={t('set.style')}
-          value={g.mode}
-          onChange={(mode) => patchG({ mode })}
-          options={[
-            { value: 'pixel', label: t('mode.pixel') },
-            { value: 'cartoon', label: t('mode.cartoon') },
-          ]}
-        />
-        <p className="hint">{g.mode === 'pixel' ? t('mode.pixelHint') : t('mode.cartoonHint')}</p>
-      </Section>
-
-      <Section title={t('set.frames')} scope="one" showScope={batch}>
-        {asset.kind === 'single' ? (
-          <p className="hint">{t('seg.singleKindHint')}</p>
-        ) : (
-          <>
-            <Segmented<SegMode>
-              name={`seg-${asset.id}`}
-              label={t('set.frames')}
-              value={seg.mode}
-              onChange={(mode) => setSeg({ mode })}
-              options={[
-                { value: 'auto', label: t('seg.auto') },
-                { value: 'grid', label: t('seg.grid') },
-                { value: 'single', label: t('seg.single') },
-              ]}
-            />
-            {seg.mode === 'grid' && (
-              <div className="row">
-                <Field label={t('seg.rows')}>
-                  <NumberInput value={seg.rows} min={1} max={64} onChange={(rows) => setSeg({ rows })} />
-                </Field>
-                <Field label={t('seg.cols')}>
-                  <NumberInput value={seg.cols} min={1} max={64} onChange={(cols) => setSeg({ cols })} />
-                </Field>
-              </div>
-            )}
-            <p className="hint">{t(`seg.${seg.mode}Hint`)}</p>
-          </>
-        )}
-      </Section>
-
-      <Section title={t('set.size')} scope="all" showScope={batch}>
-        <div className="sub">
-          <Check checked={g.targetHeight !== null} onChange={(on) => patchG({ targetHeight: on ? 64 : null })} label={t('size.heightOn')} />
-          {g.targetHeight !== null && (
-            <Field label={t('size.heightPx')}>
-              <NumberInput value={g.targetHeight} min={4} max={1024} onChange={(targetHeight) => patchG({ targetHeight })} />
-            </Field>
+  const items: Item[] = [
+    { scope: 'all', key: 'size', node: <Section title={t('set.spriteSize')}><SpriteSizeField /></Section> },
+    { scope: 'all', key: 'frame', node: <Section title={t('set.frameSize')}><FrameSizeField /></Section> },
+    {
+      scope: 'one',
+      key: 'type',
+      node: (
+        <Section title={t('set.type')}>
+          <Segmented<AssetKind>
+            name={`kind-${asset.id}`}
+            label={t('set.type')}
+            value={asset.kind}
+            onChange={(kind) => patchA({ kind })}
+            options={[
+              { value: 'sheet', label: t('kind.sheet') },
+              { value: 'single', label: t('kind.single') },
+            ]}
+          />
+          {asset.detected && (
+            <p className="hint">{asset.detected.kind === 'single' ? t('kind.detectedSingle') : t('kind.detectedSheet', { count: asset.detected.frameCount })}</p>
           )}
-          <p className="hint">{g.targetHeight === null && batch ? t('size.heightBatchWarn') : t('size.heightWhy')}</p>
-        </div>
-        <div className="sub">
-          <Check checked={g.cellAuto} onChange={(cellAuto) => patchG({ cellAuto })} label={t('size.cellAuto')} />
-          {!g.cellAuto && (
-            <>
-              <CellSizeField label={t('size.cellW')} value={g.cellW} onChange={(cellW) => patchG({ cellW })} />
-              <CellSizeField label={t('size.cellH')} value={g.cellH} onChange={(cellH) => patchG({ cellH })} />
-              <Field label={t('size.padBottom')} hint={t('size.padBottomHint')}>
-                <NumberInput value={g.padBottom} min={0} max={256} onChange={(padBottom) => patchG({ padBottom })} />
+        </Section>
+      ),
+    },
+  ];
+  if (sheet) {
+    items.push({
+      scope: 'one',
+      key: 'frames',
+      node: (
+        <Section title={t('set.frames')}>
+          <Segmented<SegMode>
+            name={`seg-${asset.id}`}
+            label={t('set.frames')}
+            value={seg.mode}
+            onChange={(mode) => setSeg({ mode })}
+            options={[
+              { value: 'auto', label: t('seg.auto') },
+              { value: 'grid', label: t('seg.grid') },
+            ]}
+          />
+          {seg.mode === 'grid' && !asset.regions && (
+            <div className="row">
+              <Field label={t('seg.rows')}>
+                <NumberInput value={seg.rows} min={1} max={64} onChange={(rows) => setSeg({ rows })} />
               </Field>
-            </>
+              <Field label={t('seg.cols')}>
+                <NumberInput value={seg.cols} min={1} max={64} onChange={(cols) => setSeg({ cols })} />
+              </Field>
+            </div>
           )}
-          <p className="hint">{t('size.cellHint')}</p>
-        </div>
-        {batch && g.targetHeight !== null && (
-          <Field label={`${t('size.relative')} (${t('scope.one')})`} hint={t('size.relativeHint')}>
-            <NumberInput value={asset.relative} min={0.1} max={5} step={0.05} onChange={(relative) => patchA({ relative })} />
-          </Field>
-        )}
-      </Section>
-
-      {asset.kind === 'sheet' && (
-        <Section title={t('set.animations')} scope="one" showScope={batch}>
+          {asset.regions ? (
+            <div className="notice">
+              <span>{t('seg.manualNote', { count: asset.regions.length })}</span>
+              <button type="button" className="btn btn-sm" onClick={() => patchA({ regions: null })}>{t('seg.backToAuto')}</button>
+            </div>
+          ) : (
+            <p className="hint">{t(`seg.${seg.mode}Hint`)}</p>
+          )}
+        </Section>
+      ),
+    });
+    items.push({
+      scope: 'one',
+      key: 'anims',
+      node: (
+        <Section title={t('set.animations')}>
           <AnimationsEditor anims={asset.anims} frameCount={state.run.frameCounts[asset.id]} onChange={(anims) => patchA({ anims })} />
         </Section>
-      )}
-
-      {g.mode === 'pixel' && (
-        <Section title={t('set.colours')} scope="all" showScope={batch}>
-          <Field label={t('colours.max')} hint={t('colours.maxHint')}>
-            <NumberInput value={g.maxColors} min={0} max={256} onChange={(maxColors) => patchG({ maxColors })} />
-          </Field>
-        </Section>
-      )}
-
+      ),
+    });
+  }
+  items.push({
+    scope: 'all',
+    key: 'colours',
+    node: (
+      <Fold title={t('set.colours')} summary={paletteSummary(g)}>
+        <PaletteField />
+      </Fold>
+    ),
+  });
+  items.push({
+    scope: 'one',
+    key: 'bg',
+    node: (
       <Fold title={t('set.background')} summary={bgSwatch} open={!autoWorked} key={`bg-${asset.id}`}>
         <Check checked={bg.custom} onChange={(custom) => setBg({ custom })} label={t('bg.useCustom')} />
         {bg.custom && (
@@ -143,7 +156,34 @@ export function SpriteSettings({ asset }: { asset: Asset }) {
           <input type="range" min={0} max={60} value={bg.tolerance} onChange={(e) => setBg({ tolerance: Number(e.target.value) })} />
         </Field>
       </Fold>
-
+    ),
+  });
+  if (batch && g.targetHeight !== null) {
+    items.push({
+      scope: 'one',
+      key: 'relative',
+      node: (
+        <Section title={t('size.relative')}>
+          <Field label={t('size.relativeLabel')} hint={t('size.relativeHint')}>
+            <NumberInput value={asset.relative} min={0.1} max={5} step={0.05} onChange={(relative) => patchA({ relative })} />
+          </Field>
+        </Section>
+      ),
+    });
+  }
+  items.push({
+    scope: 'one',
+    key: 'variants',
+    node: (
+      <Section title={t('set.variants')}>
+        <ColorVariants asset={asset} key={asset.id} />
+      </Section>
+    ),
+  });
+  items.push({
+    scope: 'all',
+    key: 'adv',
+    node: (
       <Fold title={t('set.advanced')}>
         <Field label={t('adv.anchor')} hint={t('adv.anchorHint')}>
           <select value={g.anchorX} onChange={(e) => patchG({ anchorX: e.target.value as AnchorXMethod })}>
@@ -153,6 +193,45 @@ export function SpriteSettings({ asset }: { asset: Asset }) {
           </select>
         </Field>
       </Fold>
+    ),
+  });
+
+  const style = (
+    <div className="settings-top">
+      <div className="settings-top-row">
+        <span className="field-label">{t('set.style')}</span>
+        <Segmented<ArtMode>
+          name="mode"
+          label={t('set.style')}
+          value={g.mode}
+          onChange={(mode) => patchG({ mode })}
+          options={[
+            { value: 'pixel', label: t('mode.pixel') },
+            { value: 'cartoon', label: t('mode.cartoon') },
+          ]}
+        />
+      </div>
+      <p className="hint">{g.mode === 'pixel' ? t('mode.pixelHint') : t('mode.cartoonHint')}</p>
+    </div>
+  );
+
+  const render = (list: Item[]) => list.map((it) => <div key={it.key} className="set-item">{it.node}</div>);
+  return (
+    <div className="settings-in">
+      {batch ? (
+        <>
+          <ScopeGroup title={t('scope.allTitle', { count: state.assets.length })}>
+            {style}
+            {render(items.filter((i) => i.scope === 'all'))}
+          </ScopeGroup>
+          <ScopeGroup title={t('scope.oneTitle', { name: asset.name })}>{render(items.filter((i) => i.scope === 'one'))}</ScopeGroup>
+        </>
+      ) : (
+        <>
+          {style}
+          {render(items)}
+        </>
+      )}
     </div>
   );
 }

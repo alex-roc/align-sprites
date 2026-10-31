@@ -7,14 +7,18 @@ export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'asset/add': {
       const assets = [...state.assets, ...action.assets];
-      return { ...state, assets, selectedId: state.selectedId ?? action.assets[0]?.id ?? null };
+      const selectedId = action.select ? (action.assets[0]?.id ?? state.selectedId) : (state.selectedId ?? action.assets[0]?.id ?? null);
+      // The second image opens "All together": the first thing to check in a batch is that they share a scale.
+      const stageView = state.assets.length < 2 && assets.length >= 2 ? 'all' : state.stageView;
+      return { ...state, assets, selectedId, stageView };
     }
     case 'asset/remove': {
       const assets = state.assets.filter((a) => a.id !== action.id);
       const selectedId = state.selectedId === action.id ? (assets[0]?.id ?? null) : state.selectedId;
       const { [action.id]: _r, ...results } = state.run.results;
       const { [action.id]: _c, ...frameCounts } = state.run.frameCounts;
-      return { ...state, assets, selectedId, run: { ...state.run, results, frameCounts } };
+      const stageView = state.stageView === 'all' && assets.length < 2 ? 'animation' : state.stageView;
+      return { ...state, assets, selectedId, stageView, run: { ...state.run, results, frameCounts } };
     }
     case 'asset/patch':
       return { ...state, assets: state.assets.map((a) => (a.id === action.id ? { ...a, ...action.patch } : a)) };

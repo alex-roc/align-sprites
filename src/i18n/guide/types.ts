@@ -4,12 +4,12 @@
 // Inline markup inside any string: `code`, **bold**, [label](#/guide/<section>) for links inside the guide.
 
 export const SECTION_IDS = [
-  'how-it-works', 'generate', 'normalize', 'godot', 'gdevelop', 'kaplay', 'other', 'tiles', 'troubleshooting', 'glossary',
+  'how-it-works', 'generate', 'normalize', 'godot', 'gdevelop', 'kaplay', 'other', 'tiles', 'kit', 'troubleshooting', 'glossary',
 ] as const;
 export type SectionId = (typeof SECTION_IDS)[number];
 
 /** Where an action button goes: hash routes of the other tabs. */
-export type ActionTarget = 'sprites' | 'ai' | 'tiles';
+export type ActionTarget = 'sprites' | 'ai' | 'tiles' | 'kit';
 
 export interface DiagramStep { title: string; text: string }
 export interface Legend { tone: 'key' | 'ground'; text: string }
@@ -51,4 +51,6 @@ export interface GuideContent {
   };
   sections: GuideSection[];
   reference: { text: string; link: string; href: string };
+  /** Attribution at the very end (not in the index). Strings use the inline markup, links included. */
+  credits: { title: string; lines: string[] };
 }

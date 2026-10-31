@@ -6,14 +6,14 @@
 
 Los modelos de imagen (Gemini / Nano Banana, ChatGPT…) dibujan buenos personajes, pero sus hojas de sprites fallan en los motores de juego. Los frames salen de tamaños distintos y el personaje salta de un frame a otro. Cada imagen trae otra escala, el pixel art es «falso» (bloques ×8 borrosos sobre una cuadrícula irregular) y el fondo viene de color en vez de transparente. align-sprites lo corrige en tu navegador. Tus imágenes no se suben a ningún lado.
 
-| Lo que da la IA | Después de align-sprites (32 px de alto, 16 colores, celdas de 32×32) |
+| Lo que da la IA | Después de align-sprites (32 px de alto, 16 colores, frames de 32×32) |
 |---|---|
 | ![caballero antes](img/knight-before.png) | ![caballero después](img/knight-after.png) |
 | ![zorro antes](img/fox-before.png) | ![zorro después](img/fox-after.png) |
 
-## 1. Generar con IA
+## 1. Crea la imagen con IA
 
-Abre la pestaña **Generar con IA**:
+Abre la pestaña **Crear con IA**:
 
 1. Describe el personaje y la acción (caminar, correr, reposo, ataque, salto…), el número de frames y de columnas.
 2. Copia el prompt y descarga la **imagen guía**: una cuadrícula magenta con la línea de los pies.
@@ -26,50 +26,59 @@ Consejos:
 - Usa la **clave verde** si tu personaje es rosado, morado o magenta.
 - A la IA le cuesta menos mantener coherentes los personajes pequeños, de 16 a 48 píxeles de arte de alto.
 - La IA no seguirá la guía al pie de la letra (número de frames, línea de pies, tamaño). No importa: la herramienta lo corrige.
+- Algunos defectos solo los arreglas tú: las poses repetidas y un personaje que cambia entre frames. Genera de nuevo, con una imagen de referencia.
 
 ## 2. Normalizar
 
-Abre la pestaña **Sprites** y suelta una o varias imágenes.
+Abre la pestaña **Sprites** y suelta una o varias imágenes. De cada una, la herramienta detecta si es una **hoja de sprites** (varios frames) o un **sprite único** (un solo dibujo). Si se equivocó, corrígelo en **Tipo de imagen**.
 
-**Ajustes para todo el lote.** Son compartidos, así todos los personajes quedan a la misma escala:
+Los ajustes siguen el orden en que piensas: estilo de arte, tamaño del sprite, tamaño del frame, frames y animaciones. Colores, fondo y avanzado quedan plegados. Con varias imágenes, la columna se divide en ajustes para todas las imágenes y solo para la elegida.
 
-- **Estilo de arte**: *Pixel art* encuentra la cuadrícula real de píxeles, quita el desenfoque de la IA, mantiene los bordes duros y puede limitar la paleta. *Cartoon / vectorial* redimensiona arte suave con bordes limpios y antialiasing.
-- **Tamaño de celda**: *Auto* elige el menor múltiplo de 32 donde quepan todos los frames. También puedes fijar el ancho y el alto (32, 64, 96, 128…). Un personaje suele ser más alto que ancho, por ejemplo 64×96.
-- **Altura del personaje**: al activarla, cada personaje del lote se redimensiona a esa altura en píxeles. Esto arregla el problema de que el jugador y el enemigo salgan de tamaños distintos. Un personaje suelto grande (una imagen de tipo *Personaje suelto*) se redimensiona igual.
-- **Colores máximos** (pixel art): una paleta compartida por todo el lote, por ejemplo de 16 o 32 colores.
+- **Estilo de arte**: *Pixel art* encuentra la cuadrícula real de píxeles, quita el desenfoque de la IA y mantiene los bordes duros. *Cartoon* redimensiona arte suave con bordes limpios y antialiasing.
+- **Tamaño del sprite**: la altura del dibujo, en px. Valores: Original, 8, 16, 32, 64, 96, 128, u Otro. También muestra el tamaño en tiles del juego (el tile se fija en la pestaña Kit). Todas las imágenes del lote quedan a la misma altura, así tu jugador y tu enemigo tienen la misma escala. Un tamaño relativo (1.5 para un jefe) va encima. Elige una altura menor que la que dibujó la IA: ampliar pixel art vuelve los píxeles irregulares.
+- **Tamaño del frame**: el sprite es el dibujo; el frame es el lienzo que ocupa cada cuadro, con los pies en una línea. *Automático* elige el menor múltiplo de 32 donde quepa todo. *A medida* te deja escribir ancho y alto (de 8 en 8 px, nunca menos de lo que cabe) y el espacio bajo los pies. Los múltiplos de 32 funcionan bien en casi todos los motores.
+- **Frames** (hojas de sprites): *Automático* encuentra cada frame, o *Cuadrícula* corta filas × columnas. En la vista **Original**, **Editar recuadros** te deja dibujar, mover y cambiar de tamaño los recuadros a mano.
+- **Animaciones**: nombre, frames como `0-5` o `0,2,4-6`, FPS y bucle. **Espejo** voltea una animación, y **Crear versión espejo** agrega la versión espejo como animación nueva.
+- **Colores**: *Colores originales*, una paleta lista (PICO-8, Sweetie 16, Endesga 32, Game Boy), una paleta *desde una imagen*, o *Reducir a N colores*. La paleta se comparte entre todas las imágenes y tus tiles. Las paletas fijas solo funcionan con pixel art.
+- **Variantes de color**: haz clic en un color para cambiarlo, luego **Duplicar como variante de color** para conservar las dos versiones (enemigos, equipos).
+- **Fondo**: Auto (el color más común del borde). *En todas partes (croma)* para magenta y verde; *Solo desde los bordes* para fondos blancos. Baja la tolerancia si desaparece una parte del personaje.
 
-**Ajustes por imagen**: el fondo (casi siempre *Auto*), la detección de frames (*Auto*, *Cuadrícula* de filas × columnas o *Un solo personaje*), las animaciones (nombre, frames como `0-5`, fps y bucle) y el tamaño relativo (1.5 para un jefe).
+### Sprites únicos y hojas de sprites
 
-**Resultado**: los frames detectados sobre la imagen original, la hoja final, una vista previa animada (papel cebolla, línea de pies y origen) y un diagnóstico con advertencias, por ejemplo «se recortó contenido: usa una celda más grande o Auto».
+Un sprite único no tiene animaciones y tiene las vistas **Sprite** y **Original**. Una hoja de sprites tiene **Animación**, **Hoja final** y **Original**. Con varias imágenes, **Todas juntas** pone cada imagen sobre una sola línea de suelo con el mismo zoom: la prueba de que comparten escala.
+
+### Arregla frames a mano
+
+El editor de frames, bajo la tira de frames, actúa sobre el frame elegido: mover a izquierda o derecha, duplicar, quitar de la animación, empujar 1 px. Atajos: `[` y `]` mueven el frame, `D` lo duplica, `Supr` lo quita, `Mayús` + flechas lo empujan, `0` restablece el empuje. Cuando la IA repite una pose, la herramienta lo dice («El frame 4 repite el 1») y **Quitar duplicados** los quita.
 
 ## 3. Usarlo en tu motor
 
-**Descargar ZIP** trae una carpeta por motor.
+Bajo el escenario, elige el motor y pulsa **Descargar para …**. El ZIP trae una carpeta por motor.
 
 ### Godot 4
 
 1. Copia la carpeta `godot/<nombre>/` dentro de tu proyecto (por ejemplo, `res://personajes/<nombre>/`).
-2. Arrastra `<nombre>.tscn` a tu escena. Es un `AnimatedSprite2D` con el **origen en los pies** y todas las animaciones listas, con sus fps y su bucle.
+2. Arrastra `<nombre>.tscn` a tu escena. Es un `AnimatedSprite2D` con el **origen en los pies** y todas las animaciones listas, con sus fps y su bucle. Un **sprite único** trae en cambio una escena `Sprite2D`.
 3. En pixel art, la escena ya usa el filtro *Nearest*. Para todo el proyecto: *Configuración del proyecto → Rendering → Textures → Default Texture Filter = Nearest*.
 
-También puedes usar solo `<nombre>.tres` (un recurso `SpriteFrames`) en tu propio `AnimatedSprite2D`. Si Godot muestra un error la primera vez, espera a que termine la importación o vuelve a abrir el proyecto.
+También puedes usar solo `<nombre>.tres` (un recurso `SpriteFrames`) en tu propio `AnimatedSprite2D`, pero el desplazamiento de los pies está en el `.tscn`. Si Godot muestra un error la primera vez, espera a que termine la importación o recarga el proyecto.
 
 ### GDevelop 5
 
-GDevelop no importa hojas de sprites, así que el ZIP trae un PNG por frame en `gdevelop/<nombre>/<animación>/<animación>_00.png…`.
+Dos formas de añadir cada animación (elige una):
 
-1. Crea un objeto **Sprite**, añade una animación y agrega todas sus imágenes a la vez (se ordenan por nombre).
-2. Pon el tiempo entre frames en `1 / fps` y el *bucle* como indica el README.
-3. En *Editar puntos*, fija el punto **Origen** en el valor del README (los pies) para que todas las animaciones queden alineadas.
-4. En pixel art, en las propiedades del proyecto elige el modo de escalado *Nearest* (pixel art).
+- **Frames**: crea un objeto **Sprite**, añade una animación, pulsa *Añadir imágenes* y selecciona de una vez todos los PNG de `gdevelop/<nombre>/<animación>/`.
+- **Spritesheet con Piskel**: añade una animación, ábrela con *Editar con Piskel*, elige *Importar*, escoge `spritesheets/<animación>.png` y *Importar como spritesheet* con tu tamaño de frame.
+
+Luego pon el tiempo entre frames en `1 / fps` y el bucle. En *Editar puntos* (el editor de Puntos), fija el punto **Origin** (Origen) en el valor del README (los pies) para todos los frames. Un **sprite único** es un solo PNG, `gdevelop/<nombre>/<nombre>.png`. En pixel art, en las propiedades del juego elige el modo de escalado *Nearest (sin antialiasing)*. (Los nombres de menú siguen GDevelop 5 como lo vimos por última vez; el README del ZIP trae los mismos pasos.)
 
 ### Kaplay
 
-`kaplay/<nombre>.png` y `kaplay/<nombre>.js` con la llamada `loadSprite(...)` (`sliceX`, `sliceY`, `anims`). Usa `anchor("bot")` para que el origen esté en los pies, y `kaplay({ crisp: true, texFilter: "nearest" })` en pixel art.
+`kaplay/<nombre>.png` y `kaplay/<nombre>.js` con la llamada `loadSprite(...)` (`sliceX`, `sliceY`, `anims`; cada animación empieza en `fila × columnas`). Usa `anchor("bot")` para que el origen esté en los pies, y `kaplay({ crisp: true, texFilter: "nearest" })` en pixel art. Un sprite único es un simple `loadSprite(nombre, png)`.
 
 ### Otros motores
 
-`generic/<nombre>.png` con `<nombre>.json` en el formato de Aseprite (sirve para Phaser, los importadores de Unity, Defold…), más un PNG por frame.
+`generic/<nombre>.png` con `<nombre>.json` en el formato de Aseprite, más un PNG por frame. Phaser lo lee como atlas de Aseprite, Unity corta el PNG con *Grid By Cell Size*, y Defold y Construct pueden importar los PNG por frame. Conocemos esos motores menos: revisa su documentación. Sirve cualquier motor que corte por tamaño de frame: la animación `k` es la fila `k`, el frame `i` es la columna `i`, con el origen en los pies.
 
 ## 4. Tiles
 
@@ -78,29 +87,52 @@ La pestaña **Tiles** tiene dos herramientas.
 ### Hoja de tiles (limpiar un tileset de IA)
 
 1. Agrega una imagen con varios tiles ordenados en filas y columnas (prueba *Tileset de montañas andinas*).
-2. Elige el **tamaño del tile** (16, 32, 48, 64 o el que quieras). La cuadrícula (columnas × filas) se detecta por los huecos vacíos entre tiles; si las líneas de corte se ven mal, desmarca *Detectar automáticamente* y escribe las columnas y filas.
-3. Cada tile se remuestrea a exactamente ese tamaño, se quita el fondo, y las celdas vacías se tachan y quedan fuera del tileset.
-4. **Descargar ZIP**: `godot/<nombre>/` (PNG del atlas + `TileSet` `.tres`), `tiled/<nombre>/` (PNG del atlas + `.tsx`) y el `<nombre>.png` simple.
+2. Elige el **tamaño del tile** (16, 32, 48, 64 o el que quieras). La cuadrícula se detecta por los huecos vacíos entre tiles; si las líneas de corte se ven mal, desmarca *Detectar columnas y filas automáticamente* y escribe las columnas y filas.
+3. Cada tile se remuestrea a exactamente ese tamaño, se quita el fondo, y los tiles vacíos se tachan y quedan fuera del tileset.
+4. Elige un formato (Godot 4, Tiled / GDevelop, PNG) o todos los formatos y descarga.
 
 ### Transiciones de terreno (pasto → tierra, etc.)
 
-1. Agrega la textura **A** (terreno base) y la textura **B** (se pinta sobre A). Ambas deben ser cuadradas y continuas. Marca *Sin textura B* para crear una capa superpuesta: A se dibuja sobre transparente y puedes ponerla encima de cualquier otro terreno.
-2. Elige el formato: **Blob 47** (Terrains de Godot) o **Dual 16** (tilemaps de doble cuadrícula). Ajusta el estilo del borde (margen, suavidad, irregularidad, semilla, contorno). El **mapa de prueba** muestra un mapa al azar hecho con tus tiles; pulsa *Mezclar mapa* para comprobar que encajan en todas partes. *Costuras en A/B* indica si cada textura se repite limpia (cerca de 1 es bueno).
+1. Agrega la textura **A** (terreno base) y la textura **B** (se pinta sobre A). Ambas deben ser cuadradas y continuas. Marca *Sin textura B: pintar A sobre transparente* para crear una capa superpuesta.
+2. Elige la disposición: **Blob 47 (Godot)** o **Dual 16 (GDevelop)**. Ajusta el estilo del borde. El **mapa de prueba** muestra un mapa al azar hecho con tus tiles; pulsa *Mezclar mapa* para comprobar que encajan en todas partes. *Costuras en A* y *Costuras en B* indican si cada textura se repite limpia.
 3. **Descargar ZIP**: el PNG del atlas, un `TileSet` `.tres` de Godot con los datos de terreno completos y un README con la tabla de tiles.
 
 ### Usar los tiles en tu motor
 
-- **Godot 4**: copia la carpeta `godot/<nombre>/` en tu proyecto. Para una hoja de tiles, asigna el `.tres` a un `TileMapLayer` y pinta con los tiles. Para las transiciones de terreno (Blob 47), asigna el `.tres` a un `TileMapLayer`, abre el panel *TileMap*, elige la pestaña **Terrains** y pinta: Godot elige el tile de borde correcto en cada celda. Dual 16 está pensado para el addon *TileMapDual*.
-- **GDevelop 5**: usa el objeto **Tilemap** con el `.tsx` (Tiled) y el PNG del atlas, o importa un mapa hecho en Tiled / LDtk. El atlas Dual 16 no trae datos de terreno: píntalo a mano, usando la tabla del README para saber qué tile va en cada patrón de esquinas.
+- **Godot 4**: copia la carpeta `godot/<nombre>/` en tu proyecto y asigna el `.tres` a un `TileMapLayer`. Para Blob 47, abre el panel *TileMap*, elige la pestaña **Terrains** y pinta. Dual 16 está pensado para el addon *TileMapDual*.
+- **GDevelop 5**: usa el objeto **Tilemap** con el `.tsx` (Tiled) y el PNG del atlas. El atlas Dual 16 no trae datos de terreno: píntalo a mano, usando la tabla del README.
 - **Tiled / LDtk**: abre el `.tsx` como tileset.
+
+## 5. Kit
+
+La pestaña **Kit** junta tus sprites y tiles para que compartan una escala.
+
+- **Tamaño del tile del juego**: 16, 32, 48 o 64 px, la cuadrícula sobre la que se construye tu juego. Las alturas de los sprites se muestran en tiles, y un set de tiles con otro tamaño recibe una advertencia con un botón para arreglarlo.
+- **Paleta compartida**: la misma paleta de Colores en Sprites. Una paleta fija también se aplica a tus tiles.
+- **Vista previa a escala real**: tus sprites sobre una fila de tus tiles. Si aquí se ve bien, se verá bien en tu juego.
+- **Descargar el kit para …**: un ZIP por motor con `sprites/`, `tiles/` y un `README.txt` que lista todos los tamaños y la paleta.
 
 ## Problemas frecuentes
 
 | Problema | Solución |
 |---|---|
-| El número de frames no es el correcto | Usa *Cuadrícula* con las filas × columnas de la imagen, o sube la tolerancia si unas manchas del fondo se convirtieron en frames. |
-| Desaparece una parte del personaje | La quitó el borrado del fondo: baja la tolerancia o genera con la clave verde. En los fondos blancos se usa *flood* (solo desde los bordes) para que la ropa blanca sobreviva. |
-| «Se recortó contenido» | Usa una celda más grande o *Auto*. Los personajes anchos (animales, slimes) necesitan celdas más anchas. |
-| «Reducción grande» | La IA dibujó el personaje mucho más grande que tu altura objetivo. Pídele un personaje más pequeño (por ejemplo, de 32 píxeles de arte) y saldrá más nítido. |
-| «No se encontró cuadrícula de píxeles» | La imagen no es pixel art (usa *Cartoon*) o ya está a su tamaño nativo. |
-| Los frames se repiten o el personaje cambia | Eso viene de la IA: vuelve a generar adjuntando una imagen de referencia del personaje. |
+| Se detectó con el tipo equivocado | Cambia **Tipo de imagen**: hoja de sprites o sprite único. |
+| El número de frames no es el correcto | Usa *Cuadrícula* con las filas × columnas de la imagen, sube la tolerancia si unas manchas del fondo se convirtieron en frames, o dibuja los recuadros con **Editar recuadros**. |
+| Desaparece una parte del personaje | La quitó el borrado del fondo: baja la tolerancia, o usa *Solo desde los bordes*. La próxima vez, genera con la clave verde. |
+| Un frame se corta en el borde del frame | Usa un tamaño de frame más grande o *Automático*, o un tamaño de sprite menor. |
+| Jugador y enemigo tienen tamaños distintos | Elige un tamaño de sprite común. |
+| «El sprite se reduce mucho» | La IA dibujó el personaje mucho más grande que tu tamaño de sprite: pídele uno más pequeño (de unos 32 píxeles de arte). |
+| «No se encontró una cuadrícula de píxeles clara» | La imagen no es pixel art (usa *Cartoon*) o está en su tamaño original. |
+| Los frames se repiten o el personaje cambia | La IA repitió una pose: **Quitar duplicados**, o genera de nuevo con una imagen de referencia. |
+| Los pies saltan entre frames | Empuja el frame en el editor de frames (`Mayús` + flechas). |
+| El personaje mira hacia el lado equivocado | **Crear versión espejo** en la animación. |
+| El pixel art se ve borroso en el motor | Filtro Nearest: *Default Texture Filter* (Godot), *Modo de escalado* (GDevelop), `texFilter: "nearest"` (Kaplay). |
+| Los sprites y los tiles no encajan | Fija el tamaño de tile del juego en la pestaña Kit y úsalo en tus tiles. |
+
+## Créditos
+
+Hecho por Alex Ojeda Copa, Lab TecnoSocial.
+
+La detección de la cuadrícula de píxeles usa [unfake.js](https://github.com/jenissimo/unfake.js), de Eugeniy Smirnov, con licencia MIT ([aviso de la licencia](https://github.com/jenissimo/unfake.js/blob/main/LICENSE)).
+
+align-sprites es software libre con licencia [GPL-3.0](https://github.com/alex-roc/align-sprites/blob/main/LICENSE).

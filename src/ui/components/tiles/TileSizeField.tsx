@@ -15,7 +15,7 @@ export function TileSizeField({ value, onChange }: { value: number; onChange: (n
             {p}
           </button>
         ))}
-        <NumberInput value={value} min={8} max={256} onChange={onChange} aria-label={`${t('tiles.tileSize')}, ${t('cell.custom')}`} className="num-sm" />
+        <NumberInput value={value} min={8} max={256} onChange={onChange} aria-label={`${t('tiles.tileSize')}, ${t('size.other')}`} className="num-sm" />
       </div>
       <small className="hint">{t('tiles.tileSizeHint')}</small>
     </div>

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { I18nProvider } from './i18n/index.ts';
 import { GuideTab } from './ui/components/guide/GuideTab.tsx';
 import { Footer } from './ui/components/layout/Footer.tsx';
+import { KitTab } from './ui/components/kit/KitTab.tsx';
 import { Header } from './ui/components/layout/Header.tsx';
 import { PromptsTab } from './ui/components/prompts/PromptsTab.tsx';
 import { SpritesTab } from './ui/components/sprites/SpritesTab.tsx';
@@ -25,6 +26,7 @@ function Pages() {
     <main className="page" id={`panel-${tab}`}>
       {tab === 'sprites' && <SpritesTab />}
       {tab === 'tiles' && <TilesTab />}
+      {tab === 'kit' && <KitTab />}
       {tab === 'ai' && <PromptsTab />}
       {tab === 'guide' && <GuideTab section={section} />}
     </main>

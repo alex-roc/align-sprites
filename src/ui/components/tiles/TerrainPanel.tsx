@@ -17,6 +17,7 @@ import { EmptyStage } from '../common/EmptyStage.tsx';
 import { ExportCard } from '../common/ExportCard.tsx';
 import { Check, Field, NumberInput, Segmented } from '../common/Field.tsx';
 import { RgbaCanvas } from '../common/RgbaCanvas.tsx';
+import { PaletteNote } from '../common/PaletteField.tsx';
 import { Fold, Section } from '../common/Section.tsx';
 import { StatusLine } from '../common/StatusLine.tsx';
 import { Warnings, type Fix } from '../common/Warnings.tsx';
@@ -141,6 +142,7 @@ function TerrainSettings({ onImage }: { onImage: (b: Blob, name: string) => void
             { value: 'cartoon', label: t('mode.cartoon') },
           ]}
         />
+        <PaletteNote mode={s.mode} />
       </Section>
 
       <Section title={t('tiles.tileSize')}>

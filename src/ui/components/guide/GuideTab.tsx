@@ -79,6 +79,10 @@ export function GuideTab({ section }: { section?: string }) {
           <Inline text={content.reference.text} />{' '}
           <a href={content.reference.href} target="_blank" rel="noopener noreferrer">{content.reference.link}</a>
         </p>
+        <footer className="guide-credits">
+          <h2>{content.credits.title}</h2>
+          {content.credits.lines.map((line, i) => <p key={i}><Inline text={line} /></p>)}
+        </footer>
       </article>
     </div>
   );

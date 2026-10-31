@@ -1,14 +1,15 @@
-// UI state shapes. Settings are split in GLOBAL (whole batch: mode, cell, height, colours) and PER ASSET
-// (background, segmentation, animations, relative size); see jobs.ts for how they map to SpriteJob.
-import type { AnchorXMethod, ArtMode, BgOptions, ExportTarget, RGBA8, RGBAImage, SpriteResult, TileLayout, TileSetResult } from '../../core/types.ts';
+// UI state shapes. Settings are split in GLOBAL (whole batch: mode, sprite size, frame size, palette) and PER ASSET
+// (type, background, segmentation, animations, offsets, recolour, relative size); see jobs.ts for how they map to SpriteJob.
+import type { AnchorXMethod, ArtMode, BgOptions, ExportTarget, FrameOffset, FrameRegion, RGBA8, RGBAImage, SpriteKind, SpriteResult, TileLayout, TileSetResult } from '../../core/types.ts';
 import type { TileAtlasResult } from '../../core/tiles/index.ts';
 import type { TileGridInfo } from '../../worker/api.ts';
 import type { PromptOptions, TilePromptOptions } from '../../core/prompts/index.ts';
 
-export type StageView = 'animation' | 'sheet' | 'original';
-export type AssetKind = 'sheet' | 'single';
+/** 'all' (every image side by side) only exists with 2+ images; 'sheet' (final sheet) only for sprite sheets. */
+export type StageView = 'all' | 'animation' | 'sheet' | 'original';
+export type AssetKind = SpriteKind;
 export type BgStrategy = 'auto' | 'global' | 'flood';
-export type SegMode = 'auto' | 'grid' | 'single';
+export type SegMode = 'auto' | 'grid';
 
 export interface AnimDraft {
   id: string;
@@ -17,6 +18,8 @@ export interface AnimDraft {
   frames: string;
   fps: number;
   loop: boolean;
+  /** Mirror every frame (left-facing copy of a right-facing animation). */
+  flipX: boolean;
 }
 
 export interface BgSettings {
@@ -39,31 +42,58 @@ export interface AutoBg {
   strategy: BgOptions['strategy'];
 }
 
+/** What the upload inspection found (shown as "Detected: …"); null when the inspection failed. */
+export interface Detected {
+  kind: AssetKind;
+  frameCount: number;
+  /** Tallest frame in source px (a hint for "sprites have different heights"). */
+  sourceHeight: number;
+}
+
 export interface Asset {
   id: string;
   fileName: string;
   /** Editable; becomes the export name. */
   name: string;
+  /** Sprite sheet or single sprite: set from the inspection on upload, correctable by hand. */
   kind: AssetKind;
   image: RGBAImage;
   bg: BgSettings;
   seg: SegSettings;
+  /** Hand-drawn frame boxes (segmentation 'manual'); null = automatic or grid. */
+  regions: FrameRegion[] | null;
   anims: AnimDraft[];
+  /** Manual nudges per detected frame index, in output px. */
+  frameOffsets: Record<number, FrameOffset>;
+  /** Colour swaps '#rrggbb' → '#rrggbb' (palette variants). */
+  colorMap: Record<string, string>;
+  detected: Detected | null;
   /** Size multiplier relative to the batch height (boss = 1.5). */
   relative: number;
   autoBg: AutoBg | null;
 }
 
+/** 'reduce' = quantize to `maxColors` shared colours; 'preset' / 'image' = a fixed palette every pixel snaps to. */
+export type PaletteChoice =
+  | { kind: 'original' }
+  | { kind: 'reduce' }
+  | { kind: 'preset'; id: string }
+  | { kind: 'image'; colors: RGBA8[]; from: string };
+
 export interface GlobalSettings {
   mode: ArtMode;
+  /** Frame size: automatic (smallest multiple of 32 that fits everything) or custom width × height. */
   cellAuto: boolean;
   cellW: number;
   cellH: number;
   padBottom: number;
-  /** Shared character height in output px; null = keep the native size. */
+  /** Shared sprite height in output px; null = keep the original size. */
   targetHeight: number | null;
-  /** Pixel mode: palette size, 0 = off. */
+  /** Palette size used by 'reduce'. */
   maxColors: number;
+  palette: PaletteChoice;
+  /** Tile size of the game (16/32/48/64): sprite heights are shown in tiles and the kit is checked against it. */
+  gameTile: number;
   anchorX: AnchorXMethod;
 }
 
@@ -169,7 +199,7 @@ export interface AppState {
 }
 
 export type Action =
-  | { type: 'asset/add'; assets: Asset[] }
+  | { type: 'asset/add'; assets: Asset[]; select?: boolean }
   | { type: 'asset/remove'; id: string }
   | { type: 'asset/patch'; id: string; patch: Partial<Omit<Asset, 'id' | 'image'>> }
   | { type: 'asset/select'; id: string }

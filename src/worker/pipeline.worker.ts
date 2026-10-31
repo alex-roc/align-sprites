@@ -2,13 +2,17 @@
 import * as Comlink from 'comlink';
 import { detectBackground } from '../core/bg/index.ts';
 import { buildExport, encodePng, slug, zipFiles } from '../core/export/index.ts';
+import { findDuplicateFrames } from '../core/frames/index.ts';
+import { inspectImage } from '../core/inspect/index.ts';
+import { buildKitExport } from '../core/kit/index.ts';
+import { paletteFromImage } from '../core/palette/index.ts';
 import { runBatch } from '../core/pipeline/index.ts';
 import { unfakeFromUrl, type UnfakeCore } from '../core/pixel/unfake.ts';
 import {
   composeTransitions, detectTileGrid, gridCutsFor, normalizeTileAtlas, prepareTerrain, renderTerrainMap, seamScore, terrainExport,
   tileAtlasGodot, tileAtlasTiled, type TerrainKit,
 } from '../core/tiles/index.ts';
-import type { ExportFile, RGBAImage, SpriteResult } from '../core/types.ts';
+import type { ExportFile, RGBA8, RGBAImage, SpriteResult } from '../core/types.ts';
 import wasmUrl from '../vendor/unfake/unfake_wasm_bg.wasm?url';
 import type { PipelineApi, TileGridInfo } from './api.ts';
 
@@ -40,6 +44,7 @@ interface TerrainParams {
   tileSize: number;
   style: Parameters<PipelineApi['composeTerrain']>[4];
   mode: Parameters<PipelineApi['composeTerrain']>[5];
+  palette: RGBA8[] | undefined;
 }
 let terrainParams: TerrainParams | null = null;
 let terrainKit: TerrainKit | null = null;
@@ -62,9 +67,23 @@ const api: PipelineApi = {
     return detectBackground(img);
   },
 
-  async normalizeTiles(img, o) {
+  async inspect(img, mode) {
+    return inspectImage(img, mode);
+  },
+  async paletteFromImage(img, max) {
+    return paletteFromImage(await getCore(), img, max);
+  },
+  async findDuplicates(frames) {
+    return findDuplicateFrames(frames);
+  },
+  async buildKitZip(kit, target) {
+    const zip = zipFiles(buildKitExport(kit, target));
+    return Comlink.transfer(zip, [zip.buffer as ArrayBuffer]);
+  },
+
+  async normalizeTiles(img, o, palette) {
     const core = await coreFor(o.mode);
-    const result = normalizeTileAtlas(core, img, o);
+    const result = normalizeTileAtlas(core, img, palette?.length ? { ...o, palette } : o);
     let grid: TileGridInfo;
     if (o.cols && o.rows) {
       const cuts = gridCutsFor(img, o.cols, o.rows);
@@ -86,12 +105,12 @@ const api: PipelineApi = {
     const zip = zipFiles(files);
     return Comlink.transfer(zip, [zip.buffer as ArrayBuffer]);
   },
-  async composeTerrain(a, b, tileSize, layout, style, mode) {
+  async composeTerrain(a, b, tileSize, layout, style, mode, palette) {
     const core = await coreFor(mode);
-    terrainParams = { a, b, tileSize, style, mode };
+    terrainParams = { a, b, tileSize, style, mode, palette };
     terrainKit = null;
-    const set = composeTransitions(core, a, b, tileSize, layout, style, mode);
-    const kit = prepareTerrain(core, a, b, tileSize, style, mode);
+    const set = composeTransitions(core, a, b, tileSize, layout, style, mode, { palette });
+    const kit = prepareTerrain(core, a, b, tileSize, style, mode, palette);
     terrainKit = kit;
     // The kit keeps its tiles for the preview, so they travel as copies; only the atlas is transferred.
     const copy = (img: RGBAImage): RGBAImage => ({ ...img, data: img.data.slice() });
@@ -106,7 +125,7 @@ const api: PipelineApi = {
     if (!terrainParams) throw new Error('No terrain composed yet');
     if (!terrainKit) {
       const p = terrainParams;
-      terrainKit = prepareTerrain(await coreFor(p.mode), p.a, p.b, p.tileSize, p.style, p.mode);
+      terrainKit = prepareTerrain(await coreFor(p.mode), p.a, p.b, p.tileSize, p.style, p.mode, p.palette);
     }
     const img = renderTerrainMap(terrainKit, cells, w, h);
     return Comlink.transfer(img, [img.data.buffer as ArrayBuffer]);

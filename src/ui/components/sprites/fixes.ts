@@ -25,11 +25,11 @@ export function useSpriteFixes(asset: Asset, result: SpriteResult): (w: Warning)
         return { label: t('fix.cellTo', { w: cw, h: ch }), onClick: () => patchG({ cellAuto: false, cellW: cw, cellH: ch }) };
       }
       case 'warn.frameCount':
-        return { label: t('fix.grid'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { seg: { ...asset.seg, mode: 'grid' } } }) };
+        return { label: t('fix.grid'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { seg: { ...asset.seg, mode: 'grid' }, regions: null } }) };
       case 'warn.noFrames':
         return { label: t('fix.lowerTolerance'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { bg: { ...asset.bg, tolerance: Math.min(60, asset.bg.tolerance + 12) } } }) };
       case 'warn.animRange':
-        return { label: t('fix.resetAnims'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { anims: [{ ...asset.anims[0], name: 'default', frames: '', fps: 8, loop: true }] } }) };
+        return { label: t('fix.resetAnims'), onClick: () => dispatch({ type: 'asset/patch', id: asset.id, patch: { anims: [{ ...asset.anims[0], name: 'default', frames: '', fps: 8, loop: true, flipX: false }] } }) };
       case 'warn.bigDownscale':
         return { label: t('fix.learnMore'), href: hrefFor('guide', 'generate') };
       case 'warn.noGrid':

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { composeTerrain, normalizeTiles, renderTerrainPreview } from '../../worker/client.ts';
 import { randomMap } from '../lib/map.ts';
 import { useApp } from './context.ts';
+import { fixedPalette } from './jobs.ts';
 import { buildAtlasOptions, buildEdgeStyle } from './tilesJobs.ts';
 import type { TerrainState, TileSheetState } from './types.ts';
 
@@ -15,10 +16,14 @@ export function useSheetProcessor() {
   const { state, dispatch } = useApp();
   const s = state.tiles.sheet;
   const options = useMemo(() => buildAtlasOptions(s), [s]);
-  const sig = useMemo(() => (s.source ? JSON.stringify({ id: s.source.id, ...options }) : null), [s.source, options]);
+  // The kit's shared palette (when fixed) also applies to the tiles.
+  const palette = useMemo(() => fixedPalette(state.global, s.mode), [state.global, s.mode]);
+  const sig = useMemo(() => (s.source ? JSON.stringify({ id: s.source.id, ...options, palette }) : null), [s.source, options, palette]);
   const latest = useRef(s);
+  const paletteRef = useRef(palette);
   useEffect(() => {
     latest.current = s;
+    paletteRef.current = palette;
   });
   const runId = useRef(0);
 
@@ -30,7 +35,7 @@ export function useSheetProcessor() {
     const patchRun = (p: Partial<TileSheetState['run']>) => dispatch({ type: 'tiles/sheet', patch: { run: { ...latest.current.run, ...p } } });
     const timer = setTimeout(() => {
       patchRun({ status: 'running', error: null });
-      normalizeTiles(src.image, options).then(
+      normalizeTiles(src.image, options, paletteRef.current).then(
         (out) => {
           if (id === runId.current) patchRun({ status: 'ready', sig, result: out.result, grid: out.grid, error: null });
         },
@@ -53,14 +58,17 @@ export function useTerrainProcessor() {
   const s = state.tiles.terrain;
   const b = s.bTransparent ? null : s.b;
   const ready = !!s.a && (s.bTransparent || !!s.b);
+  const palette = useMemo(() => fixedPalette(state.global, s.mode), [state.global, s.mode]);
   const sig = useMemo(
-    () => (ready ? JSON.stringify({ a: s.a!.id, b: b?.id ?? null, T: s.tileSize, layout: s.layout, style: s.style, mode: s.mode }) : null),
+    () => (ready ? JSON.stringify({ a: s.a!.id, b: b?.id ?? null, T: s.tileSize, layout: s.layout, style: s.style, mode: s.mode, palette }) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ready, s.a, b, s.tileSize, s.layout, s.style, s.mode],
+    [ready, s.a, b, s.tileSize, s.layout, s.style, s.mode, palette],
   );
   const latest = useRef(s);
+  const paletteRef = useRef(palette);
   useEffect(() => {
     latest.current = s;
+    paletteRef.current = palette;
   });
   const runId = useRef(0);
   const previewSeed = useRef<number | null>(null);
@@ -78,7 +86,7 @@ export function useTerrainProcessor() {
       patchRun({ status: 'running', error: null });
       try {
         const style = buildEdgeStyle(cur.style, cur.mode);
-        const out = await composeTerrain(a.image, other?.image ?? null, cur.tileSize, cur.layout, style, cur.mode);
+        const out = await composeTerrain(a.image, other?.image ?? null, cur.tileSize, cur.layout, style, cur.mode, paletteRef.current);
         if (id !== runId.current) return;
         const seed = latest.current.mapSeed;
         const map = randomMap(seed, MAP_W, MAP_H);

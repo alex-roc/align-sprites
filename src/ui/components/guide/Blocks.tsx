@@ -9,7 +9,7 @@ import { IMAGE_SIZES } from './assets.ts';
 import { assetUrl } from './url.ts';
 import { domId } from './nav.ts';
 
-const ACTION_HREF = { sprites: '#/sprites', ai: '#/ai', tiles: '#/tiles' } as const;
+const ACTION_HREF = { sprites: '#/sprites', ai: '#/ai', tiles: '#/tiles', kit: '#/kit' } as const;
 
 function Figure({ item }: { item: FigureItem }) {
   const size = IMAGE_SIZES[item.src];

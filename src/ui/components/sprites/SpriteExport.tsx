@@ -24,15 +24,16 @@ export function SpriteExport() {
   const running = state.run.status === 'running';
   const engine = state.exportEngine;
   const targets: ExportTarget[] = state.exportAll ? ENGINES : [engine];
+  const batch = ready.length > 1;
+  const label = t(`engine.${engine}`);
 
-  const zip = async () => {
+  // The export name follows the (possibly renamed) asset without re-running the pipeline.
+  const named = (ids: string[]): SpriteResult[] => ids.map((id) => ({ ...state.run.results[id], name: names.get(id) ?? '' }));
+  const zip = async (ids: string[], base: string) => {
     setBusy(true);
     setError(null);
     try {
-      // The export name follows the (possibly renamed) asset without re-running the pipeline.
-      const results: SpriteResult[] = ready.map((a) => ({ ...state.run.results[a.id], name: names.get(a.id) ?? a.name }));
-      const bytes = await buildZip(results, targets);
-      const base = ready.length === 1 ? (names.get(ready[0].id) ?? 'align-sprites') : 'align-sprites';
+      const bytes = await buildZip(named(ids), targets);
       downloadBlob(new Blob([bytes as BlobPart], { type: 'application/zip' }), `${base}${state.exportAll ? '' : `-${engine}`}.zip`);
     } catch (e) {
       setError(t('error.export', { message: e instanceof Error ? e.message : String(e) }));
@@ -49,25 +50,41 @@ export function SpriteExport() {
     }
   };
 
-  const label = t(`engine.${engine}`);
+  const slugName = slug(names.get(selected?.id ?? '') ?? selected?.name ?? 'sprite');
+  // A single sprite has no animations: its steps talk about one image.
+  const stepKey = (n: number) => (selected?.kind === 'single' ? `engine.${engine}.single.s${n}` : `engine.${engine}.s${n}`) as MessageKey;
+  const count = ready.length;
+  const activeName = selected?.name ?? '';
+
   return (
     <ExportCard<ExportTarget>
       name="engine"
       options={ENGINES.map((e) => ({ value: e, label: t(`engine.${e}`) }))}
       value={engine}
       onChange={(exportEngine) => dispatch({ type: 'export', patch: { exportEngine } })}
-      steps={[1, 2, 3].map((n) => t(`engine.${engine}.s${n}` as MessageKey, { name: slug(names.get(selected?.id ?? '') ?? selected?.name ?? 'sprite') }))}
+      steps={[1, 2, 3].map((n) => t(stepKey(n), { name: slugName }))}
       guideHref={hrefFor('guide', GUIDE_SECTION[engine])}
       all={state.exportAll}
       onAll={(exportAll) => dispatch({ type: 'export', patch: { exportAll } })}
-      primaryLabel={state.exportAll ? t('export.downloadAll') : t('export.downloadFor', { engine: label })}
-      onPrimary={() => void zip()}
-      secondaryLabel={t('export.pngOnly')}
+      primaryLabel={
+        batch
+          ? state.exportAll ? t('export.downloadBatchAll', { count }) : t('export.downloadBatch', { count, engine: label })
+          : state.exportAll ? t('export.downloadAll') : t('export.downloadFor', { engine: label })
+      }
+      onPrimary={() => void zip(ready.map((a) => a.id), batch ? 'align-sprites' : (names.get(ready[0]?.id ?? '') ?? 'align-sprites'))}
+      secondaryLabel={batch ? t('export.pngOf', { name: activeName }) : t('export.pngOnly')}
       onSecondary={() => void png()}
+      extra={
+        batch && selectedResult ? (
+          <button type="button" className="btn" disabled={busy || running} onClick={() => void zip([selected!.id], names.get(selected!.id) ?? 'sprite')}>
+            {t('export.onlyActive', { name: activeName, engine: state.exportAll ? t('export.all') : label })}
+          </button>
+        ) : undefined
+      }
       busy={busy}
       disabled={running || !ready.length}
       error={error}
-      note={ready.length > 1 ? t('export.batchHint', { count: ready.length }) : undefined}
+      note={batch ? t('export.includes', { names: ready.map((a) => names.get(a.id) ?? a.name).join(', ') }) : undefined}
     />
   );
 }

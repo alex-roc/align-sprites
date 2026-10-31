@@ -4,6 +4,8 @@ Ideas agreed with Alex on 2026-10-31, in the suggested order. Pick them up from 
 
 ## 1. Fix by hand what the AI gets wrong (small effort, high impact)
 
+Done in the UI (v3): duplicate detection, frame editor (reorder, duplicate, remove, nudge, hand-drawn boxes), mirror per animation. Still open: 4-direction sets for top-down.
+
 - Detect duplicate or near-identical frames (e.g. the Codex fox repeats its bottom row) and offer to remove them.
 - Light frame editor: reorder, delete, duplicate, nudge a frame a few px when it jumps, adjust the detected rects by hand (`Segmentation.kind = 'manual'` already exists in the core).
 - Mirror to get the left-facing version; build 4-direction sets for top-down.
@@ -13,6 +15,8 @@ Ideas agreed with Alex on 2026-10-31, in the suggested order. Pick them up from 
 Like Sorceress Auto-Sprite: video models animate far more consistently than a grid of frames in one image. Upload an MP4/WebM, pick the looping range and the number of frames, then run the same pipeline (HTMLVideoElement seek or WebCodecs in the worker).
 
 ## 3. Coherent game kit (medium effort, high impact for the course)
+
+Done in the UI (v3): game tile size + sprite heights in tiles, shared palettes (presets, from an image) applied to sprites and tiles, colour variants, Kit tab with preview and per-engine download. Still open: custom palette editor, palette swaps in batch.
 
 - One shared scale for sprites and tiles (e.g. 32 px tiles, 48 px characters).
 - Shared palettes (PICO-8, Endesga 32, Sweetie 16, custom) applied to every asset; palette swaps for variants (enemies, teams).
