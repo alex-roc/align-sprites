@@ -65,10 +65,11 @@ You can also use only `<name>.tres` (a `SpriteFrames` resource) in your own `Ani
 
 ### GDevelop 5
 
-Unzip the ZIP **inside your GDevelop project folder** (e.g. in `sprites/`) and pick the images from there: picked from outside, GDevelop copies them and, when a file with that name exists, renames them and can repeat or mix frames. The ZIP has one folder per image with its cut frames (`<name>/<name>_<animation>_00.png`, `_01.png`…) and a `README.txt` with the origin and the fps.
+The ZIP has one folder per image with its cut frames (`<name>/<name>_<animation>_00.png`, `_01.png`…) and a `README.txt` with the origin and the fps.
 
 - **Frames**: create a **Sprite** object, add an animation, click *Add images* and select all the PNGs of that animation at once.
 - **Piskel spritesheet** (optional: tick *Also spritesheets for Piskel* before downloading): add an animation, open it with *Edit with Piskel*, then *Import*, pick `<name>/spritesheets/<name>_<animation>.png` and *Import as spritesheet* with your frame size.
+- **Tip when importing again**: GDevelop copies the images into the project folder, and deleting them in GDevelop leaves the files. Before importing again, also delete the old PNGs from that folder, or GDevelop renames the copies and can repeat or mix frames. (Another option: unzip inside the project and pick the images there.)
 
 Then set the time between frames to `1 / fps` and the loop. In *Edit points* (the Points editor), set the **Origin** point to the value in the README (the feet) for all frames. A **single sprite** is one PNG, `<name>/<name>.png`. Pixel art: in the project properties set the scale mode to *Nearest (no antialiasing)*. (Menu names follow GDevelop 5 as we last saw it; the README in the ZIP has the same steps.)
 
