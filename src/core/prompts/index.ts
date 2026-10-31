@@ -271,7 +271,9 @@ export function buildSpritePrompt(o: PromptOptions): string {
         : `Create ONE sprite sheet image of ${o.subject} for a "${o.action}" animation: ${frames} frames in a grid of ${cols} columns × ${rows} rows, exactly like the attached guide image.`,
     );
     if (o.withReference) {
-      L.push('Use the attached reference character exactly: same design, colors, proportions and outfit.');
+      L.push(
+        'Two images are attached: the guide (the grid on the flat key colour) and the character reference. Use the reference character exactly: same design, colors, proportions and outfit. Take only the character from it, not its background or size.',
+      );
     }
     L.push('', 'Layout:');
     if (!single) {
@@ -317,7 +319,9 @@ export function buildSpritePrompt(o: PromptOptions): string {
         : `Crea UNA sola imagen de hoja de sprites de ${o.subject} con la animación «${o.action}»: ${frames} cuadros en una cuadrícula de ${cols} columnas × ${rows} filas, exactamente como la imagen guía adjunta.`,
     );
     if (o.withReference) {
-      L.push('Usa exactamente el personaje de la referencia adjunta: mismo diseño, colores, proporciones y vestimenta.');
+      L.push(
+        'Se adjuntan dos imágenes: la guía (la cuadrícula sobre el color clave plano) y la referencia del personaje. Usa exactamente el personaje de la referencia adjunta: mismo diseño, colores, proporciones y vestimenta. Toma de ella solo el personaje, no su fondo ni su tamaño.',
+      );
     }
     L.push('', 'Disposición:');
     if (!single) {

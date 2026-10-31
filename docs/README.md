@@ -17,7 +17,7 @@ Open the **Make with AI** tab:
 
 1. Describe the character and the action (walk, run, idle, attack, jump…), the number of frames and columns.
 2. Copy the prompt and download the **guide image** (a magenta grid with a feet line).
-3. In Gemini or ChatGPT, paste the prompt and attach the guide. If you already have a good character, attach it too as a reference: generating the animation from one reference image is what keeps the character consistent.
+3. In Gemini or ChatGPT, paste the prompt and attach the guide. If you already have a good character, attach it too as a reference: generating the animation from one reference image is what keeps the character consistent. The AI tends to copy the detail level of the reference rather than the height you asked for; that is fine, you choose the final size in the tool.
 4. Download the result.
 
 Tips:
@@ -41,7 +41,7 @@ The settings follow the order you think in: art style, sprite size, frame size, 
 - **Animations**: name, frames such as `0-5` or `0,2,4-6`, FPS and loop. **Mirror** flips an animation, and **Create mirrored copy** adds the mirrored version as a new animation.
 - **Colours**: *Original colours*, a ready palette (PICO-8, Sweetie 16, Endesga 32, Game Boy), a palette *from an image*, or *Reduce to N colours*. The palette is shared by every image and by your tiles. Fixed palettes only work with pixel art.
 - **Colour variants**: click a colour to change it, then **Duplicate as colour variant** to keep both versions (enemies, teams).
-- **Background**: Auto (the most common border colour). *Everywhere (chroma key)* for magenta and green; *Only from the edges* for white backgrounds. Lower the tolerance if part of the character disappears.
+- **Background**: Auto (the most common border colour). *Everywhere (chroma key)* for magenta and green; *Only from the edges* for white backgrounds (it also clears enclosed pockets of flat white, like the gap between the feet). Lower the tolerance if part of the character disappears.
 
 ### Single sprites and sprite sheets
 
@@ -87,7 +87,7 @@ The **Tiles** tab has two tools.
 ### Tile sheet (clean up an AI tileset)
 
 1. Add one image with several tiles laid out in rows and columns (try *Andean mountains tileset*).
-2. Pick the **tile size** (16, 32, 48, 64 or your own). The grid is detected from the empty gaps between tiles; if the cut lines look wrong, untick *Detect columns and rows automatically* and type the columns and rows.
+2. Pick the **tile size** (8 to 128 px, or your own). The grid is detected from the empty gaps between tiles; if the cut lines look wrong, untick *Detect columns and rows automatically* and type the columns and rows.
 3. Every tile is resampled to exactly that size, the background is removed, and empty tiles are crossed out and left out of the tile set.
 4. Choose a format (Godot 4, Tiled / GDevelop, PNG) or all formats and download.
 

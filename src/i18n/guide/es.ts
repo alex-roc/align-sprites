@@ -75,7 +75,7 @@ export const guideEs: GuideContent = {
           items: [
             "**Pide toda la animación en una sola imagen.** Los frames generados uno por uno nunca coinciden: el personaje cambia de una imagen a otra.",
             "**Adjunta la imagen guía.** Es una cuadrícula magenta con una línea de pies. Le dice a la IA cuántos frames dibujar y dónde van los pies.",
-            "**Adjunta una referencia de tu personaje** si ya tienes uno bueno. Generar a partir de una imagen de referencia mantiene al personaje coherente.",
+            "**Adjunta una referencia de tu personaje** si ya tienes uno bueno. Generar a partir de una imagen de referencia mantiene al personaje coherente. La IA suele copiar el nivel de detalle de la referencia más que el alto pedido; no importa, el tamaño final lo eliges aquí.",
             "**Elige el color clave según el personaje.** Usa magenta, o verde si tu personaje es rosado, morado o magenta. El prompt le pide a la IA que no use el color clave en el personaje.",
             "**Pide un personaje pequeño**, de 16 a 48 píxeles de arte de alto. A la IA le cuesta menos mantener coherentes los personajes pequeños.",
           ],
@@ -229,7 +229,7 @@ export const guideEs: GuideContent = {
         { type: 'p', text: "Auto usa el color más común del borde de la imagen. Tú puedes elegir cómo se quita." },
         { type: 'ul', items: [
           "**En todas partes (croma)** quita todos los píxeles cercanos al color, también los huecos entre un brazo y el cuerpo. Úsalo con claves magenta y verde.",
-          "**Solo desde los bordes** quita solo el fondo que toca el borde. Úsalo con fondos blancos, para que la ropa blanca o crema se salve.",
+          "**Solo desde los bordes** quita solo el fondo que toca el borde. Úsalo con fondos blancos, para que la ropa blanca o crema se salve. En fondos claros también quita los bolsillos cerrados del mismo blanco plano, como el hueco entre los pies; los blancos pintados (ojos, dientes, brillos) tienen sombra y se quedan.",
         ] },
         { type: 'p', text: "Si desaparece una parte del personaje, baja la tolerancia. La próxima vez, usa la clave verde." },
         { type: 'h3', id: 'advanced', text: "Avanzado" },
@@ -421,7 +421,7 @@ onKeyRelease(["left", "right"], () => hero.play("idle"));
           type: 'steps',
           items: [
             "Agrega una imagen con varios tiles en filas y columnas. Prueba el ejemplo de las montañas andinas.",
-            "Elige el tamaño del tile: 16, 32, 48, 64 o el que quieras.",
+            "Elige el tamaño del tile: de 8 a 128 px, o el que quieras.",
             "Revisa la cuadrícula. La herramienta detecta columnas y filas por los huecos vacíos entre tiles. Si las líneas de corte se ven mal, desmarca **Detectar columnas y filas automáticamente** y escribe las columnas y filas.",
             "Elige un formato (Godot 4, Tiled / GDevelop o PNG) o todos los formatos, y descarga.",
           ],

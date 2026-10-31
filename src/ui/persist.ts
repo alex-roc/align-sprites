@@ -23,8 +23,8 @@ export function saveJSON(key: string, value: unknown): void {
 // ---------------------------------------------------------------- kit settings (sprite size, game tile, palette)
 /** Sprite heights offered as presets (multiples and divisors of 32, up to 128). */
 export const SPRITE_HEIGHTS = [8, 16, 32, 64, 96, 128];
-/** Tile sizes a game can use; the kit relates sprite heights to this one. */
-export const GAME_TILES = [16, 32, 48, 64];
+/** Tile sizes a game can use (same range as the sprite sizes, plus 48); the kit relates sprite heights to this one. */
+export const GAME_TILES = [8, 16, 32, 48, 64, 96, 128];
 export const DEFAULT_GAME_TILE = 32;
 
 const isByte = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 255;

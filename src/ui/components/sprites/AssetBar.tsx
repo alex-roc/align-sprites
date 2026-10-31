@@ -16,7 +16,8 @@ export function AssetBar({ onFiles }: { onFiles: (files: File[]) => void }) {
           const selected = a.id === state.selectedId;
           const frames = state.run.frameCounts[a.id] ?? a.detected?.frameCount;
           return (
-            <li key={a.id} className={cx('asset', selected && 'is-selected')}>
+            // The whole card selects (the thumb button is the keyboard target); only × removes.
+            <li key={a.id} className={cx('asset', selected && 'is-selected')} onClick={() => !selected && dispatch({ type: 'asset/select', id: a.id })}>
               <button type="button" className="asset-thumb" aria-pressed={selected} aria-label={t('assets.select', { name: a.name })} onClick={() => dispatch({ type: 'asset/select', id: a.id })}>
                 <RgbaCanvas image={a.image} pixelated={state.global.mode === 'pixel'} />
               </button>
@@ -31,7 +32,10 @@ export function AssetBar({ onFiles }: { onFiles: (files: File[]) => void }) {
                 />
                 <span className="asset-kind">{a.kind === 'single' ? t('kind.single') : frames ? t('assets.sheetFrames', { count: frames }) : t('kind.sheet')}</span>
               </div>
-              <button type="button" className="icon-btn icon-btn-sm" onClick={() => dispatch({ type: 'asset/remove', id: a.id })} aria-label={t('assets.remove', { name: a.name })} title={t('assets.removeTitle')}>
+              <button type="button" className="icon-btn icon-btn-sm" onClick={(e) => {
+                  e.stopPropagation();
+                  dispatch({ type: 'asset/remove', id: a.id });
+                }} aria-label={t('assets.remove', { name: a.name })} title={t('assets.removeTitle')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
             </li>

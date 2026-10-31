@@ -23,8 +23,8 @@ interface Case {
 const H = (px: number): ScalePolicy => ({ kind: 'targetHeight', px });
 const CASES: Case[] = [
   { file: 'real/Correr.png', mode: 'pixel', seg: { kind: 'auto', expected: 8 }, scale: H(48), cell: { w: 64, h: 64, padBottom: 0 }, maxColors: 32 },
-  { file: 'real/Personaje.png', mode: 'pixel', seg: { kind: 'auto', expected: 4 }, scale: H(48), cell: { w: 64, h: 64, padBottom: 0 }, maxColors: 32 },
-  { file: 'real/Personaje suelto.png', mode: 'pixel', seg: { kind: 'single' }, scale: H(48), cell: { w: 64, h: 64, padBottom: 0 }, maxColors: 32 },
+  { file: 'real/Personaje_model.png', mode: 'pixel', seg: { kind: 'auto', expected: 4 }, scale: H(48), cell: { w: 64, h: 64, padBottom: 0 }, maxColors: 32 },
+  { file: 'real/Personaje.png', mode: 'pixel', seg: { kind: 'single' }, scale: H(48), cell: { w: 64, h: 64, padBottom: 0 }, maxColors: 32 },
   { file: 'real/Chuspillo dorado en pixel art.png', mode: 'pixel', seg: { kind: 'single' }, scale: { kind: 'native' }, cell: 'auto' },
   { file: 'codex/knight-walk-pixel.png', mode: 'pixel', seg: { kind: 'grid', rows: 2, cols: 3 }, scale: H(32), cell: { w: 32, h: 32, padBottom: 0 }, maxColors: 16 },
   { file: 'codex/wizard-single-pixel-large.png', mode: 'pixel', seg: { kind: 'single' }, scale: H(64), cell: { w: 64, h: 64, padBottom: 0 }, maxColors: 16 },

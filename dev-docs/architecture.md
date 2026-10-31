@@ -33,8 +33,8 @@ tools/godot-validate/    headless Godot 4 project that loads and checks exported
 ## Sprite pipeline (runSpriteJob)
 
 1. **Background**: `detectBackground` takes the dominant border colour. `removeBackground`:
-   - strategy `global` for chroma keys (magenta/green): also empties enclosed holes (between arm and body);
-   - strategy `flood` (default for white/other colours): only bg regions connected to the border, so a cream tunic on a white background survives;
+   - strategy `global` for chroma keys (magenta/green): also empties enclosed holes (between arm and body). Lighter/darker shades of the key (same hue ±12°, saturation ≥ 0.75, value ≥ 0.6: `keyShade`) count as background, because the AI redraws the guide lines a bit darker (≈ΔE 19);
+   - strategy `flood` (default for white/other colours): bg regions connected to the border, so a cream tunic on a white background survives; on light backgrounds also enclosed *flat* pockets (≥ 75 % of their pixels within ΔE 3 of the bg, ≥ `minHole` px), e.g. the gap between the feet. Painted whites (eyes, teeth) are shaded (≤ 65 % flat, measured) and stay. Dark backgrounds skip this rule: pupils and outlines are flat dark too;
    - pixel mode → binary alpha; cartoon mode → soft alpha + despill.
 2. **Segmentation** on the alpha: `sliceGrid` (rows×cols, cut lines snapped to empty gutters), `findFrames` (connected components, merge, reading order), `single`, or manual rects.
 3. **Pixel grid** (pixel mode only): `detectGrid` ONCE on the whole sheet → period P. Each frame crop is downscaled with `gridForScale(crop, P)` (phase re-fitted per frame) + `downscaleGrid(..., 'dominant')`, then alpha binarized. The dominant vote also kills 1-px magenta/white halos.
@@ -74,7 +74,7 @@ Layout, tokens and type live in `dev-docs/design.md`. Summary of the code:
 - **Tiles processors** (`state/useTileProcessors.ts`): debounced like `Processor.tsx`; the run signature is stored so remounting the tab does not recompute.
 - **i18n**: `src/i18n/en.ts` is the source of keys; `es.ts` is typed against it and `tests/i18n.test.ts` checks keys and `{placeholders}`. Core warnings are translated with `tw()` (`warn.*`).
 - Theme: CSS `light-dark()` + `data-theme` on `<html>`. Fonts: Pixelify Sans (wordmark, frame counter) and Atkinson Hyperlegible Next (everything else), via `@fontsource`.
-- Examples for "Try an example" live in `public/examples/` (copies of `samples/`).
+- Examples for "Try an example" live in `public/examples/` (copies of `samples/`). Each example is a list of files loaded together as one batch (`ui/dev/examples.ts`): the character + idle + run example shows three images at one shared size.
 
 ## Conventions
 

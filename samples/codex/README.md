@@ -25,6 +25,24 @@ what the tool has to fix.
 | `grass-seamless-pixel.png` | seamless top-down grass, pixel art, 32×32 art px | 1254×1254 | Resolution is 64×64 art px (period 19.59, fractional), not 32×32. ~50k distinct colours (no limited palette, per-block noise). Seams are acceptable: right→left edge difference 30.0 vs 30.4 for any interior art-pixel boundary, bottom→top 22.2. |
 | `dirt-seamless-pixel.png` | seamless top-down dirt with pebbles, pixel art, 32×32 art px | 1254×1254 | Same 64×64 art-px fractional grid (19.59), ~18k colours. Seams fine (13.8 / 11.7 vs 16.8 interior). Pebbles are cut by the image edges; continuity across the wrap is plausible but not exact. |
 
+## Second batch: Alex's character (hero-idle, hero-run)
+
+- **Goal:** two animations of the course character (`reference/personaje.png` = `samples/real/Personaje.png`, the
+  single sprite on white) made by following the tool's own rules, to check the whole flow on a realistic case.
+  The originals are also in Alex's Drive (`…/Mis assets/Visuales/bien-generados/`).
+- **Inputs:** `manifest-hero.json` (exact manifest, Spanish prompts from `buildSpritePrompt` with `withReference`,
+  `artHeight` 64, view side, key magenta). References: the guide first, then the character.
+- **Date / cost:** 2026-10-31, one `batch` session, 13,513 codex text tokens (~6,800 per image) plus two
+  gpt-image-2 generations; 72 s.
+- **Result:** both look like the same character as the reference (outfit, colours, hair), strict profile.
+  Normalized at 128 px together with `Personaje.png`: 1 + 4 + 6 frames, reference height exactly 128 each,
+  one 128×160 cell, feet on the same row (test: `pipeline.test.ts`).
+
+| File | Request | Output | Defects |
+|---|---|---|---|
+| `hero-idle-pixel.png` | pixel art, «reposo», 4 frames, 2×2, ~64 art px, side view, #FF00FF, + reference | 1254×1254 | Pixel period 3.0 → ≈190 art px tall, not 64: the model copies the detail level of the reference image instead of the requested size (the tool warns "big downscale" at 128 px). Background `244..248, 3..7, 247..249` with noise. The idle motion is tiny: frame 4 ≈ frame 1 (flagged as duplicates, which is right for a loop). Characters sit left of the cell centre in the left column. |
+| `hero-run-pixel.png` | pixel art, «correr», 6 frames, 3×2, ~64 art px, side view, #FF00FF, + reference | 1536×1024 | **Redrew the guide's cell borders** as faint darker-magenta lines (`≈202,4,202`, ΔE≈19 from the key, just over the default tolerance 18): before the fix they survived background removal and became a 290-px-tall extra "frame". Fixed in `bg` (`keyShade`: a lighter/darker shade of a chroma key is background). Period 3.0 (≈150 art px). Bottom row close to the top row but not duplicated. Heights 117–129 px at 128 (crouch frames are legitimately shorter). |
+
 ## Prompts
 
 Each item's text is the output of `buildSpritePrompt` / `buildTilePrompt` (the wrapper only appends one

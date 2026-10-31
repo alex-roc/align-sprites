@@ -187,6 +187,8 @@ input:disabled, select:disabled { opacity: 0.5; }
 .assetbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .assetbar ul { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
 .asset { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 6px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-control); }
+.asset { cursor: pointer; }
+.asset:not(.is-selected):hover { border-color: var(--ink-soft); }
 .asset.is-selected { border-color: var(--action); box-shadow: 0 0 0 1px var(--action); }
 .asset-thumb { flex: none; width: 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-chip); overflow: hidden; background: var(--panel-2); cursor: pointer; display: grid; place-items: center; }
 .asset-thumb .rgba-canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; }

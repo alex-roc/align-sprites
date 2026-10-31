@@ -17,7 +17,7 @@ Abre la pestaña **Crear con IA**:
 
 1. Describe el personaje y la acción (caminar, correr, reposo, ataque, salto…), el número de frames y de columnas.
 2. Copia el prompt y descarga la **imagen guía**: una cuadrícula magenta con la línea de los pies.
-3. En Gemini o ChatGPT pega el prompt y adjunta la guía. Si ya tienes un buen personaje, adjúntalo también como referencia: lo que mantiene la coherencia del personaje es generar la animación a partir de una imagen de referencia.
+3. En Gemini o ChatGPT pega el prompt y adjunta la guía. Si ya tienes un buen personaje, adjúntalo también como referencia: lo que mantiene la coherencia del personaje es generar la animación a partir de una imagen de referencia. La IA suele copiar el nivel de detalle de la referencia más que el alto pedido; no importa, el tamaño final lo eliges en la herramienta.
 4. Descarga el resultado.
 
 Consejos:
@@ -41,7 +41,7 @@ Los ajustes siguen el orden en que piensas: estilo de arte, tamaño del sprite, 
 - **Animaciones**: nombre, frames como `0-5` o `0,2,4-6`, FPS y bucle. **Espejo** voltea una animación, y **Crear versión espejo** agrega la versión espejo como animación nueva.
 - **Colores**: *Colores originales*, una paleta lista (PICO-8, Sweetie 16, Endesga 32, Game Boy), una paleta *desde una imagen*, o *Reducir a N colores*. La paleta se comparte entre todas las imágenes y tus tiles. Las paletas fijas solo funcionan con pixel art.
 - **Variantes de color**: haz clic en un color para cambiarlo, luego **Duplicar como variante de color** para conservar las dos versiones (enemigos, equipos).
-- **Fondo**: Auto (el color más común del borde). *En todas partes (croma)* para magenta y verde; *Solo desde los bordes* para fondos blancos. Baja la tolerancia si desaparece una parte del personaje.
+- **Fondo**: Auto (el color más común del borde). *En todas partes (croma)* para magenta y verde; *Solo desde los bordes* para fondos blancos (también quita los huecos cerrados de blanco plano, como el que queda entre los pies). Baja la tolerancia si desaparece una parte del personaje.
 
 ### Sprites únicos y hojas de sprites
 
@@ -87,7 +87,7 @@ La pestaña **Tiles** tiene dos herramientas.
 ### Hoja de tiles (limpiar un tileset de IA)
 
 1. Agrega una imagen con varios tiles ordenados en filas y columnas (prueba *Tileset de montañas andinas*).
-2. Elige el **tamaño del tile** (16, 32, 48, 64 o el que quieras). La cuadrícula se detecta por los huecos vacíos entre tiles; si las líneas de corte se ven mal, desmarca *Detectar columnas y filas automáticamente* y escribe las columnas y filas.
+2. Elige el **tamaño del tile** (de 8 a 128 px, o el que quieras). La cuadrícula se detecta por los huecos vacíos entre tiles; si las líneas de corte se ven mal, desmarca *Detectar columnas y filas automáticamente* y escribe las columnas y filas.
 3. Cada tile se remuestrea a exactamente ese tamaño, se quita el fondo, y los tiles vacíos se tachan y quedan fuera del tileset.
 4. Elige un formato (Godot 4, Tiled / GDevelop, PNG) o todos los formatos y descarga.
 

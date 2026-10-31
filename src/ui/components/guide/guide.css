@@ -236,7 +236,7 @@
   list-style: none;
   counter-reset: flow;
 }
-.g-diagram li {
+.g-diagram ol > li {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--line, #dcd9e8);
@@ -244,7 +244,7 @@
   background: var(--panel, #fff);
   counter-increment: flow;
 }
-.g-diagram li::before {
+.g-diagram ol > li::before {
   content: counter(flow);
   position: absolute;
   top: 8px;
@@ -262,7 +262,7 @@
   text-align: center;
 }
 .g-diagram svg { display: block; width: 100%; height: auto; }
-.g-diagram li > div { padding: 12px 14px 14px; }
+.g-diagram ol > li > div { padding: 12px 14px 14px; }
 .g-diagram strong { display: block; margin-bottom: 4px; }
 .g-diagram p { margin: 0; color: var(--ink-soft, #5f5a78); font-size: 15px; line-height: 1.5; }
 .g-legend { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 15px; }

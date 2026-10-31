@@ -73,6 +73,7 @@ export function removeBackground(img: RGBAImage, o: BgOptions, mode: ArtMode): R
 
   // Per-pixel passability: already-transparent pixels are background by definition.
   const dist = distanceTo(bg);
+  const shade = o.strategy === 'global' ? keyShade(bg) : null;
   const dE = new Float32Array(W * H);
   const cand = new Uint8Array(W * H);
   for (let p = 0, i = 0; p < W * H; p++, i += 4) {
@@ -81,12 +82,17 @@ export function removeBackground(img: RGBAImage, o: BgOptions, mode: ArtMode): R
       cand[p] = 1;
       continue;
     }
-    const d = dist(data[i], data[i + 1], data[i + 2]);
+    let d = dist(data[i], data[i + 1], data[i + 2]);
+    // A lighter or darker shade of a chroma key (guide lines the AI redrew, shaded key) is still the key.
+    if (shade && d > o.tolerance && shade(data[i], data[i + 1], data[i + 2])) d = 0;
     dE[p] = d;
     cand[p] = soft ? (d < limit ? 1 : 0) : d <= limit ? 1 : 0;
   }
 
-  const zone = o.strategy === 'global' ? cand : floodZone(cand, W, H, o.strategy === 'flood+holes' ? (o.minHole ?? 16) : 0);
+  // Flat pockets of background only on light backgrounds: on dark ones, pupils and outlines are flat dark too.
+  const light = 0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2] >= LIGHT_BG;
+  const flat = light ? { dE, minSize: o.minHole ?? 16 } : undefined;
+  const zone = o.strategy === 'global' ? cand : floodZone(cand, W, H, o.strategy === 'flood+holes' ? (o.minHole ?? 16) : 0, flat);
   if (mode === 'pixel') peelHalo(data, zone, dE, W, H, bg, o.tolerance);
 
   for (let p = 0, i = 0; p < W * H; p++, i += 4) {
@@ -215,11 +221,21 @@ function unmixWithForeground(
   return true;
 }
 
+/** Luma from which a background counts as light (white, light grey, pastel) for the flat-pocket rule. */
+const LIGHT_BG = 200;
+/** ΔE under which a pixel is "the same flat colour" as the background (the AI paints the bg flat). */
+const FLAT_DE = 3;
+/** Share of flat pixels that makes an enclosed region a pocket of background (measured: bg pockets ≈0.87, painted whites ≤0.65). */
+const FLAT_SHARE = 0.75;
+
 /**
- * 4-connected flood over `cand` seeded from every border pixel. With minHole > 0, interior candidate
- * regions (not reached from the border) of area >= minHole are added too.
+ * 4-connected flood over `cand` seeded from every border pixel. Interior candidate regions (not reached from the
+ * border) are added when they are at least `minHole` px (any colour within tolerance: 'flood+holes'), or when they
+ * are flat background (`flat`): at least FLAT_SHARE of their pixels within FLAT_DE of the bg and `flat.minSize` px.
+ * The second rule clears the gap between the legs of a character on white, while painted whites (eyes, teeth,
+ * highlights) are shaded and stay.
  */
-function floodZone(cand: Uint8Array, W: number, H: number, minHole: number): Uint8Array {
+function floodZone(cand: Uint8Array, W: number, H: number, minHole: number, flat?: { dE: Float32Array; minSize: number }): Uint8Array {
   const zone = new Uint8Array(W * H);
   const queue = new Int32Array(W * H);
   // Grows the already-enqueued seeds (queue[0..tail0)) over `cand`; returns the final count (region = queue[0..n)).
@@ -253,18 +269,58 @@ function floodZone(cand: Uint8Array, W: number, H: number, minHole: number): Uin
   }
   run(tail, zone);
 
-  if (minHole > 0) {
-    // Label interior candidate regions; keep those large enough. `seen` marks visited pixels.
+  if (minHole > 0 || flat) {
+    // Label interior candidate regions; keep the large ones and the flat background pockets. `seen` marks visited pixels.
     const seen = new Uint8Array(W * H);
     for (let p = 0; p < W * H; p++) {
       if (!cand[p] || zone[p] || seen[p]) continue;
       seen[p] = 1;
       queue[0] = p;
       const size = run(1, seen);
-      if (size >= minHole) for (let j = 0; j < size; j++) zone[queue[j]] = 1;
+      let keep = minHole > 0 && size >= minHole;
+      if (!keep && flat && size >= flat.minSize) {
+        let n = 0;
+        for (let j = 0; j < size; j++) if (flat.dE[queue[j]] <= FLAT_DE) n++;
+        keep = n >= size * FLAT_SHARE;
+      }
+      if (keep) for (let j = 0; j < size; j++) zone[queue[j]] = 1;
     }
   }
   return zone;
+}
+
+/** HSV hue (degrees), saturation and value of an sRGB colour. */
+function hsv(r: number, g: number, b: number): [number, number, number] {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+  let h = 0;
+  if (delta > 0) {
+    if (max === r) h = 60 * (((g - b) / delta + 6) % 6);
+    else if (max === g) h = 60 * ((b - r) / delta + 2);
+    else h = 60 * ((r - g) / delta + 4);
+  }
+  return [h, max === 0 ? 0 : delta / max, max / 255];
+}
+
+/** Hue window (degrees), minimum saturation and value of a pixel that counts as a shade of the chroma key. */
+const SHADE_HUE = 12;
+const SHADE_SAT = 0.75;
+const SHADE_VAL = 0.6;
+
+/**
+ * For a saturated chroma key (magenta, green…), a test "is this pixel a lighter or darker shade of the key?":
+ * same hue (±SHADE_HUE), strongly saturated and not too dark. ΔE alone misses these: the guide lines the AI
+ * redraws come out ≈ ΔE 19 from the key (e.g. 202,4,202 on 248,3,249), only because they are darker. The
+ * prompt forbids the key hue on the character, and darker blends (outline + key) stay below SHADE_VAL.
+ * Returns null for non-chroma backgrounds (white, grey, earth tones).
+ */
+export function keyShade(bg: RGBA8): ((r: number, g: number, b: number) => boolean) | null {
+  const [h0, s0, v0] = hsv(bg[0], bg[1], bg[2]);
+  if (s0 < 0.7 || v0 < 0.3) return null;
+  return (r, g, b) => {
+    const [h, sat, v] = hsv(r, g, b);
+    const dh = Math.abs(h - h0);
+    return Math.min(dh, 360 - dh) <= SHADE_HUE && sat >= SHADE_SAT && v >= SHADE_VAL;
+  };
 }
 
 /**

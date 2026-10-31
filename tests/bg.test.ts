@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { decode } from 'fast-png';
 import { describe, expect, it } from 'vitest';
-import { autoBgOptions, chooseStrategy, detectBackground, removeBackground, DEFAULT_BG, DEFAULT_BG_CARTOON } from '../src/core/bg/index.ts';
+import { autoBgOptions, chooseStrategy, detectBackground, keyShade, removeBackground, DEFAULT_BG, DEFAULT_BG_CARTOON } from '../src/core/bg/index.ts';
 import { rgbDistance } from '../src/core/color.ts';
 import { createImage, getPixel, setPixel } from '../src/core/image.ts';
-import type { BgOptions, RGBAImage } from '../src/core/types.ts';
+import type { RGBAImage } from '../src/core/types.ts';
 import { MAGENTA, makeCartoonSheet, makeCharacterFrames, makeSheet } from './fixtures/synth.ts';
-import { debugPng } from './helpers.ts';
+import { debugPng, loadPng } from './helpers.ts';
 
 /** Decode a PNG from samples/real into straight RGBA8 (handles gray / RGB / 16-bit). */
 function decodePng(name: string): RGBAImage {
@@ -28,7 +28,7 @@ function decodePng(name: string): RGBAImage {
 const sameBytes = (a: Uint8ClampedArray, b: Uint8ClampedArray) => Buffer.from(a.buffer, a.byteOffset, a.length).equals(Buffer.from(b.buffer, b.byteOffset, b.length));
 const alphaAt = (img: RGBAImage, x: number, y: number) => img.data[(y * img.width + x) * 4 + 3];
 
-// Tunic skirt of each of the 4 characters in Personaje.png (cream ~(254,230,185), only ΔE~12 from the white bg).
+// Tunic skirt of each of the 4 characters in Personaje_model.png (cream ~(254,230,185), only ΔE~12 from the white bg).
 const TORSO_X = [0.166, 0.4, 0.606, 0.852];
 const TORSO_Y = 0.6;
 // White sliver enclosed between the legs of the side-view character: a real "hole" of the bg.
@@ -85,10 +85,10 @@ describe('removeBackground (synthetic)', () => {
     debugPng('bg-synth-pixel', out);
   });
 
-  it('flood+holes empties an enclosed hole but flood keeps it', () => {
+  it('flood+holes empties an enclosed shaded near-white hole but flood keeps it (painted, not flat bg)', () => {
     const img = createImage(40, 40, [255, 255, 255, 255]);
     for (let y = 5; y < 35; y++) for (let x = 5; x < 35; x++) setPixel(img, x, y, [30, 30, 30, 255]);
-    for (let y = 15; y < 25; y++) for (let x = 15; x < 25; x++) setPixel(img, x, y, [255, 255, 255, 255]);
+    for (let y = 15; y < 25; y++) for (let x = 15; x < 25; x++) setPixel(img, x, y, (x + y) % 2 ? [255, 255, 255, 255] : [236, 236, 236, 255]);
     const base = { color: 'auto', tolerance: 18, minHole: 16 } as const;
     const flood = removeBackground(img, { ...base, strategy: 'flood' }, 'pixel');
     const holes = removeBackground(img, { ...base, strategy: 'flood+holes' }, 'pixel');
@@ -138,8 +138,8 @@ describe('removeBackground (synthetic)', () => {
 });
 
 describe('removeBackground (real assets)', () => {
-  it('Personaje.png: white bg → flood; the cream tunic survives', () => {
-    const img = decodePng('Personaje.png');
+  it('Personaje_model.png: white bg → flood; the cream tunic survives', () => {
+    const img = decodePng('Personaje_model.png');
     const det = detectBackground(img);
     expect(rgbDistance(det.color, [255, 255, 255, 255])).toBeLessThan(8);
     const o = autoBgOptions(img, 'cartoon');
@@ -158,15 +158,56 @@ describe('removeBackground (real assets)', () => {
     }
   });
 
-  it('Personaje.png: flood+holes also clears the enclosed sliver and keeps the tunic', () => {
-    const img = decodePng('Personaje.png');
-    const o: BgOptions = { ...autoBgOptions(img, 'pixel'), strategy: 'flood+holes' };
-    const flood = removeBackground(img, { ...o, strategy: 'flood' }, 'pixel');
-    const holes = removeBackground(img, o, 'pixel');
+  it('Personaje_model.png: flood clears the enclosed flat sliver between the legs and keeps the tunic', () => {
+    const img = decodePng('Personaje_model.png');
+    const o = autoBgOptions(img, 'pixel');
     const hx = Math.round(img.width * HOLE.x), hy = Math.round(img.height * HOLE.y);
-    expect(alphaAt(flood, hx, hy)).toBe(255);
-    expect(alphaAt(holes, hx, hy)).toBe(0);
-    for (const fx of TORSO_X) expect(alphaAt(holes, Math.round(img.width * fx), Math.round(img.height * TORSO_Y))).toBe(255);
+    for (const strategy of ['flood', 'flood+holes'] as const) {
+      const out = removeBackground(img, { ...o, strategy }, 'pixel');
+      expect(alphaAt(out, hx, hy)).toBe(0);
+      for (const fx of TORSO_X) expect(alphaAt(out, Math.round(img.width * fx), Math.round(img.height * TORSO_Y))).toBe(255);
+    }
+  });
+
+  it('Personaje.png: the white gap between the feet goes, the painted eye white and teeth stay', () => {
+    const img = decodePng('Personaje.png');
+    for (const mode of ['pixel', 'cartoon'] as const) {
+      const out = removeBackground(img, autoBgOptions(img, mode), mode);
+      debugPng('bg-personaje-single-' + mode, out);
+      for (const [x, y] of [[537, 1250], [537, 1300], [530, 1200]]) expect(alphaAt(out, x, y)).toBe(0); // between the feet
+      for (const [x, y] of [[648, 399], [645, 395], [671, 470]]) expect(alphaAt(out, x, y)).toBe(255); // eye white, teeth
+    }
+  });
+
+  it('flat pockets are only cleared on light backgrounds (a dark key keeps flat dark pupils)', () => {
+    const img = createImage(40, 40, [0, 0, 0, 255]);
+    for (let y = 5; y < 35; y++) for (let x = 5; x < 35; x++) setPixel(img, x, y, [200, 120, 60, 255]);
+    for (let y = 15; y < 25; y++) for (let x = 15; x < 25; x++) setPixel(img, x, y, [0, 0, 0, 255]);
+    const out = removeBackground(img, { ...DEFAULT_BG, color: [0, 0, 0, 255], strategy: 'flood' }, 'pixel');
+    expect(alphaAt(out, 0, 0)).toBe(0);
+    expect(alphaAt(out, 20, 20)).toBe(255);
+    const white = createImage(40, 40, [255, 255, 255, 255]);
+    for (let y = 5; y < 35; y++) for (let x = 5; x < 35; x++) setPixel(white, x, y, [200, 120, 60, 255]);
+    for (let y = 15; y < 25; y++) for (let x = 15; x < 25; x++) setPixel(white, x, y, [255, 255, 255, 255]);
+    const outW = removeBackground(white, { ...DEFAULT_BG, color: [255, 255, 255, 255], strategy: 'flood' }, 'pixel');
+    expect(alphaAt(outW, 20, 20)).toBe(0);
+  });
+
+  it('codex hero run: the guide lines the AI redrew in a darker magenta (ΔE≈19) are removed too', () => {
+    const img = loadPng('samples/codex/hero-run-pixel.png');
+    const o = autoBgOptions(img, 'pixel');
+    expect(o.strategy).toBe('global');
+    for (const mode of ['pixel', 'cartoon'] as const) {
+      const out = removeBackground(img, autoBgOptions(img, mode), mode);
+      for (const [x, y] of [[511, 300], [512, 700], [300, 512]]) expect(alphaAt(out, x, y)).toBe(0);
+    }
+    // White, grey and earth backgrounds have no "key shade".
+    expect(keyShade([255, 255, 255, 255])).toBeNull();
+    expect(keyShade([120, 90, 60, 255])).toBeNull();
+    const magenta = keyShade([248, 3, 249, 255])!;
+    expect(magenta(202, 4, 202)).toBe(true);
+    expect(magenta(200, 30, 40)).toBe(false); // red headband
+    expect(magenta(90, 2, 90)).toBe(false); // dark outline blend: left to the halo peeling
   });
 
   it('Correr.png: already transparent → reported as such and left untouched', () => {

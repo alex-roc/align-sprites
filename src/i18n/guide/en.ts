@@ -75,7 +75,7 @@ export const guideEn: GuideContent = {
           items: [
             "**Ask for the whole animation in one image.** Frames generated one by one never match: the character changes between images.",
             "**Attach the guide image.** It is a magenta grid with a feet line. It tells the AI how many frames to draw and where the feet go.",
-            "**Attach a reference of your character** if you already have a good one. Generating from one reference image keeps the character consistent.",
+            "**Attach a reference of your character** if you already have a good one. Generating from one reference image keeps the character consistent. The AI tends to copy the detail level of the reference rather than the height you asked for; that is fine, you choose the final size here.",
             "**Pick the key colour to suit the character.** Use magenta, or green if your character is pink, purple or magenta. The prompt tells the AI not to use the key colour on the character.",
             "**Ask for a small character**, between 16 and 48 art pixels tall. The AI keeps small characters more consistent.",
           ],
@@ -229,7 +229,7 @@ export const guideEn: GuideContent = {
         { type: 'p', text: "Auto uses the most common colour on the image border. You can choose how it is removed." },
         { type: 'ul', items: [
           "**Everywhere (chroma key)** removes every pixel close to the colour, including holes between an arm and the body. Use it for magenta and green keys.",
-          "**Only from the edges** removes only the background that touches the border. Use it for white backgrounds, so white or cream clothes survive.",
+          "**Only from the edges** removes only the background that touches the border. Use it for white backgrounds, so white or cream clothes survive. On light backgrounds it also removes enclosed pockets of the same flat white, like the gap between the feet; painted whites (eyes, teeth, highlights) are shaded and stay.",
         ] },
         { type: 'p', text: "If part of the character disappears, lower the tolerance. Next time, use the green key." },
         { type: 'h3', id: 'advanced', text: "Advanced" },
@@ -421,7 +421,7 @@ onKeyRelease(["left", "right"], () => hero.play("idle"));
           type: 'steps',
           items: [
             "Add one image with several tiles in rows and columns. Try the Andean mountains example.",
-            "Pick the tile size: 16, 32, 48, 64 or your own.",
+            "Pick the tile size: 8 to 128 px, or your own.",
             "Check the grid. The tool detects columns and rows from the empty gaps between tiles. If the cut lines look wrong, untick **Detect columns and rows automatically** and type the columns and rows.",
             "Choose a format (Godot 4, Tiled / GDevelop or PNG) or all formats, and download.",
           ],

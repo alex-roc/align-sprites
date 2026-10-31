@@ -116,8 +116,8 @@ describe('sprite pipeline (real AI assets)', () => {
     expectAligned(r, 2);
   });
 
-  it('Personaje suelto.png: a single big character resized to 64 px', () => {
-    const img = loadPng('samples/real/Personaje suelto.png');
+  it('Personaje.png: a single big character on white resized to 64 px', () => {
+    const img = loadPng('samples/real/Personaje.png');
     const r = runSpriteJob(
       core,
       job('single', img, { bg: autoBgOptions(img, 'pixel'), segmentation: { kind: 'single' }, scale: { kind: 'targetHeight', px: 64 }, cell: { w: 64, h: 64, padBottom: 0 } }),
@@ -138,8 +138,23 @@ describe('sprite pipeline (real AI assets)', () => {
     expect(tinted).toEqual([]);
   });
 
-  it('Personaje.png: 4 views on white, tunic survives', () => {
-    const img = loadPng('samples/real/Personaje.png');
+  it('codex hero idle + run + Personaje.png in one batch: 128 px each, one cell, feet on one row', () => {
+    const files = ['samples/real/Personaje.png', 'samples/codex/hero-idle-pixel.png', 'samples/codex/hero-run-pixel.png'];
+    const jobs = files.map((f, i) => {
+      const img = loadPng(f);
+      return job('hero' + i, img, { bg: autoBgOptions(img, 'pixel'), segmentation: i === 0 ? { kind: 'single' } : { kind: 'auto' }, scale: { kind: 'targetHeight', px: 128 }, cell: 'auto' });
+    });
+    const rs = runBatch(core, jobs);
+    expect(rs.map((r) => r.frames.length)).toEqual([1, 4, 6]);
+    for (const r of rs) {
+      expect(Math.abs(r.diag.refHeight - 128)).toBeLessThanOrEqual(0.5);
+      expect(r.sheet.cell).toEqual(rs[0].sheet.cell);
+      expectAligned(r, 2);
+    }
+  });
+
+  it('Personaje_model.png: 4 views on white, tunic survives', () => {
+    const img = loadPng('samples/real/Personaje_model.png');
     const r = runSpriteJob(core, job('views', img, { bg: autoBgOptions(img, 'pixel'), scale: { kind: 'targetHeight', px: 96 } }));
     debugPng('real-views-96', r.sheet.image);
     expect(r.frames.length).toBe(4);

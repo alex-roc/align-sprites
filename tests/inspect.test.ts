@@ -10,11 +10,13 @@ function rect(img: RGBAImage, x0: number, y0: number, w: number, h: number, c: R
 
 describe('inspectImage (real assets)', () => {
   const cases: [string, 'single' | 'sheet', number][] = [
-    ['samples/real/Personaje suelto.png', 'single', 1],
+    ['samples/real/Personaje.png', 'single', 1],
     ['samples/real/Correr.png', 'sheet', 8],
-    ['samples/real/Personaje.png', 'sheet', 4],
+    ['samples/real/Personaje_model.png', 'sheet', 4],
     ['samples/codex/wizard-single-pixel-large.png', 'single', 1],
     ['samples/codex/knight-walk-pixel.png', 'sheet', 6],
+    ['samples/codex/hero-run-pixel.png', 'sheet', 6], // faint guide lines redrawn by the AI must not count as frames
+    ['samples/codex/hero-idle-pixel.png', 'sheet', 4],
   ];
   for (const [file, kind, count] of cases) {
     it(`${file}: ${kind} (${count})`, () => {

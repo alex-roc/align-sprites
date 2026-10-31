@@ -25,7 +25,7 @@ export function SpritesTab() {
     const ex = EXAMPLES.find((x) => x.id === id);
     if (!ex) return;
     try {
-      await add([await fetchExample(ex)]);
+      await add(await fetchExample(ex));
     } catch {
       /* the decode error path of useAddAssets reports failures; a missing file is a deploy problem */
     }
