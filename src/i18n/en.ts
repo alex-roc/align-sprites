@@ -1,7 +1,7 @@
 // English is the primary language. es.ts must define exactly the same keys (checked in tests/i18n.test.ts).
 // `{name}` placeholders are interpolated; warn.* keys come from the processing core (Warning {key, params}).
 export const en = {
-  'app.title': 'align-sprites · normalize AI sprites for game engines',
+  'app.title': 'align-sprites: turn AI sprites into game-ready sheets for Godot, GDevelop and Kaplay',
   'lang.label': 'Language',
   'theme.label': 'Theme',
   'theme.title': 'Switch between automatic, light and dark theme',

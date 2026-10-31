@@ -28,6 +28,7 @@ pnpm test:godot        # headless Godot 4 loads the exported SpriteFrames (skips
 pnpm test:godot:tiles  # headless Godot 4 checks TileSet terrains with set_cells_terrain_connect
 pnpm build
 node scripts/run-samples.ts   # process samples/ → samples/out/ for visual checks
+node scripts/og-image.ts      # rebuild public/og.png (social preview) from tools/og/og.html
 ```
 
 Architecture: [dev-docs/architecture.md](dev-docs/architecture.md). Sample sheets: `samples/real/` (real course assets) and `samples/codex/` (generated with our prompts; defects documented in its README).

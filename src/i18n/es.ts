@@ -2,7 +2,7 @@
 import type { MessageKey } from './en.ts';
 
 export const es: Record<MessageKey, string> = {
-  'app.title': 'align-sprites · normaliza sprites de IA para motores de juego',
+  'app.title': 'align-sprites: convierte sprites de IA en hojas listas para Godot, GDevelop y Kaplay',
   'lang.label': 'Idioma',
   'theme.label': 'Tema',
   'theme.title': 'Cambiar entre tema automático, claro y oscuro',
