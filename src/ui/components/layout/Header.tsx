@@ -5,7 +5,8 @@ import { cx } from '../../cx.ts';
 import { applyTheme, loadTheme, saveTheme, type ThemeChoice } from '../../theme.ts';
 
 export const REPO_URL = 'https://github.com/alex-roc/align-sprites';
-export const DOCS_URL = `${REPO_URL}/tree/main/docs`;
+export const DOCS_URL = `${REPO_URL}/blob/main/docs/README.md`;
+export const DOCS_URL_ES = `${REPO_URL}/blob/main/docs/es.md`;
 
 const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: 'light', light: 'dark', dark: 'system' };
 
@@ -38,7 +39,7 @@ function LangSwitch() {
 }
 
 export function Header() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <header className="app-header">
       <div className="brand">
@@ -51,7 +52,7 @@ export function Header() {
         </div>
       </div>
       <nav className="header-links" aria-label={t('header.links')}>
-        <a href={DOCS_URL} target="_blank" rel="noreferrer">{t('header.guide')}</a>
+        <a href={lang === 'es' ? DOCS_URL_ES : DOCS_URL} target="_blank" rel="noreferrer">{t('header.guide')}</a>
         <a href={REPO_URL} target="_blank" rel="noreferrer">GitHub</a>
         <ThemeToggle />
         <LangSwitch />
