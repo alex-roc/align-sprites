@@ -4,7 +4,11 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildExport } from '../src/core/export/index.ts';
+import { readFileSync } from 'node:fs';
+import { buildExport, decodePng } from '../src/core/export/index.ts';
+import { runSpriteJob } from '../src/core/pipeline/index.ts';
+import { autoBgOptions } from '../src/core/bg/index.ts';
+import { unfakeFromBytes } from '../src/core/pixel/unfake.ts';
 
 const GODOT = process.env.GODOT_BIN ?? '/Applications/Godot.app/Contents/MacOS/Godot';
 const project = fileURLToPath(new URL('../tools/godot-validate/', import.meta.url));
@@ -40,9 +44,21 @@ function synth(name, mode, cell, padBottom, anims) {
   return { name, sheet, frames: [], diag: { scale: 1, refHeight: cell.h, metrics: [], regions: [], warnings: [] } };
 }
 
+/** A real AI sheet through the whole pipeline (samples/real/Correr.png, 8 run frames). */
+function real() {
+  const core = unfakeFromBytes(new Uint8Array(readFileSync(new URL('../src/vendor/unfake/unfake_wasm_bg.wasm', import.meta.url))));
+  const source = decodePng(new Uint8Array(readFileSync(new URL('../samples/real/Correr.png', import.meta.url))));
+  return runSpriteJob(core, {
+    name: 'run', source, mode: 'pixel', bg: autoBgOptions(source, 'pixel'),
+    segmentation: { kind: 'auto', expected: 8 }, animations: [{ name: 'run', frames: [0, 1, 2, 3, 4, 5, 6, 7], fps: 12, loop: true }],
+    cell: { w: 64, h: 64, padBottom: 2 }, scale: { kind: 'targetHeight', px: 48 }, maxColors: 32,
+  });
+}
+
 const results = [
   synth('Héroe', 'pixel', { w: 64, h: 96 }, 2, [['idle', 4, 6, true], ['walk', 6, 10, true], ['attack', 3, 12.5, false]]),
   synth('slime', 'cartoon', { w: 32, h: 32 }, 0, [['idle', 2, 4, true]]),
+  real(),
 ];
 
 rmSync(out, { recursive: true, force: true });
@@ -52,8 +68,8 @@ for (const f of buildExport(results, ['godot'])) {
   writeFileSync(p, f.data);
 }
 
-const slugs = ['heroe', 'slime'];
-const nodes = ['Heroe', 'Slime'];
+const slugs = ['heroe', 'slime', 'run'];
+const nodes = ['Heroe', 'Slime', 'Run'];
 const pairs = [];
 results.forEach((r, i) => {
   const { sheet } = r;
