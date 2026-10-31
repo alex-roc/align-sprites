@@ -298,13 +298,13 @@ func _physics_process(_delta: float) -> void:
       id: 'gdevelop',
       title: "GDevelop 5",
       blocks: [
-        { type: 'p', text: "El ZIP trae los frames ya cortados, sueltos en la raíz: `<nombre>_<animación>_00.png`, `_01.png`… (si tu hoja tiene una sola animación sin nombre, `<nombre>_00.png`…), y un `README-<nombre>.txt` con el origen y los fps. Así eliges todos los frames de una animación de una vez." },
+        { type: 'p', text: "El ZIP trae una carpeta por imagen con sus frames ya cortados: `<nombre>/<nombre>_<animación>_00.png`, `_01.png`… (si tu hoja tiene una sola animación sin nombre, `<nombre>_00.png`…), y un `README.txt` con el origen y los fps. Así eliges todos los frames de una animación de una vez." },
         {
           type: 'table',
           head: ["Método", "Archivos que usas", "Sirve para"],
           rows: [
             ["Frames", "`<nombre>_<animación>_00.png`, `_01.png`…", "Lo normal. No hay nada más que aprender."],
-            ["Spritesheet con Piskel", "`spritesheets/<nombre>_<animación>.png`, una fila por animación. Solo si marcas **Incluir también spritesheets para Piskel** al exportar.", "Si quieres retocar los frames en Piskel."],
+            ["Spritesheet con Piskel", "`<nombre>/spritesheets/<nombre>_<animación>.png`, una fila por animación. Solo si marcas **Incluir también spritesheets para Piskel** al exportar.", "Si quieres retocar los frames en Piskel."],
           ],
         },
         { type: 'h3', id: 'gdevelop-frames', text: "Método A: frames" },
@@ -321,15 +321,15 @@ func _physics_process(_delta: float) -> void:
           type: 'steps',
           items: [
             "En el objeto **Sprite**, añade una animación y ábrela con **Editar con Piskel**.",
-            "En Piskel, elige **Importar**, escoge `spritesheets/<nombre>_<animación>.png` y elige **Importar como spritesheet**. (Para tenerlo, marca **Incluir también spritesheets para Piskel** antes de descargar.)",
+            "En Piskel, elige **Importar**, escoge `<nombre>/spritesheets/<nombre>_<animación>.png` y elige **Importar como spritesheet**. (Para tenerlo, marca **Incluir también spritesheets para Piskel** antes de descargar.)",
             "Escribe el tamaño de frame. Es el tamaño de frame que elegiste en la herramienta, por ejemplo 32 por 32.",
             "Guarda y cierra Piskel. Los frames aparecen en la animación.",
             "Pon el tiempo entre frames en `1 / fps` y el bucle, como en el método A.",
           ],
         },
         { type: 'callout', title: "No repitas nombres de imagen", text: "GDevelop reconoce cada imagen por su nombre de archivo. Si dos imágenes se llaman igual, mezcla los frames: una animación sale con un frame repetido y el personaje se traba. Por eso cada frame se llama `<nombre>_<animación>_00.png`. Si vuelves a importar una animación que ya estaba, primero borra sus imágenes viejas del proyecto (en **Recursos**, o en la carpeta del proyecto)." },
-        { type: 'callout', title: "Ojo", text: "Los nombres de menú de arriba siguen GDevelop 5 tal como era cuando escribimos esta guía. Si los tuyos difieren, el `README-<nombre>.txt` del ZIP trae los mismos pasos con los valores exactos de tu hoja." },
-        { type: 'p', text: "Un sprite único es más simple: el ZIP trae un solo PNG, `<nombre>.png`. Agrégalo a la única animación del objeto Sprite." },
+        { type: 'callout', title: "Ojo", text: "Los nombres de menú de arriba siguen GDevelop 5 tal como era cuando escribimos esta guía. Si los tuyos difieren, el `README.txt` de cada carpeta trae los mismos pasos con los valores exactos de tu hoja." },
+        { type: 'p', text: "Un sprite único es más simple: el ZIP trae un solo PNG, `<nombre>/<nombre>.png`. Agrégalo a la única animación del objeto Sprite." },
         { type: 'h3', id: 'gdevelop-origin', text: "Pon el punto de origen en los pies" },
         { type: 'p', text: "Por defecto el origen es la esquina superior izquierda. Entonces un objeto colocado en (x, y) cuelga de esa esquina, y el personaje se desplaza cuando lo volteas o lo escalas. Pon el punto **Origin** en los pies." },
         {

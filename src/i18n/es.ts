@@ -266,7 +266,7 @@ export const es: Record<MessageKey, string> = {
   'engine.godot.s2': 'Arrastra {name}.tscn a una escena. Es un AnimatedSprite2D con el origen en los pies y todas las animaciones listas.',
   'engine.godot.s3': 'Pixel art: en Configuración del proyecto, Rendering, Textures, pon Default Texture Filter en Nearest.',
   'engine.gdevelop.s1': 'Crea un objeto Sprite y agrega una animación.',
-  'engine.gdevelop.s2': 'Pulsa Añadir imágenes y elige de una vez todos los PNG de esa animación: {frames0}, _01.png… Están juntos en la raíz del ZIP.',
+  'engine.gdevelop.s2': 'Pulsa Añadir imágenes y elige de una vez todos los PNG de esa animación: {frames0}, _01.png… Están en la carpeta {name} del ZIP.',
   'engine.gdevelop.s3': 'En Editar puntos, pon el Origen en ({ox}, {oy}) (los pies) y aplícalo a todos los frames. Pon el tiempo entre frames en {interval} s ({fps} fps) y activa Bucle si la animación se repite.',
   'engine.kaplay.s1': 'Copia {name}.png dentro de tu proyecto.',
   'engine.kaplay.s2': 'Pega en tu código la llamada loadSprite(...) de {name}.js.',

@@ -265,7 +265,7 @@ export const en = {
   'engine.godot.s2': 'Drag {name}.tscn into a scene. It is an AnimatedSprite2D with its origin at the feet and every animation ready.',
   'engine.godot.s3': 'Pixel art: set Project Settings, Rendering, Textures, Default Texture Filter to Nearest.',
   'engine.gdevelop.s1': 'Create a Sprite object and add an animation.',
-  'engine.gdevelop.s2': 'Click Add images and pick all the PNGs of that animation at once: {frames0}, _01.png… They sit side by side at the root of the ZIP.',
+  'engine.gdevelop.s2': 'Click Add images and pick all the PNGs of that animation at once: {frames0}, _01.png… They are in the {name} folder of the ZIP.',
   'engine.gdevelop.s3': 'In Edit points, set the Origin to ({ox}, {oy}) (the feet) for all frames. Set the time between frames to {interval} s ({fps} fps) and turn on Loop if the animation repeats.',
   'engine.kaplay.s1': 'Copy {name}.png into your project.',
   'engine.kaplay.s2': 'Paste the loadSprite(...) call from {name}.js into your code.',

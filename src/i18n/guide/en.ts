@@ -298,13 +298,13 @@ func _physics_process(_delta: float) -> void:
       id: 'gdevelop',
       title: "GDevelop 5",
       blocks: [
-        { type: 'p', text: "The ZIP has the frames already cut, loose at its root: `<name>_<animation>_00.png`, `_01.png`… (when your sheet has a single unnamed animation, `<name>_00.png`…), plus a `README-<name>.txt` with the origin and the fps. So you pick every frame of an animation in one go." },
+        { type: 'p', text: "The ZIP has one folder per image with its frames already cut: `<name>/<name>_<animation>_00.png`, `_01.png`… (when your sheet has a single unnamed animation, `<name>_00.png`…), plus a `README.txt` with the origin and the fps. So you pick every frame of an animation in one go." },
         {
           type: 'table',
           head: ["Method", "Files you use", "Good for"],
           rows: [
             ["Frames", "`<name>_<animation>_00.png`, `_01.png`…", "The usual way. Nothing else to learn."],
-            ["Piskel spritesheet", "`spritesheets/<name>_<animation>.png`, one row per animation. Only if you tick **Also spritesheets for Piskel** when exporting.", "When you want to touch up the frames in Piskel."],
+            ["Piskel spritesheet", "`<name>/spritesheets/<name>_<animation>.png`, one row per animation. Only if you tick **Also spritesheets for Piskel** when exporting.", "When you want to touch up the frames in Piskel."],
           ],
         },
         { type: 'h3', id: 'gdevelop-frames', text: "Method A: frames" },
@@ -321,15 +321,15 @@ func _physics_process(_delta: float) -> void:
           type: 'steps',
           items: [
             "In the **Sprite** object, add an animation and open it with **Edit with Piskel**.",
-            "In Piskel, choose **Import**, pick `spritesheets/<name>_<animation>.png` and choose **Import as spritesheet**. (To get it, tick **Also spritesheets for Piskel** before downloading.)",
+            "In Piskel, choose **Import**, pick `<name>/spritesheets/<name>_<animation>.png` and choose **Import as spritesheet**. (To get it, tick **Also spritesheets for Piskel** before downloading.)",
             "Type the frame size. It is the frame size you chose in the tool, for example 32 by 32.",
             "Save and close Piskel. The frames appear in the animation.",
             "Set the time between frames to `1 / fps` and the loop, as in method A.",
           ],
         },
         { type: 'callout', title: "Don't repeat image names", text: "GDevelop recognises each image by its file name. When two images share a name, it mixes up the frames: an animation ends up with one frame repeated and the character gets stuck. That is why each frame is called `<name>_<animation>_00.png`. If you import an animation again, first delete its old images from the project (in **Resources**, or in the project folder)." },
-        { type: 'callout', title: "Heads up", text: "The menu names above follow GDevelop 5 as it was when we wrote this guide. If yours differ, `README-<name>.txt` in the ZIP lists the same steps with the exact values for your sheet." },
-        { type: 'p', text: "A single sprite is simpler: the ZIP has one PNG, `<name>.png`. Add it to the Sprite object's only animation." },
+        { type: 'callout', title: "Heads up", text: "The menu names above follow GDevelop 5 as it was when we wrote this guide. If yours differ, `README.txt` in each folder lists the same steps with the exact values for your sheet." },
+        { type: 'p', text: "A single sprite is simpler: the ZIP has one PNG, `<name>/<name>.png`. Add it to the Sprite object's only animation." },
         { type: 'h3', id: 'gdevelop-origin', text: "Put the origin point at the feet" },
         { type: 'p', text: "By default the origin is the top-left corner. Then an object placed at (x, y) hangs from that corner, and the character shifts when you flip or scale it. Put the **Origin** point at the feet instead." },
         {

@@ -1,4 +1,4 @@
-// GDevelop 5: the cut frames as flat numbered PNGs at the root (added with multi-select), a README per sprite and,
+// GDevelop 5: one folder per sprite with its cut frames as numbered PNGs (added with multi-select), a README and,
 // on request, one horizontal spritesheet strip per animation for the built-in Piskel editor ("Import as spritesheet").
 import { blit, createImage } from '../image.ts';
 import type { ExportFile, PackedSheet, RGBAImage, SpriteResult } from '../types.ts';
@@ -29,7 +29,7 @@ export function gdevelopFramePrefix(name: string, sheet: PackedSheet, k: number)
   return sheet.anims.length === 1 && slugs[0] === 'default' ? base : `${base}_${slugs[k]}`;
 }
 
-/** Static sprite (one animation, one frame): `<name>.png` + `README-<name>.txt` with the origin. */
+/** Static sprite (one animation, one frame): `<name>/<name>.png` + `<name>/README.txt` with the origin. */
 function gdevelopStatic(r: SpriteResult): ExportFile[] {
   const name = slug(r.name);
   const { sheet } = r;
@@ -54,14 +54,15 @@ ${pixel ? `3. Pixel art: en las Propiedades del juego, pon "Modo de escalado (ta
    "Nearest (sin antialiasing)" y activa el "Redondeo de píxeles" si la cámara se mueve.` : `3. Arte suave: deja el modo de escalado por defecto ("Linear").`}
 `;
   return [
-    { path: `${name}.png`, data: sheetPng(r) },
-    { path: `README-${name}.txt`, data: readme },
+    { path: `${name}/${name}.png`, data: sheetPng(r) },
+    { path: `${name}/README.txt`, data: readme },
   ];
 }
 
 /**
- * GDevelop 5, flat: `<name>_<anim>_00.png…` (just `<name>_00.png…` when the only animation is "default"), so every
- * frame of an animation sits side by side and is picked with one multi-select. `README-<name>.txt` (en + es) has the
+ * GDevelop 5: one folder per sprite, `<name>/<name>_<anim>_00.png…` (just `<name>_00.png…` when the only animation is
+ * "default"), so every frame of an animation sits side by side and is picked with one multi-select. File names stay
+ * unique across the batch even without the folder: GDevelop identifies images by file name. `README.txt` (en + es) has the
  * origin point, fps and loop. With `spritesheets`, also `spritesheets/<name>_<anim>.png` (one row, for Piskel).
  * A single-frame sheet exports as a static sprite instead (`<name>.png` + README).
  */
@@ -79,9 +80,9 @@ export function gdevelopFrames(r: SpriteResult, opts: GdevelopOptions = {}): Exp
   sheet.anims.forEach((a, k) => {
     const digits = Math.max(2, String(Math.max(0, a.count - 1)).length);
     frames[k]!.forEach((img, i) => {
-      files.push({ path: `${prefix(k)}_${pad(i, digits)}.png`, data: encodePng(img) });
+      files.push({ path: `${name}/${prefix(k)}_${pad(i, digits)}.png`, data: encodePng(img) });
     });
-    if (opts.spritesheets && frames[k]!.length) files.push({ path: `spritesheets/${prefix(k)}.png`, data: encodePng(strip(frames[k]!)) });
+    if (opts.spritesheets && frames[k]!.length) files.push({ path: `${name}/spritesheets/${prefix(k)}.png`, data: encodePng(strip(frames[k]!)) });
     const interval = fl(1 / Math.max(a.fps, 0.001));
     table.push(`  ${slugs[k]}: ${prefix(k)}_00.png… (${a.count} frames), ${fl(a.fps)} fps (time between frames ${interval} s), loop ${a.loop ? 'ON' : 'OFF'}`);
   });
@@ -124,6 +125,6 @@ ${pixel ? `5. Pixel art: in Project properties, set "Scale mode (also called sam
 ${pixel ? `5. Pixel art: en las Propiedades del juego, pon "Modo de escalado (también llamado muestreo)" en
    "Nearest (sin antialiasing)" y activa el "Redondeo de píxeles" si la cámara se mueve.` : `5. Arte suave: deja el modo de escalado por defecto ("Linear").`}
 `;
-  files.push({ path: `README-${name}.txt`, data: readme });
+  files.push({ path: `${name}/README.txt`, data: readme });
   return files;
 }

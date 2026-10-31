@@ -88,8 +88,8 @@ const HOW: Record<ExportTarget, { en: string; es: string }> = {
     es: 'Copia sprites/ y tiles/ a tu proyecto (p. ej. res://assets/). Cada carpeta de sprite trae su .tscn; tiles/ trae el TileSet .tres para asignar a un TileMapLayer.',
   },
   gdevelop: {
-    en: 'Sprites: the cut frames are in sprites/ (<name>_<animation>_00.png…); README-<name>.txt has the origin and fps. Tiles: tiles/ has the atlas PNG and a Tiled .tsx; use them with the Tilemap object (Tiled tileset) at the tile size below.',
-    es: 'Sprites: los frames cortados están en sprites/ (<nombre>_<animación>_00.png…); README-<nombre>.txt trae el origen y los fps. Tiles: tiles/ trae el atlas PNG y un .tsx de Tiled; úsalos con el objeto Tilemap (tileset de Tiled) al tamaño de tile de abajo.',
+    en: 'Sprites: one folder per sprite in sprites/ (<name>/<name>_<animation>_00.png…); its README.txt has the origin and fps. Tiles: tiles/ has the atlas PNG and a Tiled .tsx; use them with the Tilemap object (Tiled tileset) at the tile size below.',
+    es: 'Sprites: una carpeta por sprite en sprites/ (<nombre>/<nombre>_<animación>_00.png…); su README.txt trae el origen y los fps. Tiles: tiles/ trae el atlas PNG y un .tsx de Tiled; úsalos con el objeto Tilemap (tileset de Tiled) al tamaño de tile de abajo.',
   },
   kaplay: {
     en: 'Paste each .js snippet after kaplay(...) and keep the PNG next to it (or adjust the path). Tiles load as one sliced sprite; use frame = row * cols + col.',

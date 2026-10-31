@@ -65,12 +65,12 @@ También puedes usar solo `<nombre>.tres` (un recurso `SpriteFrames`) en tu prop
 
 ### GDevelop 5
 
-El ZIP trae los frames ya cortados, sueltos en la raíz (`<nombre>_<animación>_00.png`, `_01.png`…), y un `README-<nombre>.txt` con el origen y los fps.
+El ZIP trae una carpeta por imagen con sus frames ya cortados (`<nombre>/<nombre>_<animación>_00.png`, `_01.png`…) y un `README.txt` con el origen y los fps.
 
 - **Frames**: crea un objeto **Sprite**, añade una animación, pulsa *Añadir imágenes* y selecciona de una vez todos los PNG de esa animación.
-- **Spritesheet con Piskel** (opcional: marca *Incluir también spritesheets para Piskel* antes de descargar): añade una animación, ábrela con *Editar con Piskel*, elige *Importar*, escoge `spritesheets/<nombre>_<animación>.png` y *Importar como spritesheet* con tu tamaño de frame.
+- **Spritesheet con Piskel** (opcional: marca *Incluir también spritesheets para Piskel* antes de descargar): añade una animación, ábrela con *Editar con Piskel*, elige *Importar*, escoge `<nombre>/spritesheets/<nombre>_<animación>.png` y *Importar como spritesheet* con tu tamaño de frame.
 
-Luego pon el tiempo entre frames en `1 / fps` y el bucle. En *Editar puntos* (el editor de Puntos), fija el punto **Origin** (Origen) en el valor del README (los pies) para todos los frames. Un **sprite único** es un solo PNG, `<nombre>.png`. En pixel art, en las propiedades del juego elige el modo de escalado *Nearest (sin antialiasing)*. (Los nombres de menú siguen GDevelop 5 como lo vimos por última vez; el README del ZIP trae los mismos pasos.)
+Luego pon el tiempo entre frames en `1 / fps` y el bucle. En *Editar puntos* (el editor de Puntos), fija el punto **Origin** (Origen) en el valor del README (los pies) para todos los frames. Un **sprite único** es un solo PNG, `<nombre>/<nombre>.png`. En pixel art, en las propiedades del juego elige el modo de escalado *Nearest (sin antialiasing)*. (Los nombres de menú siguen GDevelop 5 como lo vimos por última vez; el README del ZIP trae los mismos pasos.)
 
 ### Kaplay
 

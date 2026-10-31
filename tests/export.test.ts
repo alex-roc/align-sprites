@@ -110,23 +110,23 @@ describe('godot', () => {
 });
 
 describe('gdevelop', () => {
-  it('writes the cut frames flat at the root (<name>_<anim>_NN.png) + README-<name>.txt, no strips by default', () => {
+  it('writes one folder per sprite (<name>/<name>_<anim>_NN.png) + README.txt, no strips by default', () => {
     const r = makeResult('hero');
     const files = gdevelopFrames(r);
     const paths = files.map((f) => f.path);
-    expect(paths).toContain('hero_idle_00.png');
-    expect(paths).toContain('hero_idle_03.png');
-    expect(paths).toContain('hero_attack_02.png');
-    expect(paths.every((p) => !p.includes('/'))).toBe(true);
+    expect(paths).toContain('hero/hero_idle_00.png');
+    expect(paths).toContain('hero/hero_idle_03.png');
+    expect(paths).toContain('hero/hero_attack_02.png');
+    expect(paths.every((p) => p.split('/').length === 2)).toBe(true);
     // 4 + 3 frames and the README.
     expect(paths).toHaveLength(4 + 3 + 1);
-    const readme = text(files, 'README-hero.txt');
+    const readme = text(files, 'hero/README.txt');
     expect(readme).toContain('[EN]');
     expect(readme).toContain('[ES]');
     expect(readme).toContain('(32, 93)');
     expect(readme).toContain('hero_idle_00.png');
     expect(readme).not.toContain('Piskel');
-    const frame = decodePng(files.find((f) => f.path === 'hero_idle_01.png')!.data as Uint8Array);
+    const frame = decodePng(files.find((f) => f.path === 'hero/hero_idle_01.png')!.data as Uint8Array);
     expect([frame.width, frame.height]).toEqual([64, 96]);
   });
 
@@ -135,16 +135,16 @@ describe('gdevelop', () => {
     const files = gdevelopFrames(r, { spritesheets: true });
     const paths = files.map((f) => f.path);
     expect(paths).toHaveLength(4 + 3 + 2 + 1);
-    const strip = decodePng(files.find((f) => f.path === 'spritesheets/hero_idle.png')!.data as Uint8Array);
+    const strip = decodePng(files.find((f) => f.path === 'hero/spritesheets/hero_idle.png')!.data as Uint8Array);
     expect(strip.height).toBe(r.sheet.cell.h);
     expect(strip.width).toBe(r.sheet.cell.w * 4);
-    expect(text(files, 'README-hero.txt')).toContain('Piskel');
+    expect(text(files, 'hero/README.txt')).toContain('Piskel');
   });
 
   it('a single "default" animation drops the animation name: <name>_NN.png', () => {
     const r = makeResult('hero');
     const one = { ...r, sheet: { ...r.sheet, anims: [{ ...r.sheet.anims[0]!, name: 'default' }] } };
-    expect(gdevelopFrames(one).map((f) => f.path)).toContain('hero_00.png');
+    expect(gdevelopFrames(one).map((f) => f.path)).toContain('hero/hero_00.png');
   });
 });
 
@@ -208,13 +208,13 @@ describe('buildExport + zip', () => {
       const r = makeResult(n);
       return { ...r, sheet: { ...r.sheet, anims: [{ ...r.sheet.anims[0]!, name: 'default' }] } };
     });
-    const names = buildExport(batch, ['gdevelop'], { gdevelopSpritesheets: true }).map((f) => f.path.split('/').pop()!);
+    const names = buildExport(batch, ['gdevelop'], { gdevelopSpritesheets: true }).filter((f) => f.path.endsWith('.png')).map((f) => f.path.split('/').pop()!);
     expect(new Set(names).size).toBe(names.length);
   });
 
   it('one engine: no <target>/ folder (the ZIP is named after the engine)', () => {
     const one = buildExport(results, ['gdevelop']).map((f) => f.path);
-    expect(one).toContain('heroe_idle_00.png');
+    expect(one).toContain('heroe/heroe_idle_00.png');
     expect(one.some((p) => p.startsWith('gdevelop/'))).toBe(false);
     expect(buildExport(results, ['godot'], { prefix: true })[0]!.path.startsWith('godot/')).toBe(true);
   });
@@ -256,8 +256,8 @@ describe('static sprites (one animation, one frame)', () => {
 
   it('gdevelop: one png and a README with the origin, no animation folders or strips', () => {
     const files = gdevelopFrames(stat('pixel'));
-    expect(files.map((f) => f.path).sort()).toEqual(['README-roca_grande.txt', 'roca_grande.png']);
-    expect(text(files, 'README-roca_grande.txt')).toContain('Origin point: (24, 61)');
+    expect(files.map((f) => f.path).sort()).toEqual(['roca_grande/README.txt', 'roca_grande/roca_grande.png']);
+    expect(text(files, 'roca_grande/README.txt')).toContain('Origin point: (24, 61)');
   });
 
   it('kaplay: loadSprite without slice or anims', () => {
