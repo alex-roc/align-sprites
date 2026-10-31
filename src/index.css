@@ -320,6 +320,7 @@ input.asset-name[type='text'] { text-overflow: ellipsis; }
 .steps { counter-reset: st; display: flex; flex-direction: column; gap: 6px; }
 .steps li { counter-increment: st; display: flex; gap: 10px; }
 .steps li::before { content: counter(st); flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); font-weight: 700; font-size: 13px; margin-top: 1px; }
+.export-choices { margin: 0 0 12px; }
 .export-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 
 /* animations editor */

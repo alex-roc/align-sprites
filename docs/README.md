@@ -53,11 +53,11 @@ The frame editor, under the frame strip, acts on the selected frame: move left o
 
 ## 3. Use it in your engine
 
-Under the stage, choose the engine and press **Download for …**. The ZIP has one folder per engine.
+Under the stage, choose the engine and press **Download for …**. The ZIP has that engine's files (with *All engines*, one folder per engine).
 
 ### Godot 4
 
-1. Copy the folder `godot/<name>/` into your project (for example `res://characters/<name>/`).
+1. Copy the folder `<name>/` from the ZIP into your project (for example `res://characters/<name>/`).
 2. Drag `<name>.tscn` into your scene: it is an `AnimatedSprite2D` whose **origin is at the feet**, with every animation ready (fps and loop included). A **single sprite** gives a `Sprite2D` scene instead.
 3. Pixel art: the scene already uses *Nearest* filtering. For the whole project use *Project Settings → Rendering → Textures → Default Texture Filter = Nearest*.
 
@@ -65,20 +65,20 @@ You can also use only `<name>.tres` (a `SpriteFrames` resource) in your own `Ani
 
 ### GDevelop 5
 
-Two ways to add each animation (pick one):
+The ZIP has the cut frames loose at its root (`<name>_<animation>_00.png`, `_01.png`…) and a `README-<name>.txt` with the origin and the fps.
 
-- **Frames**: create a **Sprite** object, add an animation, click *Add images* and select all the PNGs of `gdevelop/<name>/<animation>/` at once.
-- **Piskel spritesheet**: add an animation, open it with *Edit with Piskel*, then *Import*, pick `spritesheets/<animation>.png` and *Import as spritesheet* with your frame size.
+- **Frames**: create a **Sprite** object, add an animation, click *Add images* and select all the PNGs of that animation at once.
+- **Piskel spritesheet** (optional: tick *Also spritesheets for Piskel* before downloading): add an animation, open it with *Edit with Piskel*, then *Import*, pick `spritesheets/<name>_<animation>.png` and *Import as spritesheet* with your frame size.
 
-Then set the time between frames to `1 / fps` and the loop. In *Edit points* (the Points editor), set the **Origin** point to the value in the README (the feet) for all frames. A **single sprite** is one PNG, `gdevelop/<name>/<name>.png`. Pixel art: in the project properties set the scale mode to *Nearest (no antialiasing)*. (Menu names follow GDevelop 5 as we last saw it; the README in the ZIP has the same steps.)
+Then set the time between frames to `1 / fps` and the loop. In *Edit points* (the Points editor), set the **Origin** point to the value in the README (the feet) for all frames. A **single sprite** is one PNG, `<name>.png`. Pixel art: in the project properties set the scale mode to *Nearest (no antialiasing)*. (Menu names follow GDevelop 5 as we last saw it; the README in the ZIP has the same steps.)
 
 ### Kaplay
 
-`kaplay/<name>.png` plus `kaplay/<name>.js` with the `loadSprite(...)` call (`sliceX`, `sliceY`, `anims`; each animation starts at `row × columns`). Use `anchor("bot")` so the feet are the origin, and `kaplay({ crisp: true, texFilter: "nearest" })` for pixel art. A single sprite is a plain `loadSprite(name, png)`.
+`<name>.png` plus `<name>.js` with the `loadSprite(...)` call (`sliceX`, `sliceY`, `anims`; each animation starts at `row × columns`). Use `anchor("bot")` so the feet are the origin, and `kaplay({ crisp: true, texFilter: "nearest" })` for pixel art. A single sprite is a plain `loadSprite(name, png)`.
 
 ### Other engines
 
-`generic/<name>.png` + `<name>.json` in Aseprite's format, plus one PNG per frame. Phaser reads it as an Aseprite atlas, Unity slices the PNG with *Grid By Cell Size*, and Defold and Construct can import the per-frame PNGs. We know these engines less well: check their documentation. Any engine that slices by frame size works: animation `k` is row `k`, frame `i` is column `i`, origin at the feet.
+`<name>.png` + `<name>.json` in Aseprite's format, plus one PNG per frame. Phaser reads it as an Aseprite atlas, Unity slices the PNG with *Grid By Cell Size*, and Defold and Construct can import the per-frame PNGs. We know these engines less well: check their documentation. Any engine that slices by frame size works: animation `k` is row `k`, frame `i` is column `i`, origin at the feet.
 
 ## 4. Tiles
 

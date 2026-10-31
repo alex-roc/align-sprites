@@ -110,25 +110,41 @@ describe('godot', () => {
 });
 
 describe('gdevelop', () => {
-  it('writes <name>/<anim>/<anim>_NN.png + README', () => {
+  it('writes the cut frames flat at the root (<name>_<anim>_NN.png) + README-<name>.txt, no strips by default', () => {
     const r = makeResult('hero');
     const files = gdevelopFrames(r);
     const paths = files.map((f) => f.path);
-    expect(paths).toContain('hero/idle/idle_00.png');
-    expect(paths).toContain('hero/idle/idle_03.png');
-    expect(paths).toContain('hero/attack/attack_02.png');
-    // 4 + 3 frames, one Piskel strip per animation, README.
-    expect(paths).toHaveLength(4 + 3 + 2 + 1);
-    expect(paths).toContain('hero/spritesheets/idle.png');
-    const strip = decodePng(files.find((f) => f.path === 'hero/spritesheets/idle.png')!.data as Uint8Array);
-    expect(strip.height).toBe(r.sheet.cell.h);
-    expect(strip.width).toBe(r.sheet.cell.w * 4);
-    const readme = text(files, 'hero/README.txt');
+    expect(paths).toContain('hero_idle_00.png');
+    expect(paths).toContain('hero_idle_03.png');
+    expect(paths).toContain('hero_attack_02.png');
+    expect(paths.every((p) => !p.includes('/'))).toBe(true);
+    // 4 + 3 frames and the README.
+    expect(paths).toHaveLength(4 + 3 + 1);
+    const readme = text(files, 'README-hero.txt');
     expect(readme).toContain('[EN]');
     expect(readme).toContain('[ES]');
     expect(readme).toContain('(32, 93)');
-    const frame = decodePng(files.find((f) => f.path === 'hero/idle/idle_01.png')!.data as Uint8Array);
+    expect(readme).toContain('hero_idle_00.png');
+    expect(readme).not.toContain('Piskel');
+    const frame = decodePng(files.find((f) => f.path === 'hero_idle_01.png')!.data as Uint8Array);
     expect([frame.width, frame.height]).toEqual([64, 96]);
+  });
+
+  it('adds one Piskel strip per animation in spritesheets/ when asked', () => {
+    const r = makeResult('hero');
+    const files = gdevelopFrames(r, { spritesheets: true });
+    const paths = files.map((f) => f.path);
+    expect(paths).toHaveLength(4 + 3 + 2 + 1);
+    const strip = decodePng(files.find((f) => f.path === 'spritesheets/hero_idle.png')!.data as Uint8Array);
+    expect(strip.height).toBe(r.sheet.cell.h);
+    expect(strip.width).toBe(r.sheet.cell.w * 4);
+    expect(text(files, 'README-hero.txt')).toContain('Piskel');
+  });
+
+  it('a single "default" animation drops the animation name: <name>_NN.png', () => {
+    const r = makeResult('hero');
+    const one = { ...r, sheet: { ...r.sheet, anims: [{ ...r.sheet.anims[0]!, name: 'default' }] } };
+    expect(gdevelopFrames(one).map((f) => f.path)).toContain('hero_00.png');
   });
 });
 
@@ -185,6 +201,13 @@ describe('buildExport + zip', () => {
     expect(paths).toContain('kaplay/heroe_2.js');
   });
 
+  it('one engine: no <target>/ folder (the ZIP is named after the engine)', () => {
+    const one = buildExport(results, ['gdevelop']).map((f) => f.path);
+    expect(one).toContain('heroe_idle_00.png');
+    expect(one.some((p) => p.startsWith('gdevelop/'))).toBe(false);
+    expect(buildExport(results, ['godot'], { prefix: true })[0]!.path.startsWith('godot/')).toBe(true);
+  });
+
   it('zips and unzips with the expected paths and bytes', () => {
     const zip = zipFiles(files);
     const out = unzipSync(zip);
@@ -222,8 +245,8 @@ describe('static sprites (one animation, one frame)', () => {
 
   it('gdevelop: one png and a README with the origin, no animation folders or strips', () => {
     const files = gdevelopFrames(stat('pixel'));
-    expect(files.map((f) => f.path).sort()).toEqual(['roca_grande/README.txt', 'roca_grande/roca_grande.png']);
-    expect(text(files, 'roca_grande/README.txt')).toContain('Origin point: (24, 61)');
+    expect(files.map((f) => f.path).sort()).toEqual(['README-roca_grande.txt', 'roca_grande.png']);
+    expect(text(files, 'README-roca_grande.txt')).toContain('Origin point: (24, 61)');
   });
 
   it('kaplay: loadSprite without slice or anims', () => {

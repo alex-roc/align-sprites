@@ -145,6 +145,7 @@ export const initialState: AppState = {
   selectedId: null,
   global: loadGlobal(),
   ...loadExportChoice(),
+  exportGdSheets: false,
   stageView: 'animation',
   run: { status: 'idle', results: {}, frameCounts: {}, error: null },
   promptKind: 'sprite',

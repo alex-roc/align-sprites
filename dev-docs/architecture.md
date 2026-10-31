@@ -48,7 +48,7 @@ tools/godot-validate/    headless Godot 4 project that loads and checks exported
 
 ## Export
 
-One ZIP, folder per target: `godot/<name>/` (png + SpriteFrames .tres + AnimatedSprite2D .tscn with the origin at the feet), `gdevelop/<name>/<anim>/…png` + README, `kaplay/<name>.png + .js` (single-frame sheets export as static sprites, see below), `generic/<name>.png + .json` (Aseprite hash). Godot `.tres` uses relative `path` without uid: copy the folder into the project as is.
+One ZIP per download; a `<target>/` folder per engine only with *All engines* (`buildExport` option `prefix`; the kit always nests). Per target: `<name>/` for Godot (png + SpriteFrames .tres + AnimatedSprite2D .tscn with the origin at the feet), GDevelop flat at the root: `<name>_<anim>_00.png…` (`<name>_00.png…` when the only animation is `default`) + `README-<name>.txt`, and `spritesheets/<name>_<anim>.png` for Piskel only with `gdevelopSpritesheets` (UI checkbox, off by default, not persisted), `<name>.png + .js` for Kaplay (single-frame sheets export as static sprites, see below), `generic/<name>.png + .json` (Aseprite hash). Godot `.tres` uses relative `path` without uid: copy the folder into the project as is.
 
 ## Inspect, frames, palette, kit (src/core)
 

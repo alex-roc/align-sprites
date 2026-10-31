@@ -59,8 +59,8 @@ const api: PipelineApi = {
     const results = runBatch(core, jobs);
     return Comlink.transfer(results, resultBuffers(results));
   },
-  async buildZip(results, targets) {
-    const zip = zipFiles(buildExport(results, targets));
+  async buildZip(results, targets, opts) {
+    const zip = zipFiles(buildExport(results, targets, opts));
     return Comlink.transfer(zip, [zip.buffer as ArrayBuffer]);
   },
   async detectBackground(img) {

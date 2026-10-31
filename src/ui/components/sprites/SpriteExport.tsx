@@ -8,6 +8,7 @@ import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
 import { exportNames } from '../../state/jobs.ts';
 import { ExportCard } from '../common/ExportCard.tsx';
+import { Check } from '../common/Field.tsx';
 
 const ENGINES: ExportTarget[] = ['godot', 'gdevelop', 'kaplay', 'generic'];
 const GUIDE_SECTION: Record<ExportTarget, string> = { godot: 'godot', gdevelop: 'gdevelop', kaplay: 'kaplay', generic: 'other' };
@@ -33,7 +34,7 @@ export function SpriteExport() {
     setBusy(true);
     setError(null);
     try {
-      const bytes = await buildZip(named(ids), targets);
+      const bytes = await buildZip(named(ids), targets, { gdevelopSpritesheets: state.exportGdSheets });
       downloadBlob(new Blob([bytes as BlobPart], { type: 'application/zip' }), `${base}${state.exportAll ? '' : `-${engine}`}.zip`);
     } catch (e) {
       setError(t('error.export', { message: e instanceof Error ? e.message : String(e) }));
@@ -85,6 +86,15 @@ export function SpriteExport() {
       disabled={running || !ready.length}
       error={error}
       note={batch ? t('export.includes', { names: ready.map((a) => names.get(a.id) ?? a.name).join(', ') }) : undefined}
+      choices={
+        targets.includes('gdevelop') && ready.some((a) => a.kind === 'sheet') ? (
+          <Check
+            checked={state.exportGdSheets}
+            onChange={(exportGdSheets) => dispatch({ type: 'export', patch: { exportGdSheets } })}
+            label={t('export.gdSheets')}
+          />
+        ) : undefined
+      }
     />
   );
 }

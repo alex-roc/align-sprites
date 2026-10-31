@@ -2,6 +2,7 @@
 import * as Comlink from 'comlink';
 import type { TileAtlasOptions, TileAtlasResult } from '../core/tiles/index.ts';
 import type { Inspection } from '../core/inspect/index.ts';
+import type { ExportOptions } from '../core/export/index.ts';
 import type { KitInput } from '../core/kit/index.ts';
 import type { ArtMode, EdgeStyle, ExportTarget, RGBA8, RGBAImage, SpriteJob, SpriteResult, TileLayout, TileSetResult } from '../core/types.ts';
 import type { AtlasExportTargets, PipelineApi, TerrainOutput, TileAtlasOutput } from './api.ts';
@@ -17,8 +18,8 @@ export function runBatch(jobs: SpriteJob[]): Promise<SpriteResult[]> {
   return pipeline.runBatch(Comlink.transfer(copies, buffers));
 }
 
-export function buildZip(results: SpriteResult[], targets: ExportTarget[]): Promise<Uint8Array> {
-  return pipeline.buildZip(results, targets);
+export function buildZip(results: SpriteResult[], targets: ExportTarget[], opts?: ExportOptions): Promise<Uint8Array> {
+  return pipeline.buildZip(results, targets, opts);
 }
 
 /** Copy of an image whose buffer can be transferred without detaching the UI's original. */

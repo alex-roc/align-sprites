@@ -64,7 +64,7 @@ const results = [
 ];
 
 rmSync(out, { recursive: true, force: true });
-for (const f of buildExport(results, ['godot'])) {
+for (const f of buildExport(results, ['godot'], { prefix: true })) {
   const p = join(out, f.path);
   mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, f.data);

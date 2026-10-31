@@ -87,7 +87,7 @@ describe('buildKitExport', () => {
 
   it('gdevelop: animation folders + Tiled .tsx for atlas and terrain', () => {
     const p = paths('gdevelop');
-    expect(p).toContain('gdevelop/sprites/heroe/walk/walk_00.png');
+    expect(p).toContain('gdevelop/sprites/heroe_walk_00.png');
     expect(p).toContain('gdevelop/tiles/mundo/mundo.png');
     expect(p).toContain('gdevelop/tiles/mundo/mundo.tsx');
     expect(p).toContain('gdevelop/tiles/hierba/hierba.tsx');

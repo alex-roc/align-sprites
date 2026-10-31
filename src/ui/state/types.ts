@@ -192,6 +192,8 @@ export interface AppState {
   /** Engine chosen in the export panel (persisted); `exportAll` ships every engine instead. */
   exportEngine: ExportTarget;
   exportAll: boolean;
+  /** GDevelop: also ship the Piskel spritesheet strips (off by default, not persisted). */
+  exportGdSheets: boolean;
   stageView: StageView;
   run: RunState;
   promptKind: PromptKind;
@@ -206,7 +208,7 @@ export type Action =
   | { type: 'asset/patch'; id: string; patch: Partial<Omit<Asset, 'id' | 'image'>> }
   | { type: 'asset/select'; id: string }
   | { type: 'global/patch'; patch: Partial<GlobalSettings> }
-  | { type: 'export'; patch: Partial<{ exportEngine: ExportTarget; exportAll: boolean }> }
+  | { type: 'export'; patch: Partial<{ exportEngine: ExportTarget; exportAll: boolean; exportGdSheets: boolean }> }
   | { type: 'stageView'; view: StageView }
   | { type: 'run/start' }
   | { type: 'run/done'; results: Record<string, SpriteResult>; frameCounts: Record<string, number> }

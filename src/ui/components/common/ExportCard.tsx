@@ -3,7 +3,7 @@ import { useI18n } from '../../../i18n/index.ts';
 import { Check, Segmented, type SegOption } from './Field.tsx';
 
 /** Export panel shared by Sprites and Tiles: pick ONE target, read its import steps, download. */
-export function ExportCard<T extends string>({ name, options, value, onChange, steps, guideHref, all, onAll, allLabel, primaryLabel, onPrimary, secondaryLabel, onSecondary, busy, disabled, error, note, extra }: {
+export function ExportCard<T extends string>({ name, options, value, onChange, steps, guideHref, all, onAll, allLabel, primaryLabel, onPrimary, secondaryLabel, onSecondary, busy, disabled, error, note, extra, choices }: {
   name: string;
   options: SegOption<T>[];
   value: T;
@@ -24,6 +24,8 @@ export function ExportCard<T extends string>({ name, options, value, onChange, s
   note?: ReactNode;
   /** More action buttons after the secondary one. */
   extra?: ReactNode;
+  /** Engine-specific checkboxes shown under the import steps (e.g. GDevelop spritesheets). */
+  choices?: ReactNode;
 }) {
   const { t } = useI18n();
   return (
@@ -37,6 +39,7 @@ export function ExportCard<T extends string>({ name, options, value, onChange, s
           <li key={i}>{s}</li>
         ))}
       </ol>
+      {choices && <div className="export-choices">{choices}</div>}
       <div className="export-actions">
         <button type="button" className="btn btn-primary" disabled={busy || disabled} onClick={onPrimary}>
           {busy ? t('export.working') : primaryLabel}

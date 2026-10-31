@@ -11,7 +11,7 @@ Normalize AI-generated sprites and tiles so they work in **Godot 4**, **GDevelop
 ## What it does
 
 - **Sprite sheets and single characters**: removes the background (chroma key with edge matting, or flood from the borders for white backgrounds), finds every frame (auto, grid or single), recovers the real pixel grid of "fake" AI pixel art, resizes every character of a batch to the **same height**, shares one palette, and packs the frames into fixed cells (multiples of 32) with the **feet on the same line**.
-- **Export**: Godot 4 (`SpriteFrames .tres` + `AnimatedSprite2D .tscn` with the origin at the feet), GDevelop 5 (one PNG per frame, or one spritesheet per animation for Piskel, + origin point), Kaplay (`loadSprite` snippet), generic (Aseprite JSON).
+- **Export**: Godot 4 (`SpriteFrames .tres` + `AnimatedSprite2D .tscn` with the origin at the feet), GDevelop 5 (the cut frames as flat numbered PNGs + origin point; optional Piskel spritesheets), Kaplay (`loadSprite` snippet), generic (Aseprite JSON).
 - **Tiles**: turns an AI tile sheet into exact T×T tiles (Godot TileSet, Tiled `.tsx`), and composes terrain transitions from two seamless textures (blob 47 with Godot terrains, or dual-grid 16).
 - **Prompts**: templates (en/es) and a guide grid image to generate whole animations with Gemini or ChatGPT.
 - **Guide**: an in-app, bilingual guide (`#/guide`) with a before/after slider, a same-height demo and step-by-step import for each engine.

@@ -2,6 +2,7 @@
 import type { ArtMode, EdgeStyle, ExportTarget, RGBA8, RGBAImage, SpriteJob, SpriteResult, TileLayout, TileSetResult } from '../core/types.ts';
 import type { Inspection } from '../core/inspect/index.ts';
 import type { KitInput } from '../core/kit/index.ts';
+import type { ExportOptions } from '../core/export/index.ts';
 import type { TileAtlasOptions, TileAtlasResult } from '../core/tiles/index.ts';
 
 /** Cut lines used to slice a tile sheet. confidence is null when the user fixed cols × rows. */
@@ -38,7 +39,7 @@ export interface PipelineApi {
   /** Run jobs as one batch (shared scale + palette). Images are transferred, not copied. */
   runBatch(jobs: SpriteJob[]): Promise<SpriteResult[]>;
   /** Build the export ZIP for the given results and engines. */
-  buildZip(results: SpriteResult[], targets: ExportTarget[]): Promise<Uint8Array>;
+  buildZip(results: SpriteResult[], targets: ExportTarget[], opts?: ExportOptions): Promise<Uint8Array>;
   /** Detect background colour quickly (for the UI swatch). */
   detectBackground(img: RGBAImage): Promise<{ color: [number, number, number, number]; confidence: number }>;
 

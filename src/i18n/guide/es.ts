@@ -253,7 +253,7 @@ export const guideEs: GuideContent = {
       id: 'godot',
       title: "Godot 4",
       blocks: [
-        { type: 'p', text: "El ZIP trae una carpeta `godot/<nombre>/` Una hoja de sprites trae cuatro archivos: la hoja `<nombre>.png`, un recurso `SpriteFrames` `<nombre>.tres`, una escena lista `<nombre>.tscn` con un `AnimatedSprite2D`, y un `README.txt`. Un sprite único trae en cambio una escena `Sprite2D`, sin `.tres`." },
+        { type: 'p', text: "El ZIP trae una carpeta `<nombre>/`. Una hoja de sprites trae cuatro archivos: la hoja `<nombre>.png`, un recurso `SpriteFrames` `<nombre>.tres`, una escena lista `<nombre>.tscn` con un `AnimatedSprite2D`, y un `README.txt`. Un sprite único trae en cambio una escena `Sprite2D`, sin `.tres`." },
         { type: 'h3', id: 'godot-add', text: "Añade el personaje a tu proyecto" },
         {
           type: 'steps',
@@ -298,13 +298,13 @@ func _physics_process(_delta: float) -> void:
       id: 'gdevelop',
       title: "GDevelop 5",
       blocks: [
-        { type: 'p', text: "GDevelop te da dos formas de añadir una animación. Elige una. El ZIP trae lo que ambas necesitan, dentro de `gdevelop/<nombre>/`." },
+        { type: 'p', text: "El ZIP trae los frames ya cortados, sueltos en la raíz: `<nombre>_<animación>_00.png`, `_01.png`… (si tu hoja tiene una sola animación sin nombre, `<nombre>_00.png`…), y un `README-<nombre>.txt` con el origen y los fps. Así eliges todos los frames de una animación de una vez." },
         {
           type: 'table',
           head: ["Método", "Archivos que usas", "Sirve para"],
           rows: [
-            ["Frames", "`<animación>/<animación>_00.png`, `_01.png`…", "Pocas animaciones. No hay nada más que aprender."],
-            ["Spritesheet con Piskel", "`spritesheets/<animación>.png`, una fila por animación", "Muchos frames. Una importación por animación."],
+            ["Frames", "`<nombre>_<animación>_00.png`, `_01.png`…", "Lo normal. No hay nada más que aprender."],
+            ["Spritesheet con Piskel", "`spritesheets/<nombre>_<animación>.png`, una fila por animación. Solo si marcas **Incluir también spritesheets para Piskel** al exportar.", "Si quieres retocar los frames en Piskel."],
           ],
         },
         { type: 'h3', id: 'gdevelop-frames', text: "Método A: frames" },
@@ -312,7 +312,7 @@ func _physics_process(_delta: float) -> void:
           type: 'steps',
           items: [
             "Crea un objeto **Sprite**. Ponle el nombre de tu personaje.",
-            "Por cada animación, añade una animación, pulsa **Añadir imágenes** y selecciona de una vez todos los PNG de la carpeta de esa animación. GDevelop los añade por orden de nombre, y por eso los archivos van numerados.",
+            "Por cada animación, añade una animación, pulsa **Añadir imágenes** y selecciona de una vez todos los PNG de esa animación (los que empiezan por `<nombre>_<animación>_`). GDevelop los añade por orden de nombre, y por eso los archivos van numerados.",
             "Pon el tiempo entre frames en `1 / fps`. A 10 fps son `0.1` segundos. Activa o desactiva el **Bucle** como lo elegiste en la herramienta.",
           ],
         },
@@ -321,14 +321,14 @@ func _physics_process(_delta: float) -> void:
           type: 'steps',
           items: [
             "En el objeto **Sprite**, añade una animación y ábrela con **Editar con Piskel**.",
-            "En Piskel, elige **Importar**, escoge `spritesheets/<animación>.png` y elige **Importar como spritesheet**.",
+            "En Piskel, elige **Importar**, escoge `spritesheets/<nombre>_<animación>.png` y elige **Importar como spritesheet**. (Para tenerlo, marca **Incluir también spritesheets para Piskel** antes de descargar.)",
             "Escribe el tamaño de frame. Es el tamaño de frame que elegiste en la herramienta, por ejemplo 32 por 32.",
             "Guarda y cierra Piskel. Los frames aparecen en la animación.",
             "Pon el tiempo entre frames en `1 / fps` y el bucle, como en el método A.",
           ],
         },
-        { type: 'callout', title: "Ojo", text: "Los nombres de menú de arriba siguen GDevelop 5 tal como era cuando escribimos esta guía. Si los tuyos difieren, el `README.txt` de la carpeta trae los mismos pasos con los valores exactos de tu hoja." },
-        { type: 'p', text: "Un sprite único es más simple: el ZIP trae un solo PNG, `gdevelop/<nombre>/<nombre>.png`. Agrégalo a la única animación del objeto Sprite." },
+        { type: 'callout', title: "Ojo", text: "Los nombres de menú de arriba siguen GDevelop 5 tal como era cuando escribimos esta guía. Si los tuyos difieren, el `README-<nombre>.txt` del ZIP trae los mismos pasos con los valores exactos de tu hoja." },
+        { type: 'p', text: "Un sprite único es más simple: el ZIP trae un solo PNG, `<nombre>.png`. Agrégalo a la única animación del objeto Sprite." },
         { type: 'h3', id: 'gdevelop-origin', text: "Pon el punto de origen en los pies" },
         { type: 'p', text: "Por defecto el origen es la esquina superior izquierda. Entonces un objeto colocado en (x, y) cuelga de esa esquina, y el personaje se desplaza cuando lo volteas o lo escalas. Pon el punto **Origin** en los pies." },
         {
@@ -348,7 +348,7 @@ func _physics_process(_delta: float) -> void:
       id: 'kaplay',
       title: "Kaplay",
       blocks: [
-        { type: 'p', text: "El ZIP trae `kaplay/<nombre>.png` y `kaplay/<nombre>.js`. El `.js` tiene la llamada a `loadSprite` lista para pegar." },
+        { type: 'p', text: "El ZIP trae `<nombre>.png` y `<nombre>.js`. El `.js` tiene la llamada a `loadSprite` lista para pegar." },
         { type: 'p', text: "La hoja tiene una fila por animación. Cada animación empieza en `from = fila × columnas`. Por eso el fragmento corta la hoja con `sliceX` y `sliceY`." },
         {
           type: 'code',
@@ -388,7 +388,7 @@ onKeyRelease(["left", "right"], () => hero.play("idle"));
       id: 'other',
       title: "Otros motores",
       blocks: [
-        { type: 'p', text: "El ZIP trae una carpeta `generic/` para cualquier motor que lea hojas de Aseprite o que corte una hoja por tamaño de frame." },
+        { type: 'p', text: "El ZIP de **Otro** sirve para cualquier motor que lea hojas de Aseprite o que corte una hoja por tamaño de frame." },
         { type: 'ul', items: [
           "`<nombre>.png` es la hoja, con una fila por animación.",
           "`<nombre>.json` está en el formato de Aseprite: el rectángulo de cada frame, su duración en milisegundos y una etiqueta por animación.",

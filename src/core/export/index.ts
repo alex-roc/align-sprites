@@ -11,15 +11,26 @@ export { zipFiles } from './zip.ts';
 export { slug } from './common.ts';
 export { godotSpriteFrames, gdevelopFrames, kaplaySnippet, genericExport };
 
-const EXPORTERS: Record<ExportTarget, (r: SpriteResult) => ExportFile[]> = {
-  godot: godotSpriteFrames,
-  gdevelop: gdevelopFrames,
-  kaplay: kaplaySnippet,
-  generic: genericExport,
+export interface ExportOptions {
+  /** Put each target in its own `<target>/` folder. Default: only when exporting several targets. */
+  prefix?: boolean;
+  /** GDevelop: also the Piskel spritesheet strips (off by default). */
+  gdevelopSpritesheets?: boolean;
+}
+
+const EXPORTERS: Record<ExportTarget, (r: SpriteResult, o: ExportOptions) => ExportFile[]> = {
+  godot: (r) => godotSpriteFrames(r),
+  gdevelop: (r, o) => gdevelopFrames(r, { spritesheets: o.gdevelopSpritesheets }),
+  kaplay: (r) => kaplaySnippet(r),
+  generic: (r) => genericExport(r),
 };
 
-/** All requested targets for all results, prefixed `<target>/`. Results whose names collide get a numeric suffix. */
-export function buildExport(results: SpriteResult[], targets: ExportTarget[]): ExportFile[] {
+/**
+ * All requested targets for all results; with several targets each one goes in a `<target>/` folder (a one-engine
+ * ZIP is already named after its engine). Results whose names collide get a numeric suffix.
+ */
+export function buildExport(results: SpriteResult[], targets: ExportTarget[], opts: ExportOptions = {}): ExportFile[] {
+  const prefix = opts.prefix ?? targets.length > 1;
   const used = new Set<string>();
   const named = results.map((r) => {
     const base = slug(r.name);
@@ -31,7 +42,7 @@ export function buildExport(results: SpriteResult[], targets: ExportTarget[]): E
   const files: ExportFile[] = [];
   for (const target of targets) {
     for (const r of named) {
-      for (const f of EXPORTERS[target](r)) files.push({ path: `${target}/${f.path}`, data: f.data });
+      for (const f of EXPORTERS[target](r, opts)) files.push({ path: prefix ? `${target}/${f.path}` : f.path, data: f.data });
     }
   }
   return files;

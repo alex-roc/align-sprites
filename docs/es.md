@@ -53,11 +53,11 @@ El editor de frames, bajo la tira de frames, actúa sobre el frame elegido: move
 
 ## 3. Usarlo en tu motor
 
-Bajo el escenario, elige el motor y pulsa **Descargar para …**. El ZIP trae una carpeta por motor.
+Bajo el escenario, elige el motor y pulsa **Descargar para …**. El ZIP trae los archivos de ese motor (con *Todos los motores*, una carpeta por motor).
 
 ### Godot 4
 
-1. Copia la carpeta `godot/<nombre>/` dentro de tu proyecto (por ejemplo, `res://personajes/<nombre>/`).
+1. Copia la carpeta `<nombre>/` del ZIP dentro de tu proyecto (por ejemplo, `res://personajes/<nombre>/`).
 2. Arrastra `<nombre>.tscn` a tu escena. Es un `AnimatedSprite2D` con el **origen en los pies** y todas las animaciones listas, con sus fps y su bucle. Un **sprite único** trae en cambio una escena `Sprite2D`.
 3. En pixel art, la escena ya usa el filtro *Nearest*. Para todo el proyecto: *Configuración del proyecto → Rendering → Textures → Default Texture Filter = Nearest*.
 
@@ -65,20 +65,20 @@ También puedes usar solo `<nombre>.tres` (un recurso `SpriteFrames`) en tu prop
 
 ### GDevelop 5
 
-Dos formas de añadir cada animación (elige una):
+El ZIP trae los frames ya cortados, sueltos en la raíz (`<nombre>_<animación>_00.png`, `_01.png`…), y un `README-<nombre>.txt` con el origen y los fps.
 
-- **Frames**: crea un objeto **Sprite**, añade una animación, pulsa *Añadir imágenes* y selecciona de una vez todos los PNG de `gdevelop/<nombre>/<animación>/`.
-- **Spritesheet con Piskel**: añade una animación, ábrela con *Editar con Piskel*, elige *Importar*, escoge `spritesheets/<animación>.png` y *Importar como spritesheet* con tu tamaño de frame.
+- **Frames**: crea un objeto **Sprite**, añade una animación, pulsa *Añadir imágenes* y selecciona de una vez todos los PNG de esa animación.
+- **Spritesheet con Piskel** (opcional: marca *Incluir también spritesheets para Piskel* antes de descargar): añade una animación, ábrela con *Editar con Piskel*, elige *Importar*, escoge `spritesheets/<nombre>_<animación>.png` y *Importar como spritesheet* con tu tamaño de frame.
 
-Luego pon el tiempo entre frames en `1 / fps` y el bucle. En *Editar puntos* (el editor de Puntos), fija el punto **Origin** (Origen) en el valor del README (los pies) para todos los frames. Un **sprite único** es un solo PNG, `gdevelop/<nombre>/<nombre>.png`. En pixel art, en las propiedades del juego elige el modo de escalado *Nearest (sin antialiasing)*. (Los nombres de menú siguen GDevelop 5 como lo vimos por última vez; el README del ZIP trae los mismos pasos.)
+Luego pon el tiempo entre frames en `1 / fps` y el bucle. En *Editar puntos* (el editor de Puntos), fija el punto **Origin** (Origen) en el valor del README (los pies) para todos los frames. Un **sprite único** es un solo PNG, `<nombre>.png`. En pixel art, en las propiedades del juego elige el modo de escalado *Nearest (sin antialiasing)*. (Los nombres de menú siguen GDevelop 5 como lo vimos por última vez; el README del ZIP trae los mismos pasos.)
 
 ### Kaplay
 
-`kaplay/<nombre>.png` y `kaplay/<nombre>.js` con la llamada `loadSprite(...)` (`sliceX`, `sliceY`, `anims`; cada animación empieza en `fila × columnas`). Usa `anchor("bot")` para que el origen esté en los pies, y `kaplay({ crisp: true, texFilter: "nearest" })` en pixel art. Un sprite único es un simple `loadSprite(nombre, png)`.
+`<nombre>.png` y `<nombre>.js` con la llamada `loadSprite(...)` (`sliceX`, `sliceY`, `anims`; cada animación empieza en `fila × columnas`). Usa `anchor("bot")` para que el origen esté en los pies, y `kaplay({ crisp: true, texFilter: "nearest" })` en pixel art. Un sprite único es un simple `loadSprite(nombre, png)`.
 
 ### Otros motores
 
-`generic/<nombre>.png` con `<nombre>.json` en el formato de Aseprite, más un PNG por frame. Phaser lo lee como atlas de Aseprite, Unity corta el PNG con *Grid By Cell Size*, y Defold y Construct pueden importar los PNG por frame. Conocemos esos motores menos: revisa su documentación. Sirve cualquier motor que corte por tamaño de frame: la animación `k` es la fila `k`, el frame `i` es la columna `i`, con el origen en los pies.
+`<nombre>.png` con `<nombre>.json` en el formato de Aseprite, más un PNG por frame. Phaser lo lee como atlas de Aseprite, Unity corta el PNG con *Grid By Cell Size*, y Defold y Construct pueden importar los PNG por frame. Conocemos esos motores menos: revisa su documentación. Sirve cualquier motor que corte por tamaño de frame: la animación `k` es la fila `k`, el frame `i` es la columna `i`, con el origen en los pies.
 
 ## 4. Tiles
 

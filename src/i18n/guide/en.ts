@@ -253,7 +253,7 @@ export const guideEn: GuideContent = {
       id: 'godot',
       title: "Godot 4",
       blocks: [
-        { type: 'p', text: "The ZIP has a `godot/<name>/` folder. A sprite sheet gets four files: the sheet `<name>.png`, a `SpriteFrames` resource `<name>.tres`, a ready scene `<name>.tscn` with an `AnimatedSprite2D`, and a `README.txt`. A single sprite gets a `Sprite2D` scene instead, with no `.tres`." },
+        { type: 'p', text: "The ZIP has a `<name>/` folder. A sprite sheet gets four files: the sheet `<name>.png`, a `SpriteFrames` resource `<name>.tres`, a ready scene `<name>.tscn` with an `AnimatedSprite2D`, and a `README.txt`. A single sprite gets a `Sprite2D` scene instead, with no `.tres`." },
         { type: 'h3', id: 'godot-add', text: "Add the character to your project" },
         {
           type: 'steps',
@@ -298,13 +298,13 @@ func _physics_process(_delta: float) -> void:
       id: 'gdevelop',
       title: "GDevelop 5",
       blocks: [
-        { type: 'p', text: "GDevelop gives you two ways to add an animation. Pick one. The ZIP has what both need, inside `gdevelop/<name>/`." },
+        { type: 'p', text: "The ZIP has the frames already cut, loose at its root: `<name>_<animation>_00.png`, `_01.png`… (when your sheet has a single unnamed animation, `<name>_00.png`…), plus a `README-<name>.txt` with the origin and the fps. So you pick every frame of an animation in one go." },
         {
           type: 'table',
           head: ["Method", "Files you use", "Good for"],
           rows: [
-            ["Frames", "`<animation>/<animation>_00.png`, `_01.png`…", "Few animations. Nothing else to learn."],
-            ["Piskel spritesheet", "`spritesheets/<animation>.png`, one row per animation", "Many frames. One import per animation."],
+            ["Frames", "`<name>_<animation>_00.png`, `_01.png`…", "The usual way. Nothing else to learn."],
+            ["Piskel spritesheet", "`spritesheets/<name>_<animation>.png`, one row per animation. Only if you tick **Also spritesheets for Piskel** when exporting.", "When you want to touch up the frames in Piskel."],
           ],
         },
         { type: 'h3', id: 'gdevelop-frames', text: "Method A: frames" },
@@ -312,7 +312,7 @@ func _physics_process(_delta: float) -> void:
           type: 'steps',
           items: [
             "Create a **Sprite** object. Use your character's name.",
-            "For each animation, add an animation, click **Add images** and select every PNG in that animation's folder at once. GDevelop adds them in name order, which is why the files are numbered.",
+            "For each animation, add an animation, click **Add images** and select every PNG of that animation at once (the ones starting with `<name>_<animation>_`). GDevelop adds them in name order, which is why the files are numbered.",
             "Set the time between frames to `1 / fps`. At 10 fps it is `0.1` seconds. Turn **Loop** on or off as you chose in the tool.",
           ],
         },
@@ -321,14 +321,14 @@ func _physics_process(_delta: float) -> void:
           type: 'steps',
           items: [
             "In the **Sprite** object, add an animation and open it with **Edit with Piskel**.",
-            "In Piskel, choose **Import**, pick `spritesheets/<animation>.png` and choose **Import as spritesheet**.",
+            "In Piskel, choose **Import**, pick `spritesheets/<name>_<animation>.png` and choose **Import as spritesheet**. (To get it, tick **Also spritesheets for Piskel** before downloading.)",
             "Type the frame size. It is the frame size you chose in the tool, for example 32 by 32.",
             "Save and close Piskel. The frames appear in the animation.",
             "Set the time between frames to `1 / fps` and the loop, as in method A.",
           ],
         },
-        { type: 'callout', title: "Heads up", text: "The menu names above follow GDevelop 5 as it was when we wrote this guide. If yours differ, `README.txt` in the folder lists the same steps with the exact values for your sheet." },
-        { type: 'p', text: "A single sprite is simpler: the ZIP has one PNG, `gdevelop/<name>/<name>.png`. Add it to the Sprite object's only animation." },
+        { type: 'callout', title: "Heads up", text: "The menu names above follow GDevelop 5 as it was when we wrote this guide. If yours differ, `README-<name>.txt` in the ZIP lists the same steps with the exact values for your sheet." },
+        { type: 'p', text: "A single sprite is simpler: the ZIP has one PNG, `<name>.png`. Add it to the Sprite object's only animation." },
         { type: 'h3', id: 'gdevelop-origin', text: "Put the origin point at the feet" },
         { type: 'p', text: "By default the origin is the top-left corner. Then an object placed at (x, y) hangs from that corner, and the character shifts when you flip or scale it. Put the **Origin** point at the feet instead." },
         {
@@ -348,7 +348,7 @@ func _physics_process(_delta: float) -> void:
       id: 'kaplay',
       title: "Kaplay",
       blocks: [
-        { type: 'p', text: "The ZIP has `kaplay/<name>.png` and `kaplay/<name>.js`. The `.js` file has the `loadSprite` call ready to paste." },
+        { type: 'p', text: "The ZIP has `<name>.png` and `<name>.js`. The `.js` file has the `loadSprite` call ready to paste." },
         { type: 'p', text: "The sheet has one row per animation. Each animation starts at `from = row × columns`. That is why the snippet slices the sheet with `sliceX` and `sliceY`." },
         {
           type: 'code',
@@ -388,7 +388,7 @@ onKeyRelease(["left", "right"], () => hero.play("idle"));
       id: 'other',
       title: "Other engines",
       blocks: [
-        { type: 'p', text: "The ZIP has a `generic/` folder for any engine that reads Aseprite sheets or slices a sheet by frame size." },
+        { type: 'p', text: "The **Other** ZIP is for any engine that reads Aseprite sheets or slices a sheet by frame size." },
         { type: 'ul', items: [
           "`<name>.png` is the sheet, with one row per animation.",
           "`<name>.json` is in Aseprite's format: the rectangle of every frame, its duration in milliseconds and one tag per animation.",
