@@ -9,10 +9,12 @@ export interface ExampleBtn {
 }
 
 /** Empty state of the stage: the stage itself is the drop zone, with examples and a three-step "how it works" line. */
-export function EmptyStage({ title, hint, multiple, onFiles, examples, steps, error, busy, extra }: {
+export function EmptyStage({ title, hint, multiple, accept = 'image/*', onFiles, examples, steps, error, busy, extra }: {
   title: string;
   hint: string;
   multiple?: boolean;
+  /** File types of the picker. */
+  accept?: string;
   onFiles: (files: File[]) => void;
   examples: ExampleBtn[];
   steps: [MessageKey, MessageKey, MessageKey];
@@ -32,7 +34,7 @@ export function EmptyStage({ title, hint, multiple, onFiles, examples, steps, er
         <input
           ref={input}
           type="file"
-          accept="image/*"
+          accept={accept}
           multiple={multiple}
           className="sr-only"
           tabIndex={-1}

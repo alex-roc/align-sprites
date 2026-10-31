@@ -1,6 +1,8 @@
 // Main-thread side of the worker: a typed Comlink proxy plus helpers that transfer pixel buffers.
 import * as Comlink from 'comlink';
 import type { TileAtlasOptions, TileAtlasResult } from '../core/tiles/index.ts';
+import type { ParallaxInput, ParallaxOptions, ParallaxResult } from '../core/parallax/index.ts';
+import type { ItemsOptions, ItemsResult } from '../core/items/index.ts';
 import type { Inspection } from '../core/inspect/index.ts';
 import type { ExportOptions } from '../core/export/index.ts';
 import type { KitInput } from '../core/kit/index.ts';
@@ -67,4 +69,23 @@ export function renderTerrainPreview(cells: Uint8Array, w: number, h: number): P
 
 export function buildTerrainZip(set: TileSetResult, name: string, names: [string, string]): Promise<Uint8Array> {
   return pipeline.buildTerrainZip(set, name, names);
+}
+
+export function normalizeItems(img: RGBAImage, o: ItemsOptions, palette?: RGBA8[]): Promise<ItemsResult> {
+  const c = copyImage(img);
+  return pipeline.normalizeItems(Comlink.transfer(c, [bufferOf(c)]), o, palette);
+}
+
+export function buildItemsZip(result: ItemsResult, name: string, names: (string | undefined)[], targets: ExportTarget[]): Promise<Uint8Array> {
+  return pipeline.buildItemsZip(result, name, names, targets);
+}
+
+/** Layer images are copied and transferred (the UI keeps its originals); the result buffers come back transferred. */
+export function buildParallax(inputs: ParallaxInput[], o: ParallaxOptions): Promise<ParallaxResult> {
+  const copies = inputs.map((l) => ({ ...l, image: copyImage(l.image) }));
+  return pipeline.buildParallax(Comlink.transfer(copies, copies.map((l) => bufferOf(l.image))), o);
+}
+
+export function buildParallaxZip(result: ParallaxResult, name: string, targets: ExportTarget[]): Promise<Uint8Array> {
+  return pipeline.buildParallaxZip(result, name, targets);
 }

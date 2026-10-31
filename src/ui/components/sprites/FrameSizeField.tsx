@@ -23,7 +23,12 @@ export function FrameSizeField() {
   const fit = useMemo(() => {
     let w = STEP, h = STEP;
     for (const r of results) {
-      const c = suggestCell(r.diag.metrics.map(() => NO_PIXELS), r.diag.metrics, g.padBottom, STEP);
+      // Centred sprites need their bbox on each side of the centre; the others their feet and anchor column.
+      const centred = r.sheet.anchor === 'center';
+      const ms = centred
+        ? r.diag.metrics.map((m) => ({ ...m, bbox: { x: -Math.floor(m.bbox.w / 2), y: -Math.floor(m.bbox.h / 2), w: m.bbox.w, h: m.bbox.h } }))
+        : r.diag.metrics;
+      const c = suggestCell(r.diag.metrics.map(() => NO_PIXELS), ms, g.padBottom, STEP, centred ? 'center' : 'feet');
       w = Math.max(w, c.w);
       h = Math.max(h, c.h);
     }

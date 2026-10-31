@@ -67,7 +67,7 @@ export function AllTogether() {
             return (
               <figure key={asset.id} className="together-item">
                 <div className="together-canvas">
-                  <div className="ground" style={{ top: 'auto', bottom: (padBottom + 0.5) * zoom }} aria-hidden="true" />
+                  <div className="ground" style={{ top: 'auto', bottom: ((result.sheet.anchor === 'center' ? cell.h / 2 : padBottom + 0.5)) * zoom }} aria-hidden="true" />
                   <CellCanvas image={result.frames[shownFrame] ?? result.frames[0]} pixelated={pixelated} w={cell.w * zoom} h={cell.h * zoom} label={names.get(asset.id) ?? asset.name} />
                 </div>
                 <figcaption>

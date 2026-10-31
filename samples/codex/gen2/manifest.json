@@ -1,0 +1,12 @@
+{
+  "style": "Follow the instructions below exactly. Reference image 1 is the layout guide described in them.",
+  "aspect": "landscape",
+  "out": ".",
+  "items": [
+    { "name": "items-pixel", "subject_file": "prompt-items.txt", "references": ["guide-items.png"] },
+    { "name": "atlas-andes-pixel", "subject_file": "prompt-atlas.txt", "references": ["guide-atlas.png"] },
+    { "name": "parallax-far-pixel", "subject_file": "prompt-far.txt", "references": ["guide-far.png"] },
+    { "name": "parallax-near-pixel", "subject_file": "prompt-near.txt", "references": ["guide-near.png"] },
+    { "name": "explosion-pixel", "subject_file": "prompt-explosion.txt", "references": ["guide-explosion.png"] }
+  ]
+}

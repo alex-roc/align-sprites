@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "align-sprites": "cli/align-sprites.ts"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -12,7 +15,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:godot": "node scripts/godot-validate.mjs",
-    "test:godot:tiles": "node scripts/godot-validate-tiles.mjs"
+    "test:godot:tiles": "node scripts/godot-validate-tiles.mjs",
+    "test:godot:items": "node scripts/godot-validate-items.mjs",
+    "test:godot:parallax": "node scripts/godot-validate-parallax.mjs",
+    "cli": "node cli/align-sprites.ts"
   },
   "dependencies": {
     "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
@@ -20,6 +26,7 @@
     "comlink": "^4.4.2",
     "fast-png": "^8.0.0",
     "fflate": "^0.8.3",
+    "kaplay": "3001.0.19",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

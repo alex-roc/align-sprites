@@ -9,6 +9,7 @@ import { fixedPalette } from '../../state/jobs.ts';
 import type { PaletteChoice } from '../../state/types.ts';
 import { usePaletteSummary } from '../../state/usePaletteSummary.ts';
 import { Field, NumberInput } from './Field.tsx';
+import { PaletteEditor, usedColors } from './PaletteEditor.tsx';
 
 /** Colours the "from an image" palette keeps (a palette strip of up to 32 colours comes back exactly). */
 const FROM_IMAGE_COLORS = 32;
@@ -42,6 +43,13 @@ export function PaletteField() {
     if (v === 'original') set({ kind: 'original' });
     else if (v === 'reduce') set({ kind: 'reduce' });
     else if (v === 'image') input.current?.click();
+    else if (v === 'custom') {
+      // The first time, start from the palette in use (or the colours of the images) instead of an empty one.
+      if (!g.customColors.length) {
+        const seed = colors?.map(rgbaToHex) ?? usedColors(Object.values(state.run.results).map((r) => r.sheet.image)) ?? [];
+        dispatch({ type: 'global/patch', patch: { palette: { kind: 'custom' }, customColors: seed } });
+      } else set({ kind: 'custom' });
+    }
     else set({ kind: 'preset', id: v.replace(/^preset:/, '') });
   };
   const fromFile = async (file: File) => {
@@ -64,6 +72,7 @@ export function PaletteField() {
             <option key={p.id} value={`preset:${p.id}`}>{p.name} ({p.colors.length})</option>
           ))}
           <option value="image">{t('palette.fromImage')}</option>
+          <option value="custom">{t('palette.custom')}</option>
         </select>
       </Field>
       {g.palette.kind === 'reduce' && (
@@ -71,7 +80,8 @@ export function PaletteField() {
           <NumberInput value={g.maxColors} min={2} max={64} onChange={(n) => set({ kind: 'reduce' }, n)} className="num-sm" />
         </Field>
       )}
-      {colors && <Swatches colors={colors} label={t('palette.swatches')} />}
+      {colors && g.palette.kind !== 'custom' && <Swatches colors={colors} label={t('palette.swatches')} />}
+      {g.palette.kind === 'custom' && <PaletteEditor />}
       {g.palette.kind === 'image' && (
         <p className="hint">
           {t('palette.fromImageNote', { name: g.palette.from || '…' })}{' '}
@@ -79,7 +89,7 @@ export function PaletteField() {
         </p>
       )}
       {g.palette.kind === 'original' && <p className="hint">{t('palette.originalHint')}</p>}
-      {(g.palette.kind === 'preset' || g.palette.kind === 'image') && <p className="hint">{t('palette.fixedHint')}</p>}
+      {(g.palette.kind === 'preset' || g.palette.kind === 'image' || g.palette.kind === 'custom') && <p className="hint">{t('palette.fixedHint')}</p>}
       {error && <p className="alert" role="alert">{error}</p>}
       <input
         ref={input}

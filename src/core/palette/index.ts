@@ -170,3 +170,6 @@ export function remapToPalette(images: RGBAImage[], palette: RGBA8[]): RGBAImage
     return { width: img.width, height: img.height, data };
   });
 }
+
+export * from './formats.ts';
+export * from './swap.ts';

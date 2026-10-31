@@ -1,0 +1,18 @@
+Create ONE tileset sheet image for a 2D game: Andean mountains: puna grass ground, brown earth, grey rock, stone bricks, a wooden plank platform. It has 6 columns × 4 rows (24 square tiles), laid out exactly like the attached guide image.
+
+Layout:
+- One tile per cell, in reading order (left to right, top to bottom), on the exact grid of the guide: same positions, same sizes.
+- Between tiles, and around the whole sheet, leave a gap of plain background like the guide. Tiles never touch each other, even the ones that connect in the game.
+- Each tile is a perfect square with straight, hard edges, filled from edge to edge.
+- The guide is only a template: do not draw its lines or numbers in the result.
+
+Tile set:
+- Ground and platform pieces for a side-view platformer: the surface tile (top-left corner, top, top-right corner), the solid fill underneath, left and right walls, inner corners, and a floating platform made of 3 pieces (left end, middle, right end). Use the remaining cells for variations of the fill and the surface, and a few decorations.
+- Tiles that connect must match exactly along the edges they share: the right edge of a tile continues into the left edge of the next one, and the same for top and bottom. Fill tiles repeat seamlessly on both axes.
+- Terrain tiles are fully opaque: no transparency, no holes and no background color inside them. Only decoration tiles (plants, rocks, signs) may show the background color around their shape.
+- SOLID TOPS: on every ground tile where characters stand, the walkable surface touches the top edge of the tile. The top row of pixels is solid ground (grass, rock or snow), fully opaque, with no empty strip above the surface and no grass blades or snow hanging over the edge. Otherwise the characters float above the ground in the game.
+- Consistent lighting and palette: light from the top-left on every tile, the same palette and the same contrast across the whole sheet.
+
+Style: true pixel art, each tile is exactly 32×32 art pixels. Every art pixel is a square block of the same size on one grid. Crisp hard edges, no anti-aliasing, no blur, no gradients, limited palette (about 16 colors).
+
+Background: one flat solid color, exactly #FF00FF (pure magenta), filling the gaps between tiles and the margin around the sheet. No gradients, shadows, text or labels. Do not use magenta, pink or purple anywhere in the artwork.

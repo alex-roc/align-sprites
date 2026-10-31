@@ -1,6 +1,6 @@
 // Pack normalized frames into a fixed-cell sheet, feet-anchored.
 import { blit, createImage, flipImageX } from '../image.ts';
-import type { AnimSpec, CellSpec, FrameMetrics, FrameOffset, PackedSheet, RGBAImage, ArtMode, Warning } from '../types.ts';
+import type { AnimSpec, CellSpec, FrameMetrics, FrameOffset, PackedSheet, RGBAImage, ArtMode, SpriteAnchor, Warning } from '../types.ts';
 
 /** Cell presets (px). Width and height are chosen independently. */
 export const CELL_PRESETS = [16, 32, 48, 64, 96, 128, 160, 192, 256];
@@ -16,8 +16,19 @@ const CLIP_NOISE_PX = 3;
 /**
  * Smallest cell (each axis a multiple of `step`, default 32) that fits every frame when anchored:
  * width must fit max(anchorX - bbox.x, bbox.x+bbox.w - anchorX)·2; height must fit max(footY - bbox.y + 1) + padBottom.
+ * With anchor 'center' the metrics are the ones `placementMetrics(..., 'center')` returns (bboxes relative to the
+ * centre): the cell must hold the farthest extent on each side twice, and padBottom is ignored.
  */
-export function suggestCell(frames: RGBAImage[], metrics: FrameMetrics[], padBottom = 0, step = 32): { w: number; h: number } {
+export function suggestCell(frames: RGBAImage[], metrics: FrameMetrics[], padBottom = 0, step = 32, anchor: SpriteAnchor = 'feet'): { w: number; h: number } {
+  if (anchor === 'center') {
+    let halfW = 0, halfH = 0;
+    for (const m of metrics.slice(0, frames.length)) {
+      if (m.bbox.w <= 0 || m.bbox.h <= 0) continue;
+      halfW = Math.max(halfW, -m.bbox.x, m.bbox.x + m.bbox.w);
+      halfH = Math.max(halfH, -m.bbox.y, m.bbox.y + m.bbox.h);
+    }
+    return { w: Math.max(1, Math.ceil((2 * halfW) / step)) * step, h: Math.max(1, Math.ceil((2 * halfH) / step)) * step };
+  }
   // Extents measured from the anchor column (included on the right side) exactly as packFrames places them.
   let left = 0, right = 0, up = 0;
   const n = Math.min(frames.length, metrics.length);
@@ -38,12 +49,14 @@ export function suggestCell(frames: RGBAImage[], metrics: FrameMetrics[], padBot
 /**
  * The placements `packFrames` will make, as parallel frame/metric lists for `suggestCell`: mirrored animations
  * swap their left/right extents and nudged frames move (anchor and feet shift by the opposite amount).
+ * With anchor 'center' each bbox is returned relative to the cell centre (its nudge included), see `suggestCell`.
  */
 export function placementMetrics(
   frames: RGBAImage[],
   metrics: FrameMetrics[],
   anims: AnimSpec[],
   offsets?: Record<number, FrameOffset>,
+  anchor: SpriteAnchor = 'feet',
 ): { frames: RGBAImage[]; metrics: FrameMetrics[] } {
   const outF: RGBAImage[] = [];
   const outM: FrameMetrics[] = [];
@@ -53,6 +66,12 @@ export function placementMetrics(
       if (!f || !m) continue;
       const off = offsets?.[fi];
       const dx = Math.round(off?.dx ?? 0), dy = Math.round(off?.dy ?? 0);
+      if (anchor === 'center') {
+        const { w, h } = m.bbox;
+        outF.push(f);
+        outM.push({ bbox: { x: dx - Math.floor(w / 2), y: dy - Math.floor(h / 2), w, h }, footY: 0, anchorX: 0 });
+        continue;
+      }
       const anchorX = a.flipX ? f.width - 1 - Math.round(m.anchorX) : Math.round(m.anchorX);
       const bbox = a.flipX ? { ...m.bbox, x: f.width - m.bbox.x - m.bbox.w } : m.bbox;
       outF.push(f);
@@ -70,6 +89,8 @@ export function placementMetrics(
  * `spec.flipX` mirrors each frame of that animation around its anchor (the anchor stays on column floor(cell.w/2)).
  * `opts.offsets` nudges a frame (keyed by frame index, so every animation using it gets the same nudge) by
  * (dx, dy) output px after the feet/anchor alignment; dy > 0 moves it down.
+ * `opts.anchor` 'center' (effects) puts the bbox centre of each frame on the cell centre instead (so a growing
+ * explosion stays centred and the origin is the middle of the cell); padBottom is ignored (stored as 0).
  */
 export function packFrames(
   frames: RGBAImage[],
@@ -77,7 +98,7 @@ export function packFrames(
   cell: CellSpec,
   anims: AnimSpec[],
   mode: ArtMode,
-  opts?: { offsets?: Record<number, FrameOffset> },
+  opts?: { offsets?: Record<number, FrameOffset>; anchor?: SpriteAnchor },
 ): { sheet: PackedSheet; cells: RGBAImage[]; warnings: Warning[] } {
   const specs: AnimSpec[] = anims.length
     ? anims
@@ -85,8 +106,10 @@ export function packFrames(
   const cols = Math.max(1, ...specs.map((a) => a.frames.length));
   const rows = specs.length;
   const image = createImage(cols * cell.w, rows * cell.h);
+  const center = opts?.anchor === 'center';
+  const padBottom = center ? 0 : cell.padBottom;
   const anchorCol = Math.floor(cell.w / 2);
-  const footRow = cell.h - 1 - cell.padBottom;
+  const footRow = cell.h - 1 - padBottom;
 
   const warnings: Warning[] = [];
   const warned = new Set<number>();
@@ -99,9 +122,16 @@ export function packFrames(
       const c = createImage(cell.w, cell.h);
       if (f && m) {
         const off = opts?.offsets?.[fi];
-        const anchor = spec.flipX ? f.width - 1 - Math.round(m.anchorX) : Math.round(m.anchorX);
-        const dx = anchorCol - anchor + Math.round(off?.dx ?? 0);
-        const dy = footRow - m.footY + Math.round(off?.dy ?? 0);
+        let dx: number, dy: number;
+        if (center) {
+          const bx = spec.flipX ? f.width - m.bbox.x - m.bbox.w : m.bbox.x;
+          dx = anchorCol - Math.floor(m.bbox.w / 2) - bx + Math.round(off?.dx ?? 0);
+          dy = Math.floor(cell.h / 2) - Math.floor(m.bbox.h / 2) - m.bbox.y + Math.round(off?.dy ?? 0);
+        } else {
+          const anchor = spec.flipX ? f.width - 1 - Math.round(m.anchorX) : Math.round(m.anchorX);
+          dx = anchorCol - anchor + Math.round(off?.dx ?? 0);
+          dy = footRow - m.footY + Math.round(off?.dy ?? 0);
+        }
         blit(c, f, dx, dy, 'replace');
         if (!warned.has(fi)) {
           const px = clippedPixels(f, dx, dy, cell.w, cell.h);
@@ -121,9 +151,10 @@ export function packFrames(
     cell: { w: cell.w, h: cell.h },
     cols,
     rows,
-    padBottom: cell.padBottom,
+    padBottom,
     anims: specs.map((a, row) => ({ name: a.name, row, count: a.frames.length, fps: a.fps, loop: a.loop })),
     mode,
+    ...(center ? { anchor: 'center' as const } : {}),
   };
   return { sheet, cells, warnings };
 }

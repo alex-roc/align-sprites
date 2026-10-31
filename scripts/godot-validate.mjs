@@ -20,7 +20,7 @@ if (!existsSync(GODOT)) {
 }
 
 /** Synthetic packed sheet: `anims` = [name, count, fps, loop]; each cell is a coloured rectangle. */
-function synth(name, mode, cell, padBottom, anims) {
+function synth(name, mode, cell, padBottom, anims, extra = {}) {
   const cols = Math.max(...anims.map((a) => a[1]));
   const rows = anims.length;
   const width = cols * cell.w;
@@ -38,7 +38,7 @@ function synth(name, mode, cell, padBottom, anims) {
   });
   const image = { width, height, data };
   const sheet = {
-    image, cell, cols, rows, padBottom, mode,
+    image, cell, cols, rows, padBottom, mode, ...extra,
     anims: anims.map(([n, count, fps, loop], row) => ({ name: n, row, count, fps, loop })),
   };
   return { name, sheet, frames: [], diag: { scale: 1, refHeight: cell.h, metrics: [], regions: [], warnings: [] } };
@@ -56,11 +56,14 @@ function real() {
 }
 
 const results = [
-  synth('Héroe', 'pixel', { w: 64, h: 96 }, 2, [['idle', 4, 6, true], ['walk', 6, 10, true], ['attack', 3, 12.5, false]]),
-  synth('slime', 'cartoon', { w: 32, h: 32 }, 0, [['idle', 2, 4, true]]),
+  synth('Héroe', 'pixel', { w: 64, h: 96 }, 2, [['idle', 4, 6, true], ['walk', 6, 10, true], ['attack', 3, 12.5, false]], { collision: { x: 22, y: 36, w: 20, h: 60 } }),
+  synth('slime', 'cartoon', { w: 32, h: 32 }, 0, [['idle', 2, 4, true]], { collision: { x: 6, y: 12, w: 20, h: 20 } }),
   real(),
   // One animation with one frame = static sprite: Sprite2D scene, no SpriteFrames.
-  synth('Piedra', 'pixel', { w: 32, h: 32 }, 1, [['default', 1, 8, true]]),
+  synth('Piedra', 'pixel', { w: 32, h: 32 }, 1, [['default', 1, 8, true]], { collision: { x: 4, y: 10, w: 24, h: 21 } }),
+  // Centre-anchored effects (animated and static): origin in the middle of the frame, box on half pixels.
+  synth('Chispa', 'pixel', { w: 32, h: 32 }, 0, [['boom', 3, 12, false]], { anchor: 'center', collision: { x: 7.5, y: 8, w: 17, h: 16 } }),
+  synth('Moneda', 'pixel', { w: 16, h: 16 }, 0, [['default', 1, 8, true]], { anchor: 'center', collision: { x: 3, y: 3, w: 10, h: 10 } }),
 ];
 
 rmSync(out, { recursive: true, force: true });
@@ -70,8 +73,8 @@ for (const f of buildExport(results, ['godot'], { prefix: true })) {
   writeFileSync(p, f.data);
 }
 
-const slugs = ['heroe', 'slime', 'run', 'piedra'];
-const nodes = ['Heroe', 'Slime', 'Run', 'Piedra'];
+const slugs = ['heroe', 'slime', 'run', 'piedra', 'chispa', 'moneda'];
+const nodes = ['Heroe', 'Slime', 'Run', 'Piedra', 'Chispa', 'Moneda'];
 const pairs = [];
 results.forEach((r, i) => {
   const { sheet } = r;
@@ -82,13 +85,25 @@ results.forEach((r, i) => {
     scene: {
       path: `res://out/godot/${slugs[i]}/${slugs[i]}.tscn`,
       node: nodes[i],
-      offset: [-Math.floor(sheet.cell.w / 2), -(sheet.cell.h - 1 - sheet.padBottom)],
+      centered: sheet.anchor === 'center',
+      offset: sheet.anchor === 'center' ? [0, 0] : [-Math.floor(sheet.cell.w / 2), -(sheet.cell.h - 1 - sheet.padBottom)],
       texture_filter: sheet.mode === 'pixel' ? 1 : 0,
       animation: sheet.anims[0].name,
     },
   };
   const isStatic = sheet.anims.length === 1 && sheet.anims[0].count === 1;
   if (isStatic) expected.static = true;
+  // <name>_body.tscn: CharacterBody2D at the origin; the shape centre is the box centre minus the origin.
+  const box = sheet.collision;
+  const origin = sheet.anchor === 'center'
+    ? [sheet.cell.w / 2, sheet.cell.h / 2]
+    : [Math.floor(sheet.cell.w / 2), sheet.cell.h - 1 - sheet.padBottom];
+  expected.body = {
+    path: `res://out/godot/${slugs[i]}/${slugs[i]}_body.tscn`,
+    node: nodes[i],
+    shape_size: [box.w, box.h],
+    shape_position: [box.x + box.w / 2 - origin[0], box.y + box.h / 2 - origin[1]],
+  };
   writeFileSync(join(out, `${slugs[i]}.expected.json`), JSON.stringify(expected, null, 2));
   // Static sprites have no .tres: the first path of the pair is the .tscn (only checked for existence there).
   pairs.push(`res://out/godot/${slugs[i]}/${slugs[i]}.${isStatic ? 'tscn' : 'tres'}`, `res://out/${slugs[i]}.expected.json`);

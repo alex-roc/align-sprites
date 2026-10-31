@@ -88,9 +88,16 @@ export type ScalePolicy =
    * Reference character height in output px (shared by every asset in a batch); relative = per-asset multiplier
    * (boss = 1.5). reference = which frame heights stand for "the character's height": 'median' (default, robust
    * to a sword or a stray frame) or 'tallest' (90th percentile: jumps and crouching attacks, where most frames are
-   * shorter than the character standing).
+   * shorter than the character standing), or 'largest' (the biggest side of the biggest frame: the default of
+   * centre-anchored effects, whose size is their largest frame).
    */
-  | { kind: 'targetHeight'; px: number; relative?: number; reference?: 'median' | 'tallest' };
+  | { kind: 'targetHeight'; px: number; relative?: number; reference?: 'median' | 'tallest' | 'largest' };
+
+/**
+ * Where the sprite's origin (the point the engine positions) sits: 'feet' = bottom centre, for characters (frames
+ * are aligned by the feet); 'center' = centre of the cell, for effects, projectiles and floating pickups.
+ */
+export type SpriteAnchor = 'feet' | 'center';
 
 export interface AnimSpec {
   name: string;
@@ -132,6 +139,11 @@ export interface SpriteJob {
   /** Pixel mode: max palette colours (shared across the batch). 0/undefined = no quantization. */
   maxColors?: number;
   anchorX?: AnchorXMethod;
+  /**
+   * Origin of the sprite (default 'feet'). 'center' puts the bbox centre of every frame on the cell centre,
+   * ignores `cell.padBottom` and defaults the scale reference to the largest frame.
+   */
+  anchor?: SpriteAnchor;
   /** Pixel mode: override the detected source pixel period (source px per art px). */
   manualPeriod?: number;
   /** Per-frame nudges keyed by detected frame index. */
@@ -161,6 +173,10 @@ export interface PackedSheet {
   padBottom: number;
   anims: PackedAnim[];
   mode: ArtMode;
+  /** Where the origin is (default 'feet'): feet = (floor(w/2), h-1-padBottom), center = (w/2, h/2), in cell px. */
+  anchor?: SpriteAnchor;
+  /** Automatic collision box in cell px (see `collisionBox`); may be fractional for centred sprites. */
+  collision?: Rect;
 }
 
 export interface SpriteDiag {

@@ -1,7 +1,7 @@
 // Maps UI settings → SpriteJob[]. GLOBAL settings (mode, sprite size, frame size, palette, padding, anchor) are applied
 // to every job, which is what keeps characters of one batch at the same scale; PER-ASSET settings (type, background,
 // segmentation, animations, offsets, recolour, relative size) only affect their own job.
-import { PALETTES } from '../../core/palette/index.ts';
+import { PALETTES, dedupeColors, hexToRgba } from '../../core/palette/index.ts';
 import type { AnimSpec, ArtMode, BgOptions, RGBA8, Segmentation, SpriteJob } from '../../core/types.ts';
 import { parseFrames } from '../lib/frames.ts';
 import { isPristineAnims } from './defaults.ts';
@@ -41,13 +41,14 @@ function buildBg(a: Asset, g: GlobalSettings): BgOptions {
   return bg;
 }
 
-/** The fixed palette (preset or taken from an image) every pixel snaps to; undefined for 'original' and 'reduce'. */
+/** The fixed palette (preset, taken from an image or custom) every pixel snaps to; undefined for 'original' and 'reduce'. */
 export function fixedPalette(g: GlobalSettings, mode: ArtMode = g.mode): RGBA8[] | undefined {
   if (mode !== 'pixel') return undefined;
   if (g.palette.kind === 'preset') {
     const id = g.palette.id;
     return PALETTES.find((p) => p.id === id)?.colors;
   }
+  if (g.palette.kind === 'custom') return g.customColors.length ? dedupeColors(g.customColors).map(hexToRgba) : undefined;
   return g.palette.kind === 'image' ? g.palette.colors : undefined;
 }
 
@@ -90,6 +91,7 @@ export function buildJobs(assets: Asset[], g: GlobalSettings, frameCounts: Recor
     scale: g.targetHeight ? { kind: 'targetHeight', px: g.targetHeight, relative: a.relative, ...(a.heightRef === 'tallest' ? { reference: 'tallest' as const } : {}) } : { kind: 'native' },
     maxColors: reduce > 0 ? reduce : undefined,
     anchorX: g.anchorX,
+    ...(a.anchor === 'center' ? { anchor: 'center' as const } : {}),
     ...(palette ? { palette } : {}),
     ...(a.kind === 'sheet' && Object.keys(a.frameOffsets).length ? { frameOffsets: a.frameOffsets } : {}),
     ...(Object.keys(a.colorMap).length ? { colorMap: a.colorMap } : {}),

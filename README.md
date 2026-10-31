@@ -10,10 +10,11 @@ Normalize AI-generated sprites and tiles so they work in **Godot 4**, **GDevelop
 
 ## What it does
 
-- **Sprite sheets and single characters**: removes the background (chroma key with edge matting, or flood from the borders for white backgrounds), finds every frame (auto, grid or single), recovers the real pixel grid of "fake" AI pixel art, resizes every character of a batch to the **same height**, shares one palette, and packs the frames into fixed cells (multiples of 32) with the **feet on the same line**.
-- **Export**: Godot 4 (`SpriteFrames .tres` + `AnimatedSprite2D .tscn` with the origin at the feet), GDevelop 5 (the cut frames as flat numbered PNGs + origin point; optional Piskel spritesheets), Kaplay (`loadSprite` snippet), generic (Aseprite JSON).
-- **Tiles**: turns an AI tile sheet into exact T×T tiles (Godot TileSet, Tiled `.tsx`), and composes terrain transitions from two seamless textures (blob 47 with Godot terrains, or dual-grid 16).
-- **Prompts**: templates (en/es) and a guide grid image to generate whole animations with Gemini or ChatGPT.
+- **Sprite sheets and single characters**: removes the background (chroma key with edge matting, or flood from the borders for white backgrounds), finds every frame (auto, grid or single), recovers the real pixel grid of "fake" AI pixel art, resizes every character of a batch to the **same height**, shares one palette, and packs the frames into fixed cells (multiples of 32) with the **feet on the same line** (or centred, for effects). Every sprite gets an automatic **collision box**. Videos (MP4/WebM from video models) become frames too.
+- **Export**: Godot 4 (`SpriteFrames .tres` + `AnimatedSprite2D .tscn` with the origin at the feet, and a `CharacterBody2D` scene with its collision shape), GDevelop 5 (the cut frames as flat numbered PNGs + origin point; optional Piskel spritesheets), Kaplay (`loadSprite` snippet), generic (Aseprite JSON).
+- **Tiles, items and backgrounds**: turns an AI tile sheet into exact T×T tiles (Godot TileSet, Tiled `.tsx`), composes terrain transitions from two seamless textures (blob 47 with Godot terrains, or dual-grid 16), fits item and icon sheets into an exact atlas, and makes parallax layers that loop sideways (Godot `Parallax2D` scene).
+- **Kit**: shared palettes (presets, from an image or your own, with batch colour swaps), a game resolution and tile size for everything, and a **playable test level** (Kaplay) to check scale, feet and fps before opening an engine.
+- **Prompts**: templates (en/es) with guide images for sprite sheets, top-down 4-direction walks, effects, items, tile atlases, parallax layers, textures and video clips.
 - **Guide**: an in-app, bilingual guide (`#/guide`) with a before/after slider, a same-height demo and step-by-step import for each engine.
 
 *Español:* herramienta web gratuita para normalizar sprites y tiles generados con IA (Gemini, ChatGPT…) y usarlos en Godot, GDevelop y Kaplay: celdas fijas, una sola escala, pies alineados y cuadrícula de píxeles real. Ver la [guía dentro de la app](https://alex-roc.github.io/align-sprites/#/guide).
@@ -26,6 +27,8 @@ pnpm dev               # http://localhost:5173/align-sprites/
 pnpm test              # Vitest: core with synthetic fixtures and real AI samples
 pnpm test:godot        # headless Godot 4 loads the exported SpriteFrames (skips if Godot is missing)
 pnpm test:godot:tiles  # headless Godot 4 checks TileSet terrains with set_cells_terrain_connect
+pnpm test:godot:items  # headless Godot 4 loads the item AtlasTextures
+pnpm test:godot:parallax  # headless Godot 4 loads the Parallax2D scene
 pnpm build
 node scripts/run-samples.ts   # process samples/ → samples/out/ for visual checks
 node scripts/og-image.ts      # rebuild public/og.png (social preview) from tools/og/og.html

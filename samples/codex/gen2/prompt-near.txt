@@ -1,0 +1,15 @@
+Create ONE wide background image: the NEAR layer (foreground) of a parallax scrolling background for a 2D game: Andean mountain range with snowy peaks under a dawn sky. Aspect ratio 2:1 (wide), like the attached guide image.
+
+Layout:
+- Only the nearest elements (big trees, rocks, plants, grass, fences), rising from the bottom edge up to about the dashed line of the guide; a few taller elements may go above it. Everything else is plain background.
+- The shapes continue down to the bottom edge with no gaps of background under them.
+- The strongest contrast and the most detail of all layers: the darkest and most saturated colors.
+
+Seamless:
+- Horizontally seamless: when the image is repeated side by side, its left edge continues exactly into its right edge. The shapes and colors at the left and right edges match at the same heights (the ticks in the guide mark them).
+- Nothing is cut at the left or right edge unless it continues on the other side. No vignette, no frame, no border.
+- The guide is only a template: do not draw its lines, ticks or dashes in the result.
+
+Style: true pixel art, the image is about 180 art pixels tall. Every art pixel is a square block of the same size on one grid. Crisp hard edges, no anti-aliasing, no blur, no gradients, limited palette (about 16 colors).
+
+Background: one flat solid color, exactly #FF00FF (pure magenta), everywhere there is no landscape. No gradients, sky, clouds, fog, shadows, text or labels. Do not use magenta, pink or purple anywhere in the artwork.

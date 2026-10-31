@@ -46,7 +46,7 @@ export function AssetBar({ onFiles }: { onFiles: (files: File[]) => void }) {
       <input
         ref={input}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         className="sr-only"
         tabIndex={-1}

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RGBAImage, SpriteResult } from '../../../core/types.ts';
 import { useI18n } from '../../../i18n/index.ts';
+import { surfaceInset } from '../../../core/kit/level.ts';
 import { rgbaToCanvas } from '../../lib/image.ts';
 
 const GROUND = '#FFC531';
 
 /**
  * Sprites standing on a row of the kit's tiles, drawn at real scale (1 sprite px = 1 tile px) and shown with an
- * integer zoom: if the sprites look the right size next to the tiles, they will in the game.
+ * integer zoom: if the sprites look the right size next to the tiles, they will in the game. Tiles with an empty top
+ * (grass blades) leave a gap: the sprites stand on the first solid row, not on the tile's top edge.
  */
 export function KitPreview({ sprites, tiles, tileSize, pixelated }: { sprites: SpriteResult[]; tiles: RGBAImage[]; tileSize: number; pixelated: boolean }) {
   const { t } = useI18n();
@@ -18,6 +20,7 @@ export function KitPreview({ sprites, tiles, tileSize, pixelated }: { sprites: S
   const gap = tileSize;
   const spritesW = cells.reduce((n, c) => n + c.img.width + gap, gap);
   const T = tileSize;
+  const inset = surfaceInset(tiles);
   const cols = Math.max(10, Math.ceil(spritesW / T) + 1);
   const W = cols * T;
   const above = Math.max(T * 2, ...cells.map((c) => c.foot));
@@ -40,7 +43,7 @@ export function KitPreview({ sprites, tiles, tileSize, pixelated }: { sprites: S
     }
     let x = gap;
     for (const cell of cells) {
-      ctx.drawImage(rgbaToCanvas(cell.img), x, above - cell.foot);
+      ctx.drawImage(rgbaToCanvas(cell.img), x, above + inset - cell.foot);
       x += cell.img.width + gap;
     }
   });

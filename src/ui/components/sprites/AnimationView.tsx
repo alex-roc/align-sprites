@@ -11,6 +11,7 @@ import { FrameThumb } from './FrameThumb.tsx';
 import { useDuplicates, useFrameEditor } from './useFrameEditor.ts';
 
 const GROUND = '#FFC531';
+const BOX = '#35D6C4';
 const PAD = 28;
 
 /**
@@ -21,7 +22,8 @@ export function AnimationView({ asset, result }: { asset: Asset; result: SpriteR
   const { t } = useI18n();
   const still = asset.kind === 'single';
   const { sheet } = result;
-  const { cell, anims, padBottom, mode } = sheet;
+  const { cell, anims, padBottom, mode, collision } = sheet;
+  const centre = sheet.anchor === 'center';
   const sheetCanvas = useMemo(() => rgbaToCanvas(sheet.image), [sheet.image]);
   const pixelated = mode === 'pixel';
 
@@ -38,6 +40,7 @@ export function AnimationView({ asset, result }: { asset: Asset; result: SpriteR
   const zoom = userZoom ?? fitZoom;
   const [onion, setOnion] = useState(false);
   const [guides, setGuides] = useState(true);
+  const [showBox, setShowBox] = useState(false);
   const [frame, setFrame] = useState(0);
   const canvas = useRef<HTMLCanvasElement>(null);
   const strip = useRef<HTMLOListElement>(null);
@@ -84,10 +87,15 @@ export function AnimationView({ asset, result }: { asset: Asset; result: SpriteR
     }
     draw(cur, 1);
     ctx.globalAlpha = 1;
+    if (showBox && collision) {
+      ctx.strokeStyle = BOX;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(collision.x * zoom + 1, collision.y * zoom + 1, collision.w * zoom - 2, collision.h * zoom - 2);
+    }
     if (guides) {
-      // Origin cross: where the engine puts the sprite's position (centre of the feet).
-      const x = Math.round((Math.floor(cell.w / 2) + 0.5) * zoom) + 0.5;
-      const y = Math.round((footRow + 0.5) * zoom) + 0.5;
+      // Origin cross: where the engine puts the sprite's position (centre of the feet, or of the cell for effects).
+      const x = centre ? Math.round((cell.w / 2) * zoom) + 0.5 : Math.round((Math.floor(cell.w / 2) + 0.5) * zoom) + 0.5;
+      const y = centre ? Math.round((cell.h / 2) * zoom) + 0.5 : Math.round((footRow + 0.5) * zoom) + 0.5;
       ctx.strokeStyle = GROUND;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -97,7 +105,7 @@ export function AnimationView({ asset, result }: { asset: Asset; result: SpriteR
       ctx.lineTo(x, y + 8);
       ctx.stroke();
     }
-  }, [sheetCanvas, anim, cell.w, cell.h, footRow, pixelated, zoom, onion, guides, cur, count, W, H]);
+  }, [sheetCanvas, anim, cell.w, cell.h, footRow, pixelated, zoom, onion, guides, centre, showBox, collision, cur, count, W, H]);
 
   const step = (d: number) => {
     setPlaying(false);
@@ -159,7 +167,7 @@ export function AnimationView({ asset, result }: { asset: Asset; result: SpriteR
       )}
       <div className="stage-body anim-stage" tabIndex={0} role="group" aria-label={still ? t('anim.spriteLabel') : t('anim.stageLabel')}>
         <div className="anim-inner" style={{ height: H + PAD * 2, minWidth: W + PAD * 2 }}>
-          {guides && <div className="ground" style={{ top: groundTop }} aria-hidden="true" />}
+          {guides && !centre && <div className="ground" style={{ top: groundTop }} aria-hidden="true" />}
           {guides && <div className="cellbox" style={{ top: PAD, width: W, height: H }} aria-hidden="true" />}
           <canvas ref={canvas} className="anim-canvas" style={{ top: PAD }} role="img" aria-label={still ? t('anim.spriteCanvas') : t('anim.canvasLabel')} />
         </div>
@@ -186,7 +194,8 @@ export function AnimationView({ asset, result }: { asset: Asset; result: SpriteR
           </select>
         </label>
         {!still && <Check checked={onion} onChange={setOnion} label={t('anim.onion')} />}
-        <Check checked={guides} onChange={setGuides} label={t('anim.guides')} />
+        <Check checked={guides} onChange={setGuides} label={centre ? t('anim.guidesCenter') : t('anim.guides')} />
+        {collision && <Check checked={showBox} onChange={setShowBox} label={t('anim.collision')} />}
         {!still && <span className="keys-hint">{t('anim.keys')}</span>}
       </div>
       {!still && (

@@ -1,0 +1,15 @@
+{
+  "out": ".",
+  "items": [
+    {
+      "name": "andes-far-pixel",
+      "aspect": "landscape",
+      "subject": "Create ONE wide parallax background layer for a 2D side-scrolling game: the FAR layer. A pixel art landscape of the Andes at dawn: a pastel sky with a few soft clouds, and distant snowy mountain peaks along the lower half in blue and violet tones, hazy and low contrast. It fills the whole image edge to edge (opaque, no transparency). It must look like a horizontal panorama that could repeat sideways: keep the left and right edges similar in height and colour.\n\nStyle: true pixel art. The scene is about 180 art pixels tall; every art pixel is a square block of the same size on one grid. Crisp hard edges, no anti-aliasing, no blur, limited palette (about 24 colors). No text, no characters, no UI, no border, no frame."
+    },
+    {
+      "name": "andes-near-pixel",
+      "aspect": "landscape",
+      "subject": "Create ONE wide parallax background layer for a 2D side-scrolling game: the NEAR layer. A pixel art row of Andean trees (queñua and polylepis), shrubs and a few rocks standing on the ground along the bottom of the image, seen from the side. The trees and rocks rise from the bottom edge and occupy only the lower 60 percent of the image; the upper part is empty background. Keep the left and right edges similar so it could repeat sideways.\n\nStyle: true pixel art. The scene is about 180 art pixels tall; every art pixel is a square block of the same size on one grid. Crisp hard edges, no anti-aliasing, no blur, limited palette (about 20 colors), warm greens and browns with dark outlines.\n\nBackground: one flat solid color, exactly #FF00FF (pure magenta), filling every empty area edge to edge. No gradients, shadows, sky, clouds, mountains, text or labels. Do not use magenta, pink or purple anywhere on the trees, rocks, outlines or effects."
+    }
+  ]
+}

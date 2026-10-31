@@ -4,8 +4,10 @@ import { detectBackground } from '../core/bg/index.ts';
 import { buildExport, encodePng, slug, zipFiles } from '../core/export/index.ts';
 import { findDuplicateFrames } from '../core/frames/index.ts';
 import { inspectImage } from '../core/inspect/index.ts';
+import { itemsExport, normalizeItems } from '../core/items/index.ts';
 import { buildKitExport } from '../core/kit/index.ts';
 import { paletteFromImage } from '../core/palette/index.ts';
+import { buildParallax, parallaxExport } from '../core/parallax/index.ts';
 import { runBatch } from '../core/pipeline/index.ts';
 import { unfakeFromUrl, type UnfakeCore } from '../core/pixel/unfake.ts';
 import {
@@ -132,6 +134,23 @@ const api: PipelineApi = {
   },
   async buildTerrainZip(set, name, names) {
     const zip = zipFiles(terrainExport(set, name, names));
+    return Comlink.transfer(zip, [zip.buffer as ArrayBuffer]);
+  },
+  async normalizeItems(img, o, palette) {
+    const result = normalizeItems(await coreFor(o.mode), img, palette?.length ? { ...o, palette } : o);
+    return Comlink.transfer(result, [result.atlas.data.buffer as ArrayBuffer]);
+  },
+  async buildItemsZip(result, name, names, targets) {
+    const zip = zipFiles(itemsExport(result, name, names, targets));
+    return Comlink.transfer(zip, [zip.buffer as ArrayBuffer]);
+  },
+
+  async buildParallax(inputs, o) {
+    const result = buildParallax(await coreFor(o.mode), inputs, o);
+    return Comlink.transfer(result, result.layers.map((l) => l.image.data.buffer as ArrayBuffer));
+  },
+  async buildParallaxZip(result, name, targets) {
+    const zip = zipFiles(parallaxExport(result, name, targets));
     return Comlink.transfer(zip, [zip.buffer as ArrayBuffer]);
   },
 };

@@ -358,8 +358,9 @@ export function normalizeTileAtlas(core: UnfakeCore | null, img: RGBAImage, o: T
       src = { x, y, w: sw, h: sh };
     }
     // Full-bleed tiles (sky, ground, water) keep their own bg-coloured art (clouds touching the edge are connected to
-    // the background by the flood), so they are cut from the untouched sheet.
-    const win = crop(o.bg && isFullBleed(origPure, W, src) ? img : work, src);
+    // the background by the flood), so they are cut from the untouched sheet. Not with a chroma key: the key colour is
+    // never art, and the window may take a row of the key gutter (measured on Codex atlases: magenta top rows).
+    const win = crop(o.bg && o.bg.strategy !== 'global' && isFullBleed(origPure, W, src) ? img : work, src);
     const isEmpty = !box || nonEmptyShare(empty, W, src) < 0.01;
     let tile: RGBAImage;
     if (isEmpty) {

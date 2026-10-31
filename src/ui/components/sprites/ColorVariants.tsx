@@ -5,6 +5,7 @@ import { useI18n } from '../../../i18n/index.ts';
 import { useApp } from '../../state/context.ts';
 import { cloneAsset } from '../../state/defaults.ts';
 import type { Asset } from '../../state/types.ts';
+import { BatchSwaps } from './BatchSwaps.tsx';
 
 const MAX_SWATCHES = 64;
 
@@ -69,6 +70,7 @@ export function ColorVariants({ asset }: { asset: Asset }) {
           </button>
         )}
       </div>
+      <BatchSwaps asset={asset} />
     </div>
   );
 }

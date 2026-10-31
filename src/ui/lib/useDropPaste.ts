@@ -1,10 +1,11 @@
-// Page-wide drop and paste of images. `dragging` drives the full-page drop overlay.
+// Page-wide drop and paste of images (and videos, when asked). `dragging` drives the full-page drop overlay.
 import { useEffect, useRef, useState } from 'react';
+import { isVideoFile } from './video.ts';
 
 const isImage = (f: File) => f.type.startsWith('image/');
 let pasteSeq = 0;
 
-export function useDropPaste(onImages: (files: File[]) => void, enabled = true): { dragging: boolean } {
+export function useDropPaste(onImages: (files: File[]) => void, enabled = true, withVideo = false): { dragging: boolean } {
   const [dragging, setDragging] = useState(false);
   const cb = useRef(onImages);
   useEffect(() => {
@@ -13,6 +14,7 @@ export function useDropPaste(onImages: (files: File[]) => void, enabled = true):
 
   useEffect(() => {
     if (!enabled) return;
+    const accepts = (f: File) => isImage(f) || (withVideo && isVideoFile(f));
     let depth = 0;
     const hasFiles = (e: DragEvent) => [...(e.dataTransfer?.types ?? [])].includes('Files');
     const enter = (e: DragEvent) => {
@@ -32,11 +34,11 @@ export function useDropPaste(onImages: (files: File[]) => void, enabled = true):
       e.preventDefault();
       depth = 0;
       setDragging(false);
-      const files = [...(e.dataTransfer?.files ?? [])].filter(isImage);
+      const files = [...(e.dataTransfer?.files ?? [])].filter(accepts);
       if (files.length) cb.current(files);
     };
     const paste = (e: ClipboardEvent) => {
-      const files = [...(e.clipboardData?.files ?? [])].filter(isImage);
+      const files = [...(e.clipboardData?.files ?? [])].filter(accepts);
       if (!files.length) return;
       e.preventDefault();
       cb.current(files.map((f) => (f.name && f.name !== 'image.png' ? f : new File([f], `pasted-${++pasteSeq}.png`, { type: f.type }))));
@@ -53,7 +55,7 @@ export function useDropPaste(onImages: (files: File[]) => void, enabled = true):
       document.removeEventListener('drop', drop);
       document.removeEventListener('paste', paste);
     };
-  }, [enabled]);
+  }, [enabled, withVideo]);
 
   return { dragging };
 }

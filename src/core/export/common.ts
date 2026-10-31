@@ -34,6 +34,26 @@ export function feetOrigin(sheet: PackedSheet): { x: number; y: number } {
   return { x: Math.floor(sheet.cell.w / 2), y: sheet.cell.h - 1 - sheet.padBottom };
 }
 
+/** Centred sprites (effects, projectiles): the origin is the middle of the cell. */
+export function isCenter(sheet: PackedSheet): boolean {
+  return sheet.anchor === 'center';
+}
+
+/** Origin at the centre: (w/2, h/2) in cell px (continuous coordinates, so fractional for an odd size). */
+export function centerOrigin(sheet: PackedSheet): { x: number; y: number } {
+  return { x: sheet.cell.w / 2, y: sheet.cell.h / 2 };
+}
+
+/** Origin of the sprite as the exporters place it: the feet (default) or the centre, in cell px. */
+export function sheetOrigin(sheet: PackedSheet): { x: number; y: number } {
+  return isCenter(sheet) ? centerOrigin(sheet) : feetOrigin(sheet);
+}
+
+/** Round to at most 2 decimals (a collision box of a centred sprite can sit on half pixels). */
+export function r2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 /** Cell rect (sheet px) of frame `i` of the animation placed on `row`. */
 export function frameRect(sheet: PackedSheet, row: number, i: number): { x: number; y: number; w: number; h: number } {
   return { x: i * sheet.cell.w, y: row * sheet.cell.h, w: sheet.cell.w, h: sheet.cell.h };

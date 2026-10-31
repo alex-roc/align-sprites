@@ -1,8 +1,11 @@
 // UI state shapes. Settings are split in GLOBAL (whole batch: mode, sprite size, frame size, palette) and PER ASSET
 // (type, background, segmentation, animations, offsets, recolour, relative size); see jobs.ts for how they map to SpriteJob.
-import type { AnchorXMethod, ArtMode, BgOptions, ExportTarget, FrameOffset, FrameRegion, RGBA8, RGBAImage, SpriteKind, SpriteResult, TileLayout, TileSetResult } from '../../core/types.ts';
+import type { AnchorXMethod, ArtMode, BgOptions, ExportTarget, FrameOffset, FrameRegion, RGBA8, RGBAImage, SpriteAnchor, SpriteKind, SpriteResult, TileLayout, TileSetResult } from '../../core/types.ts';
 import type { TileAtlasResult } from '../../core/tiles/index.ts';
+import type { ItemsResult } from '../../core/items/index.ts';
+import type { ParallaxResult } from '../../core/parallax/index.ts';
 import type { TileGridInfo } from '../../worker/api.ts';
+import type { AssetPromptForm, AssetPromptKind } from '../../core/prompts/assets.ts';
 import type { PromptOptions, TilePromptOptions } from '../../core/prompts/index.ts';
 
 /** 'all' (every image side by side) only exists with 2+ images; 'sheet' (final sheet) only for sprite sheets. */
@@ -72,15 +75,21 @@ export interface Asset {
   relative: number;
   /** Which frames give the character's height: the median (default) or the tallest (jumps, crouches). */
   heightRef: 'median' | 'tallest';
+  /** Origin: the feet (characters, default) or the centre (effects, projectiles). */
+  anchor: SpriteAnchor;
   autoBg: AutoBg | null;
 }
 
-/** 'reduce' = quantize to `maxColors` shared colours; 'preset' / 'image' = a fixed palette every pixel snaps to. */
+/**
+ * 'reduce' = quantize to `maxColors` shared colours; 'preset' / 'image' / 'custom' = a fixed palette every pixel snaps
+ * to. The colours of 'custom' live in `GlobalSettings.customColors`, so they survive switching to another palette.
+ */
 export type PaletteChoice =
   | { kind: 'original' }
   | { kind: 'reduce' }
   | { kind: 'preset'; id: string }
-  | { kind: 'image'; colors: RGBA8[]; from: string };
+  | { kind: 'image'; colors: RGBA8[]; from: string }
+  | { kind: 'custom' };
 
 export interface GlobalSettings {
   mode: ArtMode;
@@ -94,8 +103,12 @@ export interface GlobalSettings {
   /** Palette size used by 'reduce'. */
   maxColors: number;
   palette: PaletteChoice;
+  /** The user's own palette ('#rrggbb', at most 256): used when `palette` is 'custom'. */
+  customColors: string[];
   /** Tile size of the game (16/32/48/64): sprite heights are shown in tiles and the kit is checked against it. */
   gameTile: number;
+  /** Width in px of the game resolution (16:9) the Kit's test level runs at; see GAME_RESOLUTIONS. */
+  gameRes: number;
   anchorX: AnchorXMethod;
 }
 
@@ -108,9 +121,11 @@ export interface RunState {
   error: string | null;
 }
 
-export type PromptKind = 'sprite' | 'tile';
+export type PromptKind = 'sprite' | 'tile' | AssetPromptKind;
 export type PromptForm = Omit<PromptOptions, 'lang'> & { promptLang: 'ui' | 'en' | 'es' };
 export type TilePromptForm = Omit<TilePromptOptions, 'lang'>;
+/** Forms of the other prompt kinds (atlas, directions, effects, items, parallax, video). */
+export type AssetPrompts = { [K in AssetPromptKind]: AssetPromptForm<K> };
 
 // ---------------------------------------------------------------- tiles tab
 
@@ -122,7 +137,7 @@ export interface LoadedImage {
   autoBg: AutoBg | null;
 }
 
-export type TileKind = 'sheet' | 'terrain';
+export type TileKind = 'sheet' | 'terrain' | 'items' | 'parallax';
 export type TileBgStrategy = 'auto' | BgOptions['strategy'];
 export type TileFormat = 'godot' | 'tiled' | 'png';
 export type RunStatus = 'idle' | 'running' | 'ready' | 'error';
@@ -179,8 +194,69 @@ export interface TerrainState {
   };
 }
 
+/** Items and icons tool: separate objects of an AI image → square cells of one size. */
+export interface ItemsState {
+  source: LoadedImage | null;
+  mode: ArtMode;
+  cellSize: number;
+  /** 'common' = one scale for every item (the largest fills the cell); 'each' = every item fills its cell. */
+  fill: 'common' | 'each';
+  margin: number;
+  /** true = items are the separate shapes of the image; false = one item per cell of `cols` × `rows`. */
+  detectAuto: boolean;
+  cols: number;
+  rows: number;
+  /** Columns of the output atlas; 0 = the squarest layout. */
+  atlasCols: number;
+  removeBg: boolean;
+  bg: TileSheetState['bg'];
+  maxColors: number;
+  /** Detected item numbers crossed out (left out of the atlas). */
+  excluded: number[];
+  /** Names typed by the user, by detected item number (renaming never re-runs the processor). */
+  names: Record<number, string>;
+  view: 'atlas' | 'source';
+  format: ExportTarget;
+  allFormats: boolean;
+  run: { status: RunStatus; sig: string | null; result: ItemsResult | null; error: string | null };
+}
+
+/** One layer of the parallax tool, in the order the user set (far → near). */
+export interface ParallaxLayerDraft {
+  image: LoadedImage;
+  /** Cut the flat background colour out (nearer layers on a chroma key). */
+  removeBg: boolean;
+  /** Scroll factor; null = the default for its position (far 0.2, mid 0.5, near 0.8). */
+  factor: number | null;
+}
+
+/** Parallax backgrounds: far → near layers → looping layers at the game height. */
+export interface ParallaxState {
+  layers: ParallaxLayerDraft[];
+  mode: ArtMode;
+  /** Layer height in px; null = the height of the game resolution (`GlobalSettings.gameRes`, shared with the Kit). */
+  height: number | null;
+  /** Make the right edge continue into the left one. */
+  loop: boolean;
+  /** Overlap band of the loop, % of the layer width. */
+  overlap: number;
+  bgTolerance: number;
+  view: 'scroll' | 'wrap';
+  /** Layer shown in the wrap check. */
+  wrapLayer: number;
+  /** Scroll speed of the preview, game px per second. */
+  speed: number;
+  /** Export name. */
+  name: string;
+  format: ExportTarget;
+  allFormats: boolean;
+  run: { status: RunStatus; sig: string | null; result: ParallaxResult | null; error: string | null };
+}
+
 export interface TilesState {
   kind: TileKind;
+  parallax: ParallaxState;
+  items: ItemsState;
   sheet: TileSheetState;
   terrain: TerrainState;
 }
@@ -199,6 +275,7 @@ export interface AppState {
   promptKind: PromptKind;
   prompt: PromptForm;
   tilePrompt: TilePromptForm;
+  assetPrompts: AssetPrompts;
   tiles: TilesState;
 }
 
@@ -217,6 +294,9 @@ export type Action =
   | { type: 'promptKind'; kind: PromptKind }
   | { type: 'prompt/patch'; patch: Partial<PromptForm> }
   | { type: 'tilePrompt/patch'; patch: Partial<TilePromptForm> }
+  | { [K in AssetPromptKind]: { type: 'assetPrompt/patch'; kind: K; patch: Partial<AssetPromptForm<K>> } }[AssetPromptKind]
   | { type: 'tiles/kind'; kind: TileKind }
   | { type: 'tiles/sheet'; patch: Partial<TileSheetState> }
-  | { type: 'tiles/terrain'; patch: Partial<TerrainState> };
+  | { type: 'tiles/terrain'; patch: Partial<TerrainState> }
+  | { type: 'tiles/items'; patch: Partial<ItemsState> }
+  | { type: 'tiles/parallax'; patch: Partial<ParallaxState> };

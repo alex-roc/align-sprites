@@ -1,4 +1,4 @@
-import { feetOrigin, slug } from '../../../core/export/common.ts';
+import { isCenter, sheetOrigin, slug } from '../../../core/export/common.ts';
 import { gdevelopFramePrefix } from '../../../core/export/gdevelop.ts';
 import { useState } from 'react';
 import type { ExportTarget, SpriteResult } from '../../../core/types.ts';
@@ -54,14 +54,19 @@ export function SpriteExport() {
 
   const slugName = slug(names.get(selected?.id ?? '') ?? selected?.name ?? 'sprite');
   // A single sprite has no animations: its steps talk about one image.
-  const stepKey = (n: number) => (selected?.kind === 'single' ? `engine.${engine}.single.s${n}` : `engine.${engine}.s${n}`) as MessageKey;
+  // Centred sprites word the one step that talks about the origin differently (Godot 2, the others 3).
+  const sheet = selectedResult?.sheet;
+  const centre = !!sheet && isCenter(sheet);
+  const stepKey = (n: number) => {
+    const variant = centre && n === (engine === 'godot' ? 2 : 3) ? 'center.' : '';
+    return (selected?.kind === 'single' && n <= 3 ? `engine.${engine}.single.${variant}s${n}` : `engine.${engine}.${variant}s${n}`) as MessageKey;
+  };
   const count = ready.length;
   // Exact values of the selected sprite for the steps (GDevelop: origin and time between frames).
-  const sheet = selectedResult?.sheet;
-  const origin = sheet ? feetOrigin(sheet) : { x: 0, y: 0 };
+  const origin = sheet ? sheetOrigin(sheet) : { x: 0, y: 0 };
   const fps = sheet?.anims[0]?.fps ?? 8;
   const frames0 = sheet ? `${gdevelopFramePrefix(slugName, sheet, 0)}_00.png` : `${slugName}_00.png`;
-  const stepParams = { name: slugName, frames0, ox: origin.x, oy: origin.y, fps: Math.round(fps * 100) / 100, interval: Math.round(1000 / fps) / 1000 };
+  const stepParams = { name: slugName, frames0, ox: Math.floor(origin.x), oy: Math.floor(origin.y), fps: Math.round(fps * 100) / 100, interval: Math.round(1000 / fps) / 1000 };
   const activeName = selected?.name ?? '';
 
   return (
@@ -70,7 +75,7 @@ export function SpriteExport() {
       options={ENGINES.map((e) => ({ value: e, label: t(`engine.${e}`) }))}
       value={engine}
       onChange={(exportEngine) => dispatch({ type: 'export', patch: { exportEngine } })}
-      steps={[1, 2, 3].map((n) => t(stepKey(n), stepParams))}
+      steps={(sheet?.collision ? [1, 2, 3, 4] : [1, 2, 3]).map((n) => t(stepKey(n), stepParams))}
       guideHref={hrefFor('guide', GUIDE_SECTION[engine])}
       all={state.exportAll}
       onAll={(exportAll) => dispatch({ type: 'export', patch: { exportAll } })}

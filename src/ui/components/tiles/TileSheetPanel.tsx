@@ -4,12 +4,12 @@ import type { ArtMode } from '../../../core/types.ts';
 import { useI18n } from '../../../i18n/index.ts';
 import { buildAtlasZip } from '../../../worker/client.ts';
 import { fetchPublicImage } from '../../dev/examples.ts';
-import { downloadBlob, hexToRgb, rgbaToPngBlob, rgbToHex } from '../../lib/image.ts';
+import { downloadBlob, rgbaToPngBlob } from '../../lib/image.ts';
 import { useDropPaste } from '../../lib/useDropPaste.ts';
 import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
 import { useSheetProcessor } from '../../state/useTileProcessors.ts';
-import type { TileBgStrategy, TileFormat, TileSheetState } from '../../state/types.ts';
+import type { TileFormat, TileSheetState } from '../../state/types.ts';
 import { useLoadImage } from '../../state/useLoadImage.ts';
 import { DropOverlay } from '../common/DropOverlay.tsx';
 import { EmptyStage } from '../common/EmptyStage.tsx';
@@ -17,20 +17,15 @@ import { ExportCard } from '../common/ExportCard.tsx';
 import { Check, Field, NumberInput, Segmented } from '../common/Field.tsx';
 import { RgbaCanvas } from '../common/RgbaCanvas.tsx';
 import { PaletteNote } from '../common/PaletteField.tsx';
-import { Fold, Section } from '../common/Section.tsx';
+import { Section } from '../common/Section.tsx';
 import { StatusLine } from '../common/StatusLine.tsx';
 import { Warnings, type Fix } from '../common/Warnings.tsx';
 import { TileAtlasView } from './TileAtlasView.tsx';
+import { TileBgFold } from './TileBgFold.tsx';
 import { TILE_PRESETS } from '../../lib/tilePresets.ts';
 import { TileSizeField } from './TileSizeField.tsx';
 import type { Warning } from '../../../core/types.ts';
 
-const STRATEGIES: { value: TileBgStrategy; key: 'auto' | 'global' | 'flood' | 'floodHoles' }[] = [
-  { value: 'auto', key: 'auto' },
-  { value: 'global', key: 'global' },
-  { value: 'flood', key: 'flood' },
-  { value: 'flood+holes', key: 'floodHoles' },
-];
 const FORMATS: TileFormat[] = ['godot', 'tiled', 'png'];
 
 export function TileSheetPanel() {
@@ -90,11 +85,6 @@ function SheetSettings({ onReplace }: { onReplace: (f: File) => void }) {
   const patch = (p: Partial<TileSheetState>) => dispatch({ type: 'tiles/sheet', patch: p });
   const setBg = (p: Partial<TileSheetState['bg']>) => patch({ bg: { ...s.bg, ...p } });
   const src = s.source!;
-  const detected = src.autoBg?.color;
-  const shown = s.bg.custom ? s.bg.color : detected;
-  const transparent = !s.bg.custom && detected !== undefined && detected[3] === 0;
-  const autoWorked = s.removeBg && !s.bg.custom && s.bg.strategy === 'auto' && detected !== undefined;
-  const hintKey = s.bg.strategy === 'flood+holes' ? 'floodHoles' : s.bg.strategy;
 
   return (
     <div className="settings-in">
@@ -148,39 +138,7 @@ function SheetSettings({ onReplace }: { onReplace: (f: File) => void }) {
         </Section>
       )}
 
-      <Fold
-        title={t('set.background')}
-        open={!autoWorked}
-        key={`tbg-${src.id}`}
-        summary={
-          <span className="bg-summary">
-            <span className="swatch checker" aria-hidden="true">{shown && !transparent && s.removeBg && <i style={{ background: rgbToHex(shown) }} />}</span>
-            {!s.removeBg ? t('tiles.bgOff') : autoWorked ? (transparent ? t('bg.transparentOk') : t('bg.autoOk', { color: rgbToHex(shown ?? [0, 0, 0]) })) : t(`bg.strategy.${hintKey}`)}
-          </span>
-        }
-      >
-        <Check checked={s.removeBg} onChange={(removeBg) => patch({ removeBg })} label={t('tiles.removeBg')} />
-        {s.removeBg && (
-          <>
-            <Check checked={s.bg.custom} onChange={(custom) => setBg({ custom })} label={t('bg.useCustom')} />
-            {s.bg.custom && (
-              <Field label={t('bg.color')}>
-                <input type="color" value={rgbToHex(s.bg.color)} onChange={(e) => setBg({ color: hexToRgb(e.target.value) })} />
-              </Field>
-            )}
-            <Field label={t('bg.strategy')} hint={t(`bg.strategy.${hintKey}Hint`)}>
-              <select value={s.bg.strategy} onChange={(e) => setBg({ strategy: e.target.value as TileBgStrategy })}>
-                {STRATEGIES.map((o) => (
-                  <option key={o.value} value={o.value}>{t(`bg.strategy.${o.key}`)}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label={`${t('bg.tolerance')}: ${s.bg.tolerance}`} hint={t('bg.toleranceHint')}>
-              <input type="range" min={0} max={60} value={s.bg.tolerance} onChange={(e) => setBg({ tolerance: Number(e.target.value) })} />
-            </Field>
-          </>
-        )}
-      </Fold>
+      <TileBgFold src={src} removeBg={s.removeBg} bg={s.bg} onRemoveBg={(removeBg) => patch({ removeBg })} onBg={setBg} />
     </div>
   );
 }

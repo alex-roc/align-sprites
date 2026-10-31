@@ -66,6 +66,15 @@ Known limit: separate generations do not keep the character's proportions exactl
 out slightly bigger than `hero-idle` (the AI drew a bigger head while running); **Relative size** (e.g. 0.9)
 fixes it by eye in **All together**.
 
+## Fourth batch (`gen2/`): items, tile atlas, parallax layers, explosion
+
+Made with the new prompt kinds through the internal CLI (`align-sprites prompt <kind> --guide …`, prompts and guides kept in `gen2/`, `manifest.json`), one Codex batch, ~17k text tokens for 5 images. All 1536×1024 except the near layer (1774×887).
+
+- `items-pixel.png` (8 items, 4×2): clean, one item per guide cell, flat magenta. 8/8 found; atlas 3×3 slots of 32 px. Site example (`public/examples/items.png`).
+- `atlas-andes-pixel.png` (6×4, side view): the grid from the gaps is found (6×4). The full-bleed ground tiles used to keep a magenta top row (cut from the untouched sheet); fixed: with a chroma key the window is always cut from the bg-free sheet. The bottom row are props (grass, rocks, alpaca, sign), not tiles. Site example (`public/examples/tileset-andes.png`, replacing Alex's own atlas).
+- `parallax-far-pixel.png` (opaque) and `parallax-near-pixel.png` (magenta, landscape to the bottom edge): ~146 art px tall instead of the 180 asked. The near layer touches the bottom edge, so a "flat key border" test must look at the top of the border. Site example of the parallax tool (`public/examples/andes-far.png`, `andes-near.png`, shown at 180 px: ×1 with the top filled in). `samples/parallax/` holds an earlier pair the parallax agent made (256 art px tall), used only by tests.
+- `explosion-pixel.png` (8 frames, 2×4): grows then fades to sparks, as asked; `--grid 2x4 --anchor center` gives clean centred frames.
+
 ## Prompts
 
 Each item's text is the output of `buildSpritePrompt` / `buildTilePrompt` (the wrapper only appends one

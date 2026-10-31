@@ -1,0 +1,19 @@
+Create ONE sprite sheet image of a game visual effect, a fiery explosion with orange and yellow flames and grey smoke (explosion): 8 frames in a grid of 4 columns × 2 rows, exactly like the attached guide image.
+
+Layout:
+- One frame per cell, in reading order (left to right, top to bottom), same cell grid and aspect ratio as the guide.
+- The effect is centered on the cross drawn in each cell: its center is at the same point in every frame. There is no ground and no feet line.
+- At its biggest the effect fills about 80% of the cell. Nothing touches or crosses the cell borders.
+- The guide is only a template: do not draw its lines, cross or numbers in the result.
+
+Animation (it plays once, it grows and fades):
+  Frame 1: a small bright flash at the center. Next frames: it expands quickly into a fireball that reaches its biggest size around the middle of the animation. Then it breaks up into smoke, sparks and debris that shrink and thin out. Last frame: only a few small sparks, almost empty.
+  Spread the changes evenly over the 8 frames; each frame clearly different from its neighbours.
+
+Hard edges (important):
+- No glow, halo, soft light, blur, haze or semi-transparency around the effect. The background color is removed afterwards, and soft glows turn into a dirty fringe.
+- Draw solid shapes with hard edges, in flat bands of color (bright core, middle color, dark edge). Every pixel of the effect is fully opaque.
+
+Style: true pixel art, the effect is about 48 art pixels wide at its biggest. Every art pixel is a square block of the same size on one grid. Crisp hard edges, no anti-aliasing, no blur, no gradients, limited palette (about 16 colors).
+
+Background: one flat solid color, exactly #FF00FF (pure magenta), filling every cell edge to edge. No gradients, shadows, floor, scenery, text or labels. Do not use magenta, pink or purple anywhere in the artwork.

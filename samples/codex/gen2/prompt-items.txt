@@ -1,0 +1,15 @@
+Create ONE image with a sheet of 8 separate game items (icons): gold coin, red potion, silver key, blue gem, wooden shield, iron sword, red heart, green apple. They are laid out in a grid of 4 columns × 2 rows, exactly like the attached guide image.
+
+Layout:
+- One item per cell, in reading order (left to right, top to bottom), same cell grid and aspect ratio as the guide. If the list has fewer items than cells, leave the last cells empty.
+- Each item is centered in its cell and stays inside the inner square of the guide, so there are clear gaps of background between items. Nothing touches or crosses the cell borders.
+- The same scale for all: every item fills about the same area of its square (a long key and a round coin both fit it).
+- Each cell holds a single object, alone: no hands, no stands, no text or numbers.
+- The guide is only a template: do not draw its lines, inner squares or numbers in the result.
+
+Consistency:
+- The same view for all (front, flat icon view), light from the top-left, the same outline style and the same palette family across the whole set.
+
+Style: true pixel art, each item is about 32 art pixels wide. Every art pixel is a square block of the same size on one grid. Crisp hard edges, no anti-aliasing, no blur, no gradients, limited palette (about 16 colors).
+
+Background: one flat solid color, exactly #FF00FF (pure magenta), filling every cell edge to edge. No gradients, shadows on the background (no drop shadow under the items), glow, floor, text or labels. Do not use magenta, pink or purple anywhere in the artwork.

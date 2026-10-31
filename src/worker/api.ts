@@ -4,6 +4,8 @@ import type { Inspection } from '../core/inspect/index.ts';
 import type { KitInput } from '../core/kit/index.ts';
 import type { ExportOptions } from '../core/export/index.ts';
 import type { TileAtlasOptions, TileAtlasResult } from '../core/tiles/index.ts';
+import type { ParallaxInput, ParallaxOptions, ParallaxResult } from '../core/parallax/index.ts';
+import type { ItemsOptions, ItemsResult } from '../core/items/index.ts';
 
 /** Cut lines used to slice a tile sheet. confidence is null when the user fixed cols × rows. */
 export interface TileGridInfo {
@@ -62,4 +64,14 @@ export interface PipelineApi {
   renderTerrainPreview(cells: Uint8Array, w: number, h: number): Promise<RGBAImage>;
   /** ZIP of a terrain set: <name>/<name>.png + .tres + README.txt. */
   buildTerrainZip(set: TileSetResult, name: string, names: [string, string]): Promise<Uint8Array>;
+
+  /** Items and icons sheet → atlas of exact square cells (`palette` = fixed shared palette, pixel mode). */
+  normalizeItems(img: RGBAImage, o: ItemsOptions, palette?: RGBA8[]): Promise<ItemsResult>;
+  /** ZIP of an items atlas for the given engines; `names[i]` renames item i (blank = default). */
+  buildItemsZip(result: ItemsResult, name: string, names: (string | undefined)[], targets: ExportTarget[]): Promise<Uint8Array>;
+
+  /** Parallax background: layers (far → near) resampled to the game height and looped. Pixel art loads the unfake core. */
+  buildParallax(inputs: ParallaxInput[], o: ParallaxOptions): Promise<ParallaxResult>;
+  /** ZIP of a parallax background for the given engines. */
+  buildParallaxZip(result: ParallaxResult, name: string, targets: ExportTarget[]): Promise<Uint8Array>;
 }

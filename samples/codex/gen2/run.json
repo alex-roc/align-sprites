@@ -1,0 +1,69 @@
+{
+  "ok": true,
+  "mode": "batch",
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "context": "lean",
+  "generated": {
+    "count": 5,
+    "paths": []
+  },
+  "selected": {
+    "count": 5,
+    "paths": [
+      "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/items-pixel.png",
+      "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/atlas-andes-pixel.png",
+      "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/parallax-far-pixel.png",
+      "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/parallax-near-pixel.png",
+      "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/explosion-pixel.png"
+    ],
+    "expected": 5
+  },
+  "images": [
+    {
+      "name": "items-pixel",
+      "path": "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/items-pixel.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "name": "atlas-andes-pixel",
+      "path": "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/atlas-andes-pixel.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "name": "parallax-far-pixel",
+      "path": "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/parallax-far-pixel.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "name": "parallax-near-pixel",
+      "path": "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/parallax-near-pixel.png",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "name": "explosion-pixel",
+      "path": "/Users/alexojeda/dev/align-sprites/samples/codex/gen2/explosion-pixel.png",
+      "width": 1536,
+      "height": 1024
+    }
+  ],
+  "outputDir": "/Users/alexojeda/dev/align-sprites/samples/codex/gen2",
+  "workdir": "/var/folders/_3/jydqclvs23b76ns55mnd5q5r0000gn/T/codex-image-gen-HpyYUz",
+  "warnings": [],
+  "usage": {
+    "input_tokens": 14827,
+    "cached_input_tokens": 5888,
+    "uncached_input_tokens": 8939,
+    "output_tokens": 2546,
+    "reasoning_output_tokens": 49,
+    "total_tokens": 17373,
+    "images": 5,
+    "total_tokens_per_image": 3475,
+    "note": "codex text tokens only; each image additionally costs the gpt-image-2 generation itself"
+  },
+  "durationMs": 138787
+}

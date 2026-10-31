@@ -11,7 +11,7 @@ src/core/color.ts        sRGB→Lab, ΔE, distanceTo(ref)
 src/core/pixel/unfake.ts adapter over the unfake.js WASM core (grid detection, grid downscale, quantize)
 src/core/bg/             background detection/removal
 src/core/segment/        frame segmentation (grid / auto)
-src/core/measure/        per-frame metrics (bbox, feet, horizontal anchor)
+src/core/measure/        per-frame metrics (bbox, feet, horizontal anchor); collision.ts: automatic collision box
 src/core/resample/       area resampling for cartoon art
 src/core/pack/           fixed-cell sheet packing, feet-anchored
 src/core/pipeline/       runSpriteJob / runBatch (orchestration)
@@ -20,8 +20,14 @@ src/core/prompts/        prompt templates + guide grid image
 src/core/tiles/          tile atlas normalizer + terrain transition composer (phase 2)
 src/core/inspect/        inspectImage: bg + sheet/single + frame count + source height on a <= 512 px copy
 src/core/frames/         findDuplicateFrames, frameDifference, flipCellX (frame editor helpers)
-src/core/palette/        PALETTES presets, hex helpers, paletteFromImage, remapToPalette, applyColorMap, imageColors
-src/core/kit/            buildKitExport: sprites + tiles of a session, per engine
+src/core/palette/        PALETTES presets, hex helpers, paletteFromImage, remapToPalette, applyColorMap, imageColors;
+                         formats.ts (.hex/.gpl/.txt parse + serialize), swap.ts (paletteSwapMap, mergeColorMaps)
+src/core/kit/            buildKitExport: sprites + tiles of a session, per engine; level.ts: game resolutions, integer
+                         scaling, tileTopInset/surfaceInset, test-level layout and animation picking
+src/core/video/          video → sheet helpers (frame times, layout, composeSheet, pickLoopEnd); decoding is in ui/lib/video.ts
+src/core/items/          findItems + normalizeItems (item/icon sheet → exact square slots), itemsExport
+src/core/parallax/       background layers → looping layers at the game height, per-engine export
+cli/                     internal CLI over the core (align-sprites sprite|inspect|tiles|terrain|items|parallax|prompt)
 src/worker/              Comlink worker implementing PipelineApi (src/worker/api.ts)
 src/ui/, src/i18n/       React UI; every UI string lives in src/i18n (en + es, same keys)
 src/vendor/unfake/       vendored unfake.js WASM (MIT; bundles imagequant, GPL-3.0 → project is GPL-3.0-or-later)
@@ -50,6 +56,12 @@ tools/godot-validate/    headless Godot 4 project that loads and checks exported
 
 One ZIP per download; a `<target>/` folder per engine only with *All engines* (`buildExport` option `prefix`; the kit always nests). Per target: `<name>/` for Godot (png + SpriteFrames .tres + AnimatedSprite2D .tscn with the origin at the feet), GDevelop one folder per sprite: `<name>/<name>_<anim>_00.png…` (`<name>_00.png…` when the only animation is `default`; names unique even without the folder, GDevelop keys images by file name) + `<name>/README.txt`, and `<name>/spritesheets/<name>_<anim>.png` for Piskel only with `gdevelopSpritesheets` (UI checkbox, off by default, not persisted), `<name>.png + .js` for Kaplay (single-frame sheets export as static sprites, see below), `generic/<name>.png + .json` (Aseprite hash). Godot `.tres` uses relative `path` without uid: copy the folder into the project as is.
 
+## Roles: anchor and collision (src/core)
+
+- `SpriteJob.anchor` 'feet' (default) | 'center'. Centre: every frame's bbox centre goes to the cell centre (an explosion grows symmetrically), `padBottom` is 0, and the scale reference defaults to `'largest'` (longest side of the biggest frame, over every animation). `PackedSheet.anchor` tells the exporters where the origin is.
+- `PackedSheet.collision` (cell coords) from `measure/collision.ts`: feet assets = bottom on footRow + 1, height = refHeight, width = 10–90 % quantiles of the alpha column mass (median over the first animation), so arms, swords and capes stay out; centre assets = median bbox at 90 %. Exported as Godot `<name>_body.tscn` (CharacterBody2D + sprite + RectangleShape2D), GDevelop README mask points, Kaplay `area({ shape: new Rect(...) })` (`kaplayArea`/`kaplayAreaLine`: Kaplay adds the rect pos to the rect's own anchor), generic `meta.collision`.
+- `ui/lib/frameOps.ts` `rowAnimations`: one animation per detected row (4 rows = walk_down/left/right/up, 3 rows mirror the side, else anim_N).
+
 ## Inspect, frames, palette, kit (src/core)
 
 - `inspectImage(img, mode)` reduces the image to a longest side of 512 px (nearest), runs `autoBgOptions` + `removeBackground` + `findFrames` and returns `{bg, kind, frameCount, sourceHeight}` (height rescaled to ORIGINAL px, ~20-40 ms for 1500 px sheets). Regions under 10 % of the largest bbox area are parts (a sword held away from the body), not frames, so such a character stays `single`.
@@ -75,6 +87,12 @@ Layout, tokens and type live in `dev-docs/design.md`. Summary of the code:
 - **i18n**: `src/i18n/en.ts` is the source of keys; `es.ts` is typed against it and `tests/i18n.test.ts` checks keys and `{placeholders}`. Core warnings are translated with `tw()` (`warn.*`).
 - Theme: CSS `light-dark()` + `data-theme` on `<html>`. Fonts: Pixelify Sans (wordmark, frame counter) and Atkinson Hyperlegible Next (everything else), via `@fontsource`.
 - Examples for "Try an example" live in `public/examples/` (copies of `samples/`). Each example is a list of files loaded together as one batch (`ui/dev/examples.ts`): the character + idle + run example shows three images at one shared size.
+
+## Video, items, test level (v4)
+
+- **Video** (`components/sprites/VideoDialog.tsx`): an HTMLVideoElement seeks to evenly spaced times in [start, end) (end excluded), `requestVideoFrameCallback` when available, frames capped to 768 px, composed into a grid sheet with gaps of the corner colour, added through `useAddAssets` with grid segmentation and fps = count / range. *Find the loop* compares 64 px copies (mean absolute difference) and takes the first return under 35 % of the maximum, refined to the local minimum.
+- **Items** (`components/tiles/ItemsPanel.tsx`, worker `normalizeItems`/`buildItemsZip`): own detector (`findItems`: components merged by proximity or containment; `findFrames` would glue small items to a neighbour). One common scale (largest fills the slot) or `fill: 'each'`; pixel art never enlarged, period detected once per sheet, one resample per item.
+- **Test level** (`components/kit/TestLevel.tsx` + `levelScene.ts`): `kaplay` is imported dynamically when Play is pressed (own chunk, not in the main bundle). The canvas is the game screen (1 px = 1 game px) scaled by an integer factor in CSS. The sheet/anims config is the Kaplay exporter's (`kaplayAnims`, `kaplayArea`), so the level also checks the export.
 
 ## Conventions
 

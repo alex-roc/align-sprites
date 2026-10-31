@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useI18n } from '../../../i18n/index.ts';
-import type { AnchorXMethod, ArtMode } from '../../../core/types.ts';
+import type { AnchorXMethod, ArtMode, SpriteAnchor } from '../../../core/types.ts';
 import { hexToRgb, rgbToHex } from '../../lib/image.ts';
 import { useApp } from '../../state/context.ts';
 import type { Asset, AssetKind, BgStrategy, GlobalSettings, SegMode } from '../../state/types.ts';
@@ -77,6 +77,25 @@ export function SpriteSettings({ asset }: { asset: Asset }) {
         </Section>
       ),
     },
+    {
+      scope: 'one',
+      key: 'origin',
+      node: (
+        <Section title={t('role.title')}>
+          <Segmented<SpriteAnchor>
+            name={`anchor-${asset.id}`}
+            label={t('role.title')}
+            value={asset.anchor}
+            onChange={(anchor) => patchA({ anchor })}
+            options={[
+              { value: 'feet', label: t('role.feet') },
+              { value: 'center', label: t('role.center') },
+            ]}
+          />
+          <p className="hint">{t(`role.${asset.anchor}Hint`)}</p>
+        </Section>
+      ),
+    },
   ];
   if (sheet) {
     items.push({
@@ -120,7 +139,12 @@ export function SpriteSettings({ asset }: { asset: Asset }) {
       key: 'anims',
       node: (
         <Section title={t('set.animations')}>
-          <AnimationsEditor anims={asset.anims} frameCount={state.run.frameCounts[asset.id]} onChange={(anims) => patchA({ anims })} />
+          <AnimationsEditor
+            anims={asset.anims}
+            frameCount={state.run.frameCounts[asset.id]}
+            rows={state.run.results[asset.id]?.diag.regions.map((r) => r.row)}
+            onChange={(anims) => patchA({ anims })}
+          />
         </Section>
       ),
     });
@@ -159,7 +183,7 @@ export function SpriteSettings({ asset }: { asset: Asset }) {
     ),
   });
   // How this image is sized against the common height: which frames measure the character, and a multiplier.
-  const showRef = asset.kind === 'sheet';
+  const showRef = asset.kind === 'sheet' && asset.anchor === 'feet';
   if (g.targetHeight !== null && (batch || showRef)) {
     items.push({
       scope: 'one',

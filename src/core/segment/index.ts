@@ -294,7 +294,7 @@ function mergeComponents(input: Comp[], mergeDist: number): Comp[] {
 }
 
 /** Rows by vertical overlap (top→bottom), items left→right inside each row. */
-function readingOrder(groups: Comp[]): FrameRegion[] {
+export function readingOrder(groups: Comp[]): FrameRegion[] {
   const sorted = [...groups].sort((a, b) => a.y0 + a.y1 - (b.y0 + b.y1));
   const rows: { y0: number; y1: number; items: Comp[] }[] = [];
   for (const g of sorted) {

@@ -1,8 +1,10 @@
-import type { Asset, AnimDraft, AppState, AutoBg, Detected, EdgeStyleForm, GlobalSettings, TerrainState, TileSheetState } from './types.ts';
+import type { Asset, AnimDraft, AppState, AutoBg, Detected, EdgeStyleForm, GlobalSettings, ItemsState, ParallaxState, TerrainState, TileSheetState } from './types.ts';
 import type { RGBAImage } from '../../core/types.ts';
 import { PALETTES } from '../../core/palette/index.ts';
+import { ASSET_PROMPT_DEFAULTS } from '../../core/prompts/assets.ts';
 import { defaultEdgeStyle } from '../../core/tiles/index.ts';
-import { DEFAULT_GAME_TILE, GAME_TILES, loadJSON, parsePaletteChoice } from '../persist.ts';
+import { DEFAULT_GAME_RES, GAME_RESOLUTIONS } from '../../core/kit/level.ts';
+import { DEFAULT_GAME_TILE, GAME_TILES, loadJSON, parseCustomColors, parsePaletteChoice } from '../persist.ts';
 import type { ExportTarget } from '../../core/types.ts';
 
 let seq = 0;
@@ -17,7 +19,9 @@ export const DEFAULT_GLOBAL: GlobalSettings = {
   targetHeight: null,
   maxColors: 16,
   palette: { kind: 'original' },
+  customColors: [],
   gameTile: DEFAULT_GAME_TILE,
+  gameRes: DEFAULT_GAME_RES,
   anchorX: 'medianColumn',
 };
 
@@ -40,10 +44,12 @@ export function loadGlobal(): GlobalSettings {
   if (r.targetHeight === null || isNum(r.targetHeight, 4, 1024)) g.targetHeight = r.targetHeight as number | null;
   if (isNum(r.maxColors, 2, 256)) g.maxColors = r.maxColors;
   const palette = parsePaletteChoice(r.palette, PALETTES.map((p) => p.id));
+  g.customColors = parseCustomColors(r.customColors);
   if (palette) g.palette = palette;
   // Before palettes existed `maxColors > 0` meant "reduce"; keep that choice for returning visitors.
   else if (isNum(r.maxColors, 1, 256) && r.palette === undefined) g.palette = { kind: 'reduce' };
   if (typeof r.gameTile === 'number' && GAME_TILES.includes(r.gameTile)) g.gameTile = r.gameTile;
+  if (typeof r.gameRes === 'number' && GAME_RESOLUTIONS.some((x) => x.w === r.gameRes)) g.gameRes = r.gameRes;
   if (r.anchorX === 'medianColumn' || r.anchorX === 'centroid' || r.anchorX === 'bboxCenter') g.anchorX = r.anchorX;
   return g;
 }
@@ -93,6 +99,7 @@ export function makeAsset(fileName: string, image: RGBAImage, detected: Detected
     detected,
     relative: 1,
     heightRef: 'median',
+    anchor: 'feet',
     autoBg,
   };
 }
@@ -124,6 +131,43 @@ export const initialTileSheet: TileSheetState = {
   format: 'godot',
   allFormats: false,
   run: { status: 'idle', sig: null, result: null, grid: null, error: null },
+};
+
+export const initialItems: ItemsState = {
+  source: null,
+  mode: 'pixel',
+  cellSize: DEFAULT_TILE_SIZE,
+  fill: 'common',
+  margin: 1,
+  detectAuto: true,
+  cols: 4,
+  rows: 3,
+  atlasCols: 0,
+  removeBg: true,
+  bg: { strategy: 'auto', custom: false, color: [255, 255, 255], tolerance: 25 },
+  maxColors: 0,
+  excluded: [],
+  names: {},
+  view: 'atlas',
+  format: 'godot',
+  allFormats: false,
+  run: { status: 'idle', sig: null, result: null, error: null },
+};
+
+export const initialParallax: ParallaxState = {
+  layers: [],
+  mode: 'pixel',
+  height: null,
+  loop: true,
+  overlap: 12,
+  bgTolerance: 25,
+  view: 'scroll',
+  wrapLayer: 0,
+  speed: 60,
+  name: 'background',
+  format: 'godot',
+  allFormats: false,
+  run: { status: 'idle', sig: null, result: null, error: null },
 };
 
 export const initialTerrain: TerrainState = {
@@ -162,5 +206,6 @@ export const initialState: AppState = {
     withReference: false,
   },
   tilePrompt: { mode: 'pixel', material: '', tileSize: 32, view: 'top-down' },
-  tiles: { kind: 'sheet', sheet: initialTileSheet, terrain: initialTerrain },
+  assetPrompts: ASSET_PROMPT_DEFAULTS,
+  tiles: { kind: 'sheet', sheet: initialTileSheet, terrain: initialTerrain, items: initialItems, parallax: initialParallax },
 };

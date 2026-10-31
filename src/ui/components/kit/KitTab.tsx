@@ -14,7 +14,10 @@ import { PaletteField, Swatches } from '../common/PaletteField.tsx';
 import { usePaletteSummary } from '../../state/usePaletteSummary.ts';
 import { Section } from '../common/Section.tsx';
 import { fixedPalette } from '../../state/jobs.ts';
+import { resolutionByWidth } from '../../../core/kit/level.ts';
 import { KitPreview } from './KitPreview.tsx';
+import { ResolutionField } from './ResolutionField.tsx';
+import { TestLevel, type LevelTile } from './TestLevel.tsx';
 
 const ENGINES: ExportTarget[] = ['godot', 'gdevelop', 'kaplay', 'generic'];
 const GUIDE_SECTION: Record<ExportTarget, string> = { godot: 'godot', gdevelop: 'gdevelop', kaplay: 'kaplay', generic: 'other' };
@@ -48,6 +51,12 @@ export function KitTab() {
   const previewTiles = useMemo<RGBAImage[]>(() => {
     if (atlas) return atlasTiles(atlas.atlas, atlas.tileSize, atlas.tiles);
     return [terrain.run.tileA, terrain.run.tileB].filter((x): x is RGBAImage => !!x);
+  }, [atlas, terrain.run.tileA, terrain.run.tileB]);
+  // Ground choices of the test level: every tile with content of the atlas, plus the terrain's two base textures.
+  const levelTiles = useMemo<LevelTile[]>(() => {
+    const out: LevelTile[] = atlas ? atlasTiles(atlas.atlas, atlas.tileSize, atlas.tiles, Infinity).map((image, i) => ({ key: `atlas${i}`, image })) : [];
+    [terrain.run.tileA, terrain.run.tileB].forEach((image, i) => image && out.push({ key: `terrain${i}`, image }));
+    return out;
   }, [atlas, terrain.run.tileA, terrain.run.tileB]);
   const previewTile = atlas?.tileSize ?? terrain.run.tileA?.width ?? tileSize;
 
@@ -87,6 +96,9 @@ export function KitTab() {
                   </button>
                 ))}
               </div>
+            </Section>
+            <Section title={t('kit.resTitle')} hint={t('kit.resHint')}>
+              <ResolutionField />
             </Section>
             <Section title={t('kit.paletteTitle')} hint={t('kit.paletteHint')}>
               <PaletteField />
@@ -154,6 +166,9 @@ export function KitTab() {
               <h2 className="card-title">{t('kit.preview')}</h2>
               <KitPreview sprites={sprites.map((s) => s.result)} tiles={previewTiles} tileSize={previewTile} pixelated={g.mode === 'pixel'} />
             </section>
+          )}
+          {sprites.length > 0 && (
+            <TestLevel sprites={sprites.map((s) => ({ id: s.asset.id, name: s.asset.name, result: s.result }))} tiles={levelTiles} gameTile={tileSize} res={resolutionByWidth(g.gameRes)} pixelated={g.mode === 'pixel'} />
           )}
           <ExportCard<ExportTarget>
             name="kit-engine"

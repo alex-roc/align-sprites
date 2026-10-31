@@ -1,6 +1,7 @@
 // Orchestrates bg → segment → pixel grid → scale → measure → pack (see dev-docs/architecture.md).
 import { removeBackground } from '../bg/index.ts';
 import { alphaBBox, crop } from '../image.ts';
+import { collisionBox } from '../measure/collision.ts';
 import { measureFrame, referenceHeight } from '../measure/index.ts';
 import { packFrames, placementMetrics, suggestCell } from '../pack/index.ts';
 import { applyColorMap, remapToPalette } from '../palette/index.ts';
@@ -77,9 +78,15 @@ function desiredHeight(job: SpriteJob): number | null {
   return job.scale.kind === 'targetHeight' ? Math.max(1, Math.round(job.scale.px * (job.scale.relative ?? 1))) : null;
 }
 
-/** Statistic of the reference frames that stands for the character's height (see ScalePolicy.reference). */
-function heightStat(job: SpriteJob): 'median' | 'p90' {
-  return job.scale.kind === 'targetHeight' && job.scale.reference === 'tallest' ? 'p90' : 'median';
+/**
+ * Statistic of the reference frames that stands for the character's height (see ScalePolicy.reference). Centred
+ * effects default to their largest frame (an explosion's size is its biggest frame, not the median one).
+ */
+function heightStat(job: SpriteJob): 'median' | 'p90' | 'largest' {
+  const ref = job.scale.kind === 'targetHeight' ? job.scale.reference : undefined;
+  if (ref === 'tallest') return 'p90';
+  if (ref === 'largest' || (!ref && job.anchor === 'center')) return 'largest';
+  return 'median';
 }
 
 /** Jumps, crouches: the reference frames' heights vary so much that their median is not the standing height. */
@@ -101,9 +108,10 @@ export function normalizeJob(core: UnfakeCore | null, job: SpriteJob): Normalize
     return { job, frames: [], metrics: [], anims: [], regions, scale: 1, refHeight: 0, warnings };
   }
   const anims = resolveAnims(job.animations, regions.length, warnings);
-  const refIdx = anims[0].frames;
   const want = desiredHeight(job);
   const stat = heightStat(job);
+  // The first animation stands for the character; the biggest frame of an effect may be in any animation.
+  const refIdx = stat === 'largest' ? [...new Set(anims.flatMap((a) => a.frames))] : anims[0].frames;
   const refOf = (ms: FrameMetrics[]) => referenceHeight(refIdx.map((i) => ms[i]), stat);
 
   if (job.mode === 'pixel') {
@@ -158,7 +166,11 @@ export function normalizeJob(core: UnfakeCore | null, job: SpriteJob): Normalize
 
 /** Pack a normalized job into its sheet. */
 export function packJob(n: NormalizedJob, cell: CellSpec, palette?: RGBA8[]): SpriteResult {
-  const { sheet, cells, warnings } = packFrames(n.frames, n.metrics, cell, n.anims, n.job.mode, { offsets: n.job.frameOffsets });
+  const anchor = n.job.anchor ?? 'feet';
+  const { sheet, cells, warnings } = packFrames(n.frames, n.metrics, cell, n.anims, n.job.mode, { offsets: n.job.frameOffsets, anchor });
+  // The collision box is measured on the packed cells of the first animation (flips and nudges included).
+  const collision = collisionBox(cells.slice(0, sheet.anims[0]?.count ?? 0), anchor, sheet.cell, sheet.padBottom, n.refHeight);
+  if (collision) sheet.collision = collision;
   return {
     name: n.job.name,
     sheet,
@@ -181,8 +193,9 @@ function cellFor(norms: NormalizedJob[], requested: CellSpec | 'auto'): CellSpec
   for (const n of norms) {
     if (!n.frames.length) continue;
     // Size for the placements actually made (mirrored animations, nudged frames).
-    const p = placementMetrics(n.frames, n.metrics, n.anims, n.job.frameOffsets);
-    const c = suggestCell(p.frames, p.metrics, 0);
+    const anchor = n.job.anchor ?? 'feet';
+    const p = placementMetrics(n.frames, n.metrics, n.anims, n.job.frameOffsets, anchor);
+    const c = suggestCell(p.frames, p.metrics, 0, 32, anchor);
     w = Math.max(w, c.w);
     h = Math.max(h, c.h);
   }
@@ -250,7 +263,7 @@ export function runBatch(core: UnfakeCore | null, jobs: SpriteJob[]): SpriteResu
     if (!n.frames.length) {
       return {
         name: n.job.name,
-        sheet: { image: { width: 0, height: 0, data: new Uint8ClampedArray(0) }, cell: { w: cell.w, h: cell.h }, cols: 0, rows: 0, padBottom: cell.padBottom, anims: [], mode: n.job.mode },
+        sheet: { image: { width: 0, height: 0, data: new Uint8ClampedArray(0) }, cell: { w: cell.w, h: cell.h }, cols: 0, rows: 0, padBottom: cell.padBottom, anims: [], mode: n.job.mode, ...(n.job.anchor === 'center' ? { anchor: 'center' as const } : {}) },
         frames: [],
         diag: { scale: n.scale, refHeight: 0, metrics: [], regions: n.regions, warnings: n.warnings },
       };

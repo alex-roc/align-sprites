@@ -9,10 +9,12 @@ type Zoom = 'fit' | number;
 export function SheetView({ result }: { result: SpriteResult }) {
   const { t } = useI18n();
   const [zoom, setZoom] = useState<Zoom>('fit');
-  const { image, cell, cols, rows, padBottom, anims, mode } = result.sheet;
+  const { image, cell, cols, rows, padBottom, anims, mode, anchor } = result.sheet;
   const W = image.width;
   const H = image.height;
-  const feet = cell.h - 1 - padBottom + 0.5;
+  const centre = anchor === 'center';
+  // The line of every row: the feet, or the middle of the cell for centred sprites.
+  const feet = centre ? cell.h / 2 : cell.h - 1 - padBottom + 0.5;
   return (
     <div className="sheetview">
       <div className="stage-body scroll-stage">

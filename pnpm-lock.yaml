@@ -23,6 +23,9 @@ importers:
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
+      kaplay:
+        specifier: 3001.0.19
+        version: 3001.0.19
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -525,6 +528,10 @@ packages:
 
   iobuffer@6.0.1:
     resolution: {integrity: sha512-SZWYkWNfjIXIBYSDpXDYIgshqtbOPsi4lviawAEceR1Kqk+sHDlcQjWrzNQsii80AyBY0q5c8HCTNjqo74ul+Q==}
+
+  kaplay@3001.0.19:
+    resolution: {integrity: sha512-T8GdXGXvgv/vbYVA1lcHzuDNVhp3juOJJE8OZs0vR5MdGNElBvANEeTSnqAAhJpSXtNxpeNy29pqkok3RnXKtg==}
+    engines: {node: '>=20.0.0'}
 
   lightningcss-android-arm64@1.33.0:
     resolution: {integrity: sha512-gEpRTalKdosp4Bb8qWtc2iOgE5SeIHlpS1up9bFq2wAyYhl1UdTObYiHe98zEM9SQvSoqQZ1IQD0JNpg3Ml5pg==}
@@ -1034,6 +1041,8 @@ snapshots:
     optional: true
 
   iobuffer@6.0.1: {}
+
+  kaplay@3001.0.19: {}
 
   lightningcss-android-arm64@1.33.0:
     optional: true

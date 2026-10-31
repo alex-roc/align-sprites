@@ -141,6 +141,18 @@ describe('real AI sheets', () => {
     expect(r.atlas.data[3]).toBe(0);
   });
 
+  it('Codex atlas on a magenta key (prompt + guide): 6×4 tiles, no key colour left on tile edges', () => {
+    const img = loadPng('samples/codex/gen2/atlas-andes-pixel.png');
+    const bg: BgOptions = { color: 'auto', tolerance: 25, strategy: 'global', minHole: 16 };
+    const r = normalizeTileAtlas(core, img, { tileSize: 32, mode: 'pixel', bg });
+    expect([r.cols, r.rows]).toEqual([6, 4]);
+    // full-bleed ground tiles used to be cut from the untouched sheet, keeping a magenta top row from the gutter
+    let magenta = 0;
+    const d = r.atlas.data;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 0 && d[i] > 150 && d[i + 2] > 150 && d[i + 1] < 100) magenta++;
+    expect(magenta).toBeLessThan(8);
+  });
+
   it('transparent mosaics (612×408): same 10×7 grid → exact 320×224 atlas', () => {
     const img = loadPng('samples/real/mosaicos-transparente.png');
     const g = detectTileGrid(img);

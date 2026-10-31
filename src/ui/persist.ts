@@ -1,3 +1,4 @@
+import { dedupeColors } from '../core/palette/index.ts';
 import type { RGBA8 } from '../core/types.ts';
 import type { PaletteChoice } from './state/types.ts';
 
@@ -40,11 +41,16 @@ export function parseColors(raw: unknown): RGBA8[] | null {
   return out;
 }
 
+/** Saved custom palette: valid '#rrggbb' codes only, deduplicated and capped. */
+export function parseCustomColors(raw: unknown): string[] {
+  return Array.isArray(raw) ? dedupeColors(raw.filter((c): c is string => typeof c === 'string')) : [];
+}
+
 /** Saved palette choice (`preset` ids are checked by the caller against PALETTES). */
 export function parsePaletteChoice(raw: unknown, presetIds: readonly string[]): PaletteChoice | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  if (r.kind === 'original' || r.kind === 'reduce') return { kind: r.kind };
+  if (r.kind === 'original' || r.kind === 'reduce' || r.kind === 'custom') return { kind: r.kind };
   if (r.kind === 'preset' && typeof r.id === 'string' && presetIds.includes(r.id)) return { kind: 'preset', id: r.id };
   if (r.kind === 'image') {
     const colors = parseColors(r.colors);

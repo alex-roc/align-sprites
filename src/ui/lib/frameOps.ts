@@ -103,3 +103,26 @@ export function mirrorDraft(d: AnimDraft, id: string, names: string[]): AnimDraf
   for (let n = 2; names.includes(name); n++) name = `${base}_${n}`;
   return { ...d, id, name, flipX: !d.flipX };
 }
+
+/** Names of the rows of a top-down set (RPG Maker order); with 3 rows the second one is the side view. */
+const TOP_DOWN_4 = ['walk_down', 'walk_left', 'walk_right', 'walk_up'];
+
+/**
+ * One animation per sheet row. `rows[i]` is the row of detected frame i (`FrameRegion.row`). Returns null when the
+ * sheet has a single row (nothing to split). Names: 4 rows = top-down walk cycles down, left, right, up; 3 rows =
+ * down, side (facing right), up, plus `walk_left` as the mirrored side; any other count = `anim_0`, `anim_1`…
+ * Every draft gets `fps`, loops and starts unmirrored (except the mirrored left).
+ */
+export function rowAnimations(rows: number[], fps: number, newId: () => string): AnimDraft[] | null {
+  const byRow = new Map<number, number[]>();
+  rows.forEach((r, i) => byRow.set(r, [...(byRow.get(r) ?? []), i]));
+  const groups = [...byRow.entries()].sort((a, b) => a[0] - b[0]).map(([, frames]) => frames);
+  if (groups.length < 2) return null;
+  const draft = (name: string, frames: number[], flipX = false): AnimDraft => ({ id: newId(), name, frames: framesToText(frames), fps, loop: true, flipX });
+  if (groups.length === 4) return groups.map((g, i) => draft(TOP_DOWN_4[i], g));
+  if (groups.length === 3) {
+    const [down, side, up] = groups;
+    return [draft('walk_down', down), draft('walk_left', side, true), draft('walk_right', side), draft('walk_up', up)];
+  }
+  return groups.map((g, i) => draft(`anim_${i}`, g));
+}

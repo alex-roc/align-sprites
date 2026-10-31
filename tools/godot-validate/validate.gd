@@ -2,6 +2,8 @@ extends SceneTree
 # Headless checker for align-sprites Godot exports.
 # Usage: godot --headless --path tools/godot-validate --script res://validate.gd -- <res .tres> <res expected.json> [...]
 # expected.json: {cell:{w,h}, texture:{w,h}, anims:[{name,frames,speed,loop}], scene:{path,node,offset:[x,y],texture_filter,animation}}
+# "body": {path,node,shape_size:[w,h],shape_position:[x,y]} checks <name>_body.tscn (CharacterBody2D + sprite + CollisionShape2D).
+# scene.centered tells whether the sprite is centred on the node (effects) or drawn from its top-left corner (feet).
 # With "static": true the export is a Sprite2D scene (no SpriteFrames): only the scene and its texture are checked.
 
 var failures := 0
@@ -43,6 +45,7 @@ func validate_pair(tres_path: String, json_path: String) -> void:
 
 	if exp.get("static", false):
 		validate_static(exp)
+		validate_body(exp, Sprite2D)
 		return
 
 	var sf = load(tres_path)
@@ -94,12 +97,13 @@ func validate_pair(tres_path: String, json_path: String) -> void:
 		var off: Vector2 = node.offset
 		var want_off := Vector2(float(sc["offset"][0]), float(sc["offset"][1]))
 		check(off == want_off, "offset %s != %s" % [off, want_off])
-		check(node.centered == false, "centered should be false")
+		check(node.centered == bool(sc["centered"]), "centered should be %s" % sc["centered"])
 		check(int(node.texture_filter) == int(sc["texture_filter"]), "texture_filter %d != %d" % [int(node.texture_filter), int(sc["texture_filter"])])
 		check(node.sprite_frames != null, "sprite_frames not set")
 		check(String(node.animation) == String(sc["animation"]), "animation %s != %s" % [node.animation, sc["animation"]])
 		check(node.autoplay == String(sc["animation"]), "autoplay %s != %s" % [node.autoplay, sc["animation"]])
 	node.free()
+	validate_body(exp, AnimatedSprite2D)
 
 
 func validate_static(exp: Dictionary) -> void:
@@ -114,9 +118,51 @@ func validate_static(exp: Dictionary) -> void:
 		check(String(node.name) == String(sc["node"]), "node name %s != %s" % [node.name, sc["node"]])
 		var want_off := Vector2(float(sc["offset"][0]), float(sc["offset"][1]))
 		check(node.offset == want_off, "offset %s != %s" % [node.offset, want_off])
-		check(node.centered == false, "centered should be false")
+		check(node.centered == bool(sc["centered"]), "centered should be %s" % sc["centered"])
 		check(int(node.texture_filter) == int(sc["texture_filter"]), "texture_filter %d != %d" % [int(node.texture_filter), int(sc["texture_filter"])])
 		check(node.texture != null, "texture not set")
 		if node.texture != null:
 			check(node.texture.get_width() == int(exp["texture"]["w"]) and node.texture.get_height() == int(exp["texture"]["h"]), "texture size %s != %sx%s" % [node.texture.get_size(), exp["texture"]["w"], exp["texture"]["h"]])
+	node.free()
+
+
+# <name>_body.tscn: CharacterBody2D root, the sprite (same placement as the plain scene) and a rectangle shape.
+func validate_body(exp: Dictionary, sprite_class) -> void:
+	if not exp.has("body"):
+		return
+	var b: Dictionary = exp["body"]
+	var sc: Dictionary = exp["scene"]
+	var packed = load(b["path"])
+	if not (packed is PackedScene):
+		fail("%s did not load as PackedScene" % b["path"])
+		return
+	var node = packed.instantiate()
+	check(node is CharacterBody2D, "%s root is %s, not CharacterBody2D" % [b["path"], node.get_class()])
+	check(String(node.name) == String(b["node"]), "body node name %s != %s" % [node.name, b["node"]])
+	var sprite = null
+	var col = null
+	for c in node.get_children():
+		if is_instance_of(c, sprite_class):
+			sprite = c
+		elif c is CollisionShape2D:
+			col = c
+	check(sprite != null, "%s has no %s child" % [b["path"], sprite_class])
+	check(col != null, "%s has no CollisionShape2D child" % b["path"])
+	if sprite != null:
+		check(sprite.centered == bool(sc["centered"]), "body sprite centered should be %s" % sc["centered"])
+		var want_off := Vector2(float(sc["offset"][0]), float(sc["offset"][1]))
+		check(sprite.offset == want_off, "body sprite offset %s != %s" % [sprite.offset, want_off])
+		check(int(sprite.texture_filter) == int(sc["texture_filter"]), "body sprite texture_filter mismatch")
+		if sprite is AnimatedSprite2D:
+			check(sprite.sprite_frames != null, "body sprite_frames not set")
+			check(String(sprite.animation) == String(sc["animation"]), "body animation %s != %s" % [sprite.animation, sc["animation"]])
+		else:
+			check(sprite.texture != null, "body texture not set")
+	if col != null:
+		check(col.shape is RectangleShape2D, "collision shape is %s, not RectangleShape2D" % col.shape)
+		if col.shape is RectangleShape2D:
+			var want_size := Vector2(float(b["shape_size"][0]), float(b["shape_size"][1]))
+			check(col.shape.size.is_equal_approx(want_size), "shape size %s != %s" % [col.shape.size, want_size])
+		var want_pos := Vector2(float(b["shape_position"][0]), float(b["shape_position"][1]))
+		check(col.position.is_equal_approx(want_pos), "shape position %s != %s" % [col.position, want_pos])
 	node.free()

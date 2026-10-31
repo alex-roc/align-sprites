@@ -235,7 +235,7 @@ const VIEW: Record<Lang, Record<PromptOptions['view'], string>> = {
   },
 };
 
-function cap(s: string): string {
+export function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
@@ -445,7 +445,7 @@ const DIGITS: string[][] = [
   ['###', '#.#', '###', '..#', '###'],
 ];
 
-function fillRect(img: RGBAImage, x: number, y: number, w: number, h: number, c: RGBA8): void {
+export function fillRect(img: RGBAImage, x: number, y: number, w: number, h: number, c: RGBA8): void {
   const x0 = Math.max(0, x), y0 = Math.max(0, y);
   const x1 = Math.min(img.width, x + w), y1 = Math.min(img.height, y + h);
   for (let yy = y0; yy < y1; yy++) {
@@ -459,7 +459,7 @@ function fillRect(img: RGBAImage, x: number, y: number, w: number, h: number, c:
   }
 }
 
-function drawNumber(img: RGBAImage, n: number, x: number, y: number, scale: number, c: RGBA8): void {
+export function drawNumber(img: RGBAImage, n: number, x: number, y: number, scale: number, c: RGBA8): void {
   let cx = x;
   for (const ch of String(n)) {
     const glyph = DIGITS[ch.charCodeAt(0) - 48];

@@ -66,8 +66,12 @@ export function measureFrame(img: RGBAImage, o: MeasureOptions = {}): FrameMetri
   return { bbox, footY, anchorX };
 }
 
-/** Reference character height: median (default) or 90th percentile of bbox heights. Ignores empty frames. */
-export function referenceHeight(ms: FrameMetrics[], stat: 'median' | 'p90' = 'median'): number {
+/**
+ * Reference character height: median (default), 90th percentile of bbox heights or, for 'largest' (effects), the
+ * biggest side of the biggest frame (a long thin beam is as big as it is wide). Ignores empty frames.
+ */
+export function referenceHeight(ms: FrameMetrics[], stat: 'median' | 'p90' | 'largest' = 'median'): number {
+  if (stat === 'largest') return Math.max(0, ...ms.map((m) => Math.max(m.bbox.w, m.bbox.h)));
   const hs = ms.map((m) => m.bbox.h).filter((h) => h > 0).sort((a, b) => a - b);
   if (!hs.length) return 0;
   if (stat === 'p90') return hs[Math.max(0, Math.ceil(hs.length * 0.9) - 1)];
