@@ -93,6 +93,17 @@ export interface AnimSpec {
   frames: number[];
   fps: number;
   loop: boolean;
+  /** Mirror every frame horizontally around the anchor (e.g. a left-facing copy of a right-facing walk). */
+  flipX?: boolean;
+}
+
+/** What one uploaded image is: a sheet with several frames, or a single sprite (one frame). */
+export type SpriteKind = 'sheet' | 'single';
+
+/** Manual per-frame nudge in output px, applied when packing (fixes a frame that "jumps"). */
+export interface FrameOffset {
+  dx: number;
+  dy: number;
 }
 
 export interface CellSpec {
@@ -118,6 +129,15 @@ export interface SpriteJob {
   anchorX?: AnchorXMethod;
   /** Pixel mode: override the detected source pixel period (source px per art px). */
   manualPeriod?: number;
+  /** Per-frame nudges keyed by detected frame index. */
+  frameOffsets?: Record<number, FrameOffset>;
+  /**
+   * Fixed palette shared by the batch (and the tiles of a kit). When set it wins over maxColors: every opaque
+   * pixel is remapped to the nearest colour of this palette.
+   */
+  palette?: RGBA8[];
+  /** Colour swap applied last, '#rrggbb' → '#rrggbb' (palette variants: enemies, teams). */
+  colorMap?: Record<string, string>;
 }
 
 export interface PackedAnim {
