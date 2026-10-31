@@ -327,6 +327,7 @@ func _physics_process(_delta: float) -> void:
             "Pon el tiempo entre frames en `1 / fps` y el bucle, como en el método A.",
           ],
         },
+        { type: 'callout', title: "No repitas nombres de imagen", text: "GDevelop reconoce cada imagen por su nombre de archivo. Si dos imágenes se llaman igual, mezcla los frames: una animación sale con un frame repetido y el personaje se traba. Por eso cada frame se llama `<nombre>_<animación>_00.png`. Si vuelves a importar una animación que ya estaba, primero borra sus imágenes viejas del proyecto (en **Recursos**, o en la carpeta del proyecto)." },
         { type: 'callout', title: "Ojo", text: "Los nombres de menú de arriba siguen GDevelop 5 tal como era cuando escribimos esta guía. Si los tuyos difieren, el `README-<nombre>.txt` del ZIP trae los mismos pasos con los valores exactos de tu hoja." },
         { type: 'p', text: "Un sprite único es más simple: el ZIP trae un solo PNG, `<nombre>.png`. Agrégalo a la única animación del objeto Sprite." },
         { type: 'h3', id: 'gdevelop-origin', text: "Pon el punto de origen en los pies" },

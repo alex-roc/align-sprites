@@ -327,6 +327,7 @@ func _physics_process(_delta: float) -> void:
             "Set the time between frames to `1 / fps` and the loop, as in method A.",
           ],
         },
+        { type: 'callout', title: "Don't repeat image names", text: "GDevelop recognises each image by its file name. When two images share a name, it mixes up the frames: an animation ends up with one frame repeated and the character gets stuck. That is why each frame is called `<name>_<animation>_00.png`. If you import an animation again, first delete its old images from the project (in **Resources**, or in the project folder)." },
         { type: 'callout', title: "Heads up", text: "The menu names above follow GDevelop 5 as it was when we wrote this guide. If yours differ, `README-<name>.txt` in the ZIP lists the same steps with the exact values for your sheet." },
         { type: 'p', text: "A single sprite is simpler: the ZIP has one PNG, `<name>.png`. Add it to the Sprite object's only animation." },
         { type: 'h3', id: 'gdevelop-origin', text: "Put the origin point at the feet" },

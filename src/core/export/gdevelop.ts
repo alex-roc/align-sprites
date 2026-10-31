@@ -1,7 +1,7 @@
 // GDevelop 5: the cut frames as flat numbered PNGs at the root (added with multi-select), a README per sprite and,
 // on request, one horizontal spritesheet strip per animation for the built-in Piskel editor ("Import as spritesheet").
 import { blit, createImage } from '../image.ts';
-import type { ExportFile, RGBAImage, SpriteResult } from '../types.ts';
+import type { ExportFile, PackedSheet, RGBAImage, SpriteResult } from '../types.ts';
 import { animFrames, animSlugs, feetOrigin, fl, isStatic, sheetPng, slug } from './common.ts';
 import { encodePng } from './png.ts';
 
@@ -20,6 +20,13 @@ function strip(frames: RGBAImage[]): RGBAImage {
 export interface GdevelopOptions {
   /** Also write `spritesheets/<name>_<anim>.png` (one row per animation, for Piskel). Default off. */
   spritesheets?: boolean;
+}
+
+/** File-name prefix of animation k's frames: `<name>_<anim>`, or just `<name>` when the only animation is "default". */
+export function gdevelopFramePrefix(name: string, sheet: PackedSheet, k: number): string {
+  const slugs = animSlugs(sheet.anims);
+  const base = slug(name);
+  return sheet.anims.length === 1 && slugs[0] === 'default' ? base : `${base}_${slugs[k]}`;
 }
 
 /** Static sprite (one animation, one frame): `<name>.png` + `README-<name>.txt` with the origin. */
@@ -66,8 +73,7 @@ export function gdevelopFrames(r: SpriteResult, opts: GdevelopOptions = {}): Exp
   const frames = animFrames(r);
   const o = feetOrigin(sheet);
   const files: ExportFile[] = [];
-  const onlyDefault = sheet.anims.length === 1 && slugs[0] === 'default';
-  const prefix = (k: number) => (onlyDefault ? name : `${name}_${slugs[k]}`);
+  const prefix = (k: number) => gdevelopFramePrefix(name, sheet, k);
 
   const table: string[] = [];
   sheet.anims.forEach((a, k) => {
@@ -94,6 +100,8 @@ Frame size: ${sheet.cell.w}x${sheet.cell.h} px. Origin point: (${o.x}, ${o.y}) (
    (multi-select, see the list above). They are added ordered by name.${opts.spritesheets ? `
    Or with Piskel: open the animation with "Edit with Piskel", Import > spritesheets/<file>.png >
    "Import as spritesheet" with a frame size of ${sheet.cell.w}x${sheet.cell.h}; save and close Piskel.` : ''}
+   GDevelop identifies images by file name: if you import an animation again, first delete its old images
+   from the project (Resources), or the frames get mixed up.
 3. Set the time between frames to 1/fps (see the list above) and enable or disable "Loop" as listed.
 4. Open the "Points" editor and set the point "Origin" to (${o.x}, ${o.y}) (the same for all frames:
    tick "Apply the same points to all frames"). The origin is at the feet, so an instance
@@ -107,6 +115,8 @@ ${pixel ? `5. Pixel art: in Project properties, set "Scale mode (also called sam
    (selección múltiple, mira la lista de arriba). Se añaden ordenados por nombre.${opts.spritesheets ? `
    O con Piskel: abre la animación con "Editar con Piskel", Importar > spritesheets/<archivo>.png >
    "Importar como spritesheet" con un tamaño de frame de ${sheet.cell.w}x${sheet.cell.h}; guarda y cierra Piskel.` : ''}
+   GDevelop reconoce las imágenes por su nombre: si vuelves a importar una animación, borra antes sus
+   imágenes viejas del proyecto (Recursos), o los frames se mezclan.
 3. Pon el tiempo entre fotogramas en 1/fps (ver lista arriba) y activa o desactiva "Bucle" según la lista.
 4. Abre el editor de "Puntos" y pon el punto "Origin" (Origen) en (${o.x}, ${o.y}) (igual en todos los
    fotogramas: marca "Aplicar los mismos puntos a todos los fotogramas"). El origen está en los pies,

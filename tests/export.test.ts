@@ -201,6 +201,17 @@ describe('buildExport + zip', () => {
     expect(paths).toContain('kaplay/heroe_2.js');
   });
 
+  it('gdevelop: every file name is unique across the batch, even when every animation is "default"', () => {
+    // GDevelop identifies images by file name: with repeated names (the old default/default_00.png in each folder)
+    // it reused one image for most frames of the next animation (measured in a real project: run = frame 0 + 7× one frame).
+    const batch = ['1_reposo', '2_correr', '3_saltar'].map((n) => {
+      const r = makeResult(n);
+      return { ...r, sheet: { ...r.sheet, anims: [{ ...r.sheet.anims[0]!, name: 'default' }] } };
+    });
+    const names = buildExport(batch, ['gdevelop'], { gdevelopSpritesheets: true }).map((f) => f.path.split('/').pop()!);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
   it('one engine: no <target>/ folder (the ZIP is named after the engine)', () => {
     const one = buildExport(results, ['gdevelop']).map((f) => f.path);
     expect(one).toContain('heroe_idle_00.png');

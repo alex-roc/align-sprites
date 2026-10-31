@@ -1,4 +1,5 @@
-import { slug } from '../../../core/export/common.ts';
+import { feetOrigin, slug } from '../../../core/export/common.ts';
+import { gdevelopFramePrefix } from '../../../core/export/gdevelop.ts';
 import { useState } from 'react';
 import type { ExportTarget, SpriteResult } from '../../../core/types.ts';
 import { useI18n, type MessageKey } from '../../../i18n/index.ts';
@@ -55,6 +56,12 @@ export function SpriteExport() {
   // A single sprite has no animations: its steps talk about one image.
   const stepKey = (n: number) => (selected?.kind === 'single' ? `engine.${engine}.single.s${n}` : `engine.${engine}.s${n}`) as MessageKey;
   const count = ready.length;
+  // Exact values of the selected sprite for the steps (GDevelop: origin and time between frames).
+  const sheet = selectedResult?.sheet;
+  const origin = sheet ? feetOrigin(sheet) : { x: 0, y: 0 };
+  const fps = sheet?.anims[0]?.fps ?? 8;
+  const frames0 = sheet ? `${gdevelopFramePrefix(slugName, sheet, 0)}_00.png` : `${slugName}_00.png`;
+  const stepParams = { name: slugName, frames0, ox: origin.x, oy: origin.y, fps: Math.round(fps * 100) / 100, interval: Math.round(1000 / fps) / 1000 };
   const activeName = selected?.name ?? '';
 
   return (
@@ -63,7 +70,7 @@ export function SpriteExport() {
       options={ENGINES.map((e) => ({ value: e, label: t(`engine.${e}`) }))}
       value={engine}
       onChange={(exportEngine) => dispatch({ type: 'export', patch: { exportEngine } })}
-      steps={[1, 2, 3].map((n) => t(stepKey(n), { name: slugName }))}
+      steps={[1, 2, 3].map((n) => t(stepKey(n), stepParams))}
       guideHref={hrefFor('guide', GUIDE_SECTION[engine])}
       all={state.exportAll}
       onAll={(exportAll) => dispatch({ type: 'export', patch: { exportAll } })}

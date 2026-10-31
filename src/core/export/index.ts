@@ -10,6 +10,7 @@ export { encodePng, decodePng } from './png.ts';
 export { zipFiles } from './zip.ts';
 export { slug } from './common.ts';
 export { godotSpriteFrames, gdevelopFrames, kaplaySnippet, genericExport };
+export { gdevelopFramePrefix } from './gdevelop.ts';
 
 export interface ExportOptions {
   /** Put each target in its own `<target>/` folder. Default: only when exporting several targets. */
