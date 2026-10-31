@@ -1,0 +1,7 @@
+; Minimal project used by scripts/godot-validate.mjs to load the exported .tres/.tscn headless.
+config_version=5
+
+[application]
+
+config/name="godot-validate"
+config/features=PackedStringArray("4.4")

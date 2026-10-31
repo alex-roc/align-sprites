@@ -1,54 +1,38 @@
 // Exporters: one ZIP with a folder per engine target. Paths inside the zip: `<target>/<name>/...`.
-import type { ExportFile, ExportTarget, RGBAImage, SpriteResult } from '../types.ts';
+import type { ExportFile, ExportTarget, SpriteResult } from '../types.ts';
+import { slug } from './common.ts';
+import { genericExport } from './generic.ts';
+import { gdevelopFrames } from './gdevelop.ts';
+import { godotSpriteFrames } from './godot.ts';
+import { kaplaySnippet } from './kaplay.ts';
 
-/** PNG encode (fast-png). */
-export function encodePng(img: RGBAImage): Uint8Array {
-  void img;
-  throw new Error('not implemented');
-}
+export { encodePng, decodePng } from './png.ts';
+export { zipFiles } from './zip.ts';
+export { slug } from './common.ts';
+export { godotSpriteFrames, gdevelopFrames, kaplaySnippet, genericExport };
 
-/** PNG decode (fast-png) → straight RGBA8 (expand grey/RGB/palette/16-bit to RGBA8). */
-export function decodePng(bytes: Uint8Array): RGBAImage {
-  void bytes;
-  throw new Error('not implemented');
-}
+const EXPORTERS: Record<ExportTarget, (r: SpriteResult) => ExportFile[]> = {
+  godot: godotSpriteFrames,
+  gdevelop: gdevelopFrames,
+  kaplay: kaplaySnippet,
+  generic: genericExport,
+};
 
-/** Zip (fflate zipSync, no compression for PNGs, deflate for text). */
-export function zipFiles(files: ExportFile[]): Uint8Array {
-  void files;
-  throw new Error('not implemented');
-}
-
-/**
- * Godot 4: `<name>.png`, `<name>.tres` (SpriteFrames, AtlasTexture per frame, relative path, no uid),
- * `<name>.tscn` (AnimatedSprite2D, centered=false, offset=(-floor(w/2), -(h-1-padBottom)) so the origin is at the feet,
- * texture_filter=1 in pixel mode, autoplay first anim). Plus README.txt (en + es).
- */
-export function godotSpriteFrames(r: SpriteResult): ExportFile[] {
-  void r;
-  throw new Error('not implemented');
-}
-
-/** GDevelop 5: `<name>/<anim>/<anim>_00.png…` + README.txt (en + es) with import steps, origin point and fps. */
-export function gdevelopFrames(r: SpriteResult): ExportFile[] {
-  void r;
-  throw new Error('not implemented');
-}
-
-/** Kaplay: `<name>.png` + `<name>.js` snippet (loadSprite with sliceX/sliceY/anims, anchor("bot")). */
-export function kaplaySnippet(r: SpriteResult): ExportFile[] {
-  void r;
-  throw new Error('not implemented');
-}
-
-/** Generic: `<name>.png` + `<name>.json` in Aseprite "hash" format (frames, meta.frameTags, meta.size) + per-frame PNGs. */
-export function genericExport(r: SpriteResult): ExportFile[] {
-  void r;
-  throw new Error('not implemented');
-}
-
-/** All requested targets for all results, prefixed `<target>/`. */
+/** All requested targets for all results, prefixed `<target>/`. Results whose names collide get a numeric suffix. */
 export function buildExport(results: SpriteResult[], targets: ExportTarget[]): ExportFile[] {
-  void results; void targets;
-  throw new Error('not implemented');
+  const used = new Set<string>();
+  const named = results.map((r) => {
+    const base = slug(r.name);
+    let name = base;
+    for (let n = 2; used.has(name); n++) name = `${base}_${n}`;
+    used.add(name);
+    return name === r.name ? r : { ...r, name };
+  });
+  const files: ExportFile[] = [];
+  for (const target of targets) {
+    for (const r of named) {
+      for (const f of EXPORTERS[target](r)) files.push({ path: `${target}/${f.path}`, data: f.data });
+    }
+  }
+  return files;
 }

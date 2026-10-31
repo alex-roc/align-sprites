@@ -10,7 +10,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:godot": "node scripts/godot-validate.mjs"
   },
   "dependencies": {
     "comlink": "^4.4.2",
