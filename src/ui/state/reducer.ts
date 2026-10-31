@@ -44,5 +44,11 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, prompt: { ...state.prompt, ...action.patch } };
     case 'tilePrompt/patch':
       return { ...state, tilePrompt: { ...state.tilePrompt, ...action.patch } };
+    case 'tiles/kind':
+      return { ...state, tiles: { ...state.tiles, kind: action.kind } };
+    case 'tiles/sheet':
+      return { ...state, tiles: { ...state.tiles, sheet: { ...state.tiles.sheet, ...action.patch } } };
+    case 'tiles/terrain':
+      return { ...state, tiles: { ...state.tiles, terrain: { ...state.tiles.terrain, ...action.patch } } };
   }
 }

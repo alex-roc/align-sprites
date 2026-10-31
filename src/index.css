@@ -218,3 +218,20 @@ input:disabled, select:disabled { opacity: 0.5; }
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation-duration: 3s; }
 }
+
+/* ---- tiles ---- */
+.tiles { display: flex; flex-direction: column; gap: 16px; }
+.tiles-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.image-drop { display: flex; flex-direction: column; gap: 10px; }
+.dropzone-sm { padding: 18px 14px; }
+.slots { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.texture-slot { display: flex; flex-direction: column; gap: 8px; }
+.texture-slot.is-muted { opacity: 0.5; }
+.slot-b { display: flex; flex-direction: column; gap: 8px; }
+.cut-line { stroke: var(--accent-2); stroke-width: 1.5; stroke-dasharray: 5 3; }
+.empty-tile { fill: var(--danger); opacity: 0.18; }
+.empty-x { stroke: var(--danger); stroke-width: 1; opacity: 0.8; }
+.tiled-preview { display: block; width: 144px; height: 144px; border: 1px solid var(--border); border-radius: 6px; }
+.tile-fig { margin: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+.diag dd.is-good { color: var(--ok); }
+.diag dd.is-bad { color: var(--danger); }

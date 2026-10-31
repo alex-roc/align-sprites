@@ -19,3 +19,10 @@ export async function fetchExample(ex: Example): Promise<{ name: string; blob: B
   if (!res.ok) throw new Error(`${ex.file}: HTTP ${res.status}`);
   return { name: ex.file, blob: await res.blob(), kind: ex.kind };
 }
+
+/** Fetch any image shipped in public/examples. */
+export async function fetchPublicImage(file: string): Promise<Blob> {
+  const res = await fetch(`${import.meta.env.BASE_URL}examples/${file}`);
+  if (!res.ok) throw new Error(`${file}: HTTP ${res.status}`);
+  return res.blob();
+}

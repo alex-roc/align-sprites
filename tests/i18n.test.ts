@@ -23,7 +23,7 @@ describe('i18n', () => {
   });
 
   it('has the warn.* keys emitted by the core', () => {
-    for (const k of ['clipped', 'frameCount', 'animRange', 'noFrames', 'noGrid', 'bigDownscale', 'upscale', 'lowBgConfidence', 'cellTooSmall']) {
+    for (const k of ['clipped', 'frameCount', 'animRange', 'noFrames', 'noGrid', 'bigDownscale', 'upscale', 'lowBgConfidence', 'cellTooSmall', 'tileGridUncertain', 'tileUpscaled', 'notSeamless', 'edgeStyleClamped', 'dualOddTile']) {
       expect(en, k).toHaveProperty(`warn.${k}`);
       expect(es, k).toHaveProperty(`warn.${k}`);
     }

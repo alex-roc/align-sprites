@@ -69,6 +69,29 @@ GDevelop does not import sprite sheets, so the ZIP has one PNG per frame: `gdeve
 
 `generic/<name>.png` + `<name>.json` in Aseprite's format (Phaser, Unity importers, Defold…), plus one PNG per frame.
 
+## 4. Tiles
+
+The **Tiles** tab has two tools.
+
+### Tile sheet (clean up an AI tileset)
+
+1. Add one image with several tiles laid out in rows and columns (try *Andean mountains tileset*).
+2. Pick the **tile size** (16, 32, 48, 64 or your own). The grid (columns × rows) is detected from the empty gaps between tiles; if the cut lines look wrong, untick *Detect automatically* and type the columns and rows.
+3. Every tile is resampled to exactly that size, the background is removed, and empty cells are crossed out and left out of the tile set.
+4. **Download ZIP**: `godot/<name>/` (atlas PNG + `TileSet` `.tres`), `tiled/<name>/` (atlas PNG + `.tsx`) and the plain `<name>.png`.
+
+### Terrain transitions (grass → dirt, and so on)
+
+1. Add texture **A** (base terrain) and texture **B** (painted over A). Both should be square and seamless. Tick *No texture B* to make an overlay layer: A is drawn over transparency, so you can stack it on any other terrain.
+2. Choose the layout: **Blob 47** (Godot Terrains) or **Dual 16** (dual-grid tilemaps). Tune the edge style (margin, softness, irregularity, seed, outline). The **test map** shows a random map built with your tiles; press *Shuffle map* to check that they connect everywhere. *Seams in A/B* tells you whether each texture repeats cleanly (close to 1 is good).
+3. **Download ZIP**: the atlas PNG, a Godot `TileSet` `.tres` with the terrain data filled in, and a README with the tile table.
+
+### Using the tiles in your engine
+
+- **Godot 4**: copy the folder `godot/<name>/` into your project. For a tile sheet, assign the `.tres` to a `TileMapLayer` and paint with the tiles. For terrain transitions (Blob 47), assign the `.tres` to a `TileMapLayer`, open the *TileMap* panel, choose the **Terrains** tab and paint: Godot picks the right edge tile for every cell. Dual 16 is made for the *TileMapDual* addon.
+- **GDevelop 5**: use the **Tilemap** object with the `.tsx` (Tiled) and the atlas PNG, or import a map made in Tiled / LDtk. The Dual 16 atlas has no terrain data: paint it by hand, using the README table to find which tile goes on each corner pattern.
+- **Tiled / LDtk**: open the `.tsx` as a tileset.
+
 ## Troubleshooting
 
 | Problem | Fix |

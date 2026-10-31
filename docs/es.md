@@ -69,6 +69,29 @@ GDevelop no importa hojas de sprites, así que el ZIP trae un PNG por frame en `
 
 `generic/<nombre>.png` con `<nombre>.json` en el formato de Aseprite (sirve para Phaser, los importadores de Unity, Defold…), más un PNG por frame.
 
+## 4. Tiles
+
+La pestaña **Tiles** tiene dos herramientas.
+
+### Hoja de tiles (limpiar un tileset de IA)
+
+1. Agrega una imagen con varios tiles ordenados en filas y columnas (prueba *Tileset de montañas andinas*).
+2. Elige el **tamaño del tile** (16, 32, 48, 64 o el que quieras). La cuadrícula (columnas × filas) se detecta por los huecos vacíos entre tiles; si las líneas de corte se ven mal, desmarca *Detectar automáticamente* y escribe las columnas y filas.
+3. Cada tile se remuestrea a exactamente ese tamaño, se quita el fondo, y las celdas vacías se tachan y quedan fuera del tileset.
+4. **Descargar ZIP**: `godot/<nombre>/` (PNG del atlas + `TileSet` `.tres`), `tiled/<nombre>/` (PNG del atlas + `.tsx`) y el `<nombre>.png` simple.
+
+### Transiciones de terreno (pasto → tierra, etc.)
+
+1. Agrega la textura **A** (terreno base) y la textura **B** (se pinta sobre A). Ambas deben ser cuadradas y continuas. Marca *Sin textura B* para crear una capa superpuesta: A se dibuja sobre transparente y puedes ponerla encima de cualquier otro terreno.
+2. Elige el formato: **Blob 47** (Terrains de Godot) o **Dual 16** (tilemaps de doble cuadrícula). Ajusta el estilo del borde (margen, suavidad, irregularidad, semilla, contorno). El **mapa de prueba** muestra un mapa al azar hecho con tus tiles; pulsa *Mezclar mapa* para comprobar que encajan en todas partes. *Costuras en A/B* indica si cada textura se repite limpia (cerca de 1 es bueno).
+3. **Descargar ZIP**: el PNG del atlas, un `TileSet` `.tres` de Godot con los datos de terreno completos y un README con la tabla de tiles.
+
+### Usar los tiles en tu motor
+
+- **Godot 4**: copia la carpeta `godot/<nombre>/` en tu proyecto. Para una hoja de tiles, asigna el `.tres` a un `TileMapLayer` y pinta con los tiles. Para las transiciones de terreno (Blob 47), asigna el `.tres` a un `TileMapLayer`, abre el panel *TileMap*, elige la pestaña **Terrains** y pinta: Godot elige el tile de borde correcto en cada celda. Dual 16 está pensado para el addon *TileMapDual*.
+- **GDevelop 5**: usa el objeto **Tilemap** con el `.tsx` (Tiled) y el PNG del atlas, o importa un mapa hecho en Tiled / LDtk. El atlas Dual 16 no trae datos de terreno: píntalo a mano, usando la tabla del README para saber qué tile va en cada patrón de esquinas.
+- **Tiled / LDtk**: abre el `.tsx` como tileset.
+
 ## Problemas frecuentes
 
 | Problema | Solución |

@@ -1,5 +1,6 @@
-import type { Asset, AnimDraft, AppState, AssetKind, AutoBg, GlobalSettings } from './types.ts';
+import type { Asset, AnimDraft, AppState, AssetKind, AutoBg, EdgeStyleForm, GlobalSettings, TerrainState, TileSheetState } from './types.ts';
 import type { RGBAImage } from '../../core/types.ts';
+import { defaultEdgeStyle } from '../../core/tiles/index.ts';
 
 let seq = 0;
 export const newId = (prefix: string): string => `${prefix}${++seq}`;
@@ -50,6 +51,41 @@ export function makeAsset(fileName: string, image: RGBAImage, kind: AssetKind, a
   };
 }
 
+export const DEFAULT_TILE_SIZE = 32;
+
+/** defaultEdgeStyle(T, seed) as form values (outline off by default, as in the core). */
+export function edgeStyleForm(tileSize: number, seed = 1): EdgeStyleForm {
+  const d = defaultEdgeStyle(tileSize, seed);
+  return { margin: d.margin, blur: d.blur, noiseAmp: d.noiseAmp, noiseCells: d.noiseCells, seed: d.seed, outline: 'none' };
+}
+
+export const initialTileSheet: TileSheetState = {
+  source: null,
+  mode: 'pixel',
+  tileSize: DEFAULT_TILE_SIZE,
+  gridAuto: true,
+  cols: 4,
+  rows: 4,
+  removeBg: true,
+  bg: { strategy: 'auto', custom: false, color: [255, 255, 255], tolerance: 25 },
+  maxColors: 0,
+  targets: { godot: true, tiled: true, png: true },
+  run: { status: 'idle', sig: null, result: null, grid: null, error: null },
+};
+
+export const initialTerrain: TerrainState = {
+  a: null,
+  b: null,
+  bTransparent: false,
+  mode: 'pixel',
+  tileSize: DEFAULT_TILE_SIZE,
+  layout: 'blob47',
+  style: edgeStyleForm(DEFAULT_TILE_SIZE),
+  mapSeed: 7,
+  preview: null,
+  run: { status: 'idle', sig: null, set: null, tileA: null, tileB: null, seamA: null, seamB: null, error: null },
+};
+
 export const initialState: AppState = {
   tab: 'sprites',
   assets: [],
@@ -71,4 +107,5 @@ export const initialState: AppState = {
     withReference: false,
   },
   tilePrompt: { mode: 'pixel', material: '', tileSize: 32, view: 'top-down' },
+  tiles: { kind: 'sheet', sheet: initialTileSheet, terrain: initialTerrain },
 };

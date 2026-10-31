@@ -53,6 +53,7 @@ One ZIP, folder per target: `godot/<name>/` (png + SpriteFrames .tres + Animated
 - `src/worker/client.ts` copies the source pixels and transfers the copies; the worker transfers result buffers back.
 - `src/i18n/en.ts` is the source of keys; `es.ts` is typed against it and `tests/i18n.test.ts` checks keys and `{placeholders}`. Core warnings are translated with `tw()` (`warn.*`).
 - Theme: CSS `light-dark()` + `data-theme` on `<html>`; language and theme are the only persisted UI state (localStorage).
+- Tiles tab (`src/ui/components/tiles/`): two panels (tile sheet / terrain) with their state in `AppState.tiles`. Each panel owns a debounced processor hook (same pattern as `Processor.tsx`; the run signature is stored so remounting the tab does not recompute). The worker API has `normalizeTiles`, `buildAtlasZip`, `composeTerrain`, `renderTerrainPreview`, `buildTerrainZip`; `composeTerrain` keeps the prepared `TerrainKit` in the worker, so *Shuffle map* only sends a 16×10 cell array. Texture images are copied before being transferred.
 - Examples for "Try an example" live in `public/examples/` (copies of `samples/real/`).
 
 ## Tiles (src/core/tiles)

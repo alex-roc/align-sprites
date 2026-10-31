@@ -1,16 +1,30 @@
 import { useI18n } from '../../../i18n/index.ts';
+import { useApp } from '../../state/context.ts';
+import type { TileKind } from '../../state/types.ts';
+import { Segmented } from '../common/Field.tsx';
+import { TerrainPanel } from './TerrainPanel.tsx';
+import { TileSheetPanel } from './TileSheetPanel.tsx';
 
-/** Placeholder: the tile atlas / terrain transition tools arrive in phase 2. */
+/** Tiles tab: normalize an AI tile atlas, or compose terrain transition tiles from two textures. */
 export function TilesTab() {
   const { t } = useI18n();
+  const { state, dispatch } = useApp();
   return (
-    <section className="step">
-      <header className="step-head">
-        <h2>{t('tiles.title')} <span className="badge">{t('tiles.soon')}</span></h2>
-      </header>
-      <div className="step-body">
-        <p>{t('tiles.description')}</p>
+    <div className="tiles">
+      <div className="tiles-head">
+        <Segmented<TileKind>
+          name="tile-kind"
+          label={t('tabs.tiles')}
+          value={state.tiles.kind}
+          onChange={(kind) => dispatch({ type: 'tiles/kind', kind })}
+          options={[
+            { value: 'sheet', label: t('tiles.kind.sheet') },
+            { value: 'terrain', label: t('tiles.kind.terrain') },
+          ]}
+        />
+        <p className="hint">{t(state.tiles.kind === 'sheet' ? 'tiles.kind.sheetHint' : 'tiles.kind.terrainHint')}</p>
       </div>
-    </section>
+      {state.tiles.kind === 'sheet' ? <TileSheetPanel /> : <TerrainPanel />}
+    </div>
   );
 }
