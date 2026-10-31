@@ -1,392 +1,345 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ArtMode, TileLayout } from '../../../core/types.ts';
+import { slug } from '../../../core/export/common.ts';
+import { useState } from 'react';
+import type { ArtMode, TileLayout, Warning } from '../../../core/types.ts';
 import { useI18n } from '../../../i18n/index.ts';
-import { buildTerrainZip, composeTerrain, renderTerrainPreview } from '../../../worker/client.ts';
+import { buildTerrainZip } from '../../../worker/client.ts';
+import { fetchPublicImage } from '../../dev/examples.ts';
 import { downloadBlob, rgbaToPngBlob } from '../../lib/image.ts';
-import { randomMap } from '../../lib/map.ts';
+import { useDropPaste } from '../../lib/useDropPaste.ts';
+import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
 import { edgeStyleForm } from '../../state/defaults.ts';
-import { buildEdgeStyle } from '../../state/tilesJobs.ts';
+import { useTerrainProcessor } from '../../state/useTileProcessors.ts';
 import type { EdgeStyleForm, LoadedImage, TerrainState } from '../../state/types.ts';
 import { useLoadImage } from '../../state/useLoadImage.ts';
-import { Check, Field, Group, NumberInput, Segmented } from '../common/Field.tsx';
+import { DropOverlay } from '../common/DropOverlay.tsx';
+import { EmptyStage } from '../common/EmptyStage.tsx';
+import { ExportCard } from '../common/ExportCard.tsx';
+import { Check, Field, NumberInput, Segmented } from '../common/Field.tsx';
 import { RgbaCanvas } from '../common/RgbaCanvas.tsx';
-import { Step } from '../common/Step.tsx';
-import { ImageDrop } from './ImageDrop.tsx';
+import { Fold, Section } from '../common/Section.tsx';
+import { StatusLine } from '../common/StatusLine.tsx';
+import { Warnings, type Fix } from '../common/Warnings.tsx';
 import { TileAtlasView } from './TileAtlasView.tsx';
 import { TileSizeField } from './TileSizeField.tsx';
 import { TiledPreview } from './TiledPreview.tsx';
 
-const DEBOUNCE_MS = 300;
-const MAP_W = 16;
-const MAP_H = 10;
 /** Core threshold for warn.notSeamless. */
 const SEAM_WARN = 1.8;
 
-type Run = TerrainState['run'];
-
-/** Composes the tile set ~300 ms after a setting changes, then renders the test map with the current seed. */
-function useTerrainProcessor() {
-  const { state, dispatch } = useApp();
-  const s = state.tiles.terrain;
-  const b = s.bTransparent ? null : s.b;
-  const ready = !!s.a && (s.bTransparent || !!s.b);
-  const sig = useMemo(
-    () => (ready ? JSON.stringify({ a: s.a!.id, b: b?.id ?? null, T: s.tileSize, layout: s.layout, style: s.style, mode: s.mode }) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ready, s.a, b, s.tileSize, s.layout, s.style, s.mode],
-  );
-  const latest = useRef(s);
-  useEffect(() => {
-    latest.current = s;
-  });
-  const runId = useRef(0);
-  const previewSeed = useRef<number | null>(null);
-  const previewId = useRef(0);
-
-  useEffect(() => {
-    const id = ++runId.current;
-    const cur = latest.current;
-    if (!sig || !cur.a) return;
-    if (cur.run.sig === sig && cur.run.status === 'ready') return;
-    const a = cur.a;
-    const other = cur.bTransparent ? null : cur.b;
-    const patchRun = (p: Partial<Run>, extra: Partial<TerrainState> = {}) => dispatch({ type: 'tiles/terrain', patch: { run: { ...latest.current.run, ...p }, ...extra } });
-    const timer = setTimeout(async () => {
-      patchRun({ status: 'running', error: null });
-      try {
-        const style = buildEdgeStyle(cur.style, cur.mode);
-        const out = await composeTerrain(a.image, other?.image ?? null, cur.tileSize, cur.layout, style, cur.mode);
-        if (id !== runId.current) return;
-        const seed = latest.current.mapSeed;
-        const map = randomMap(seed, MAP_W, MAP_H);
-        const preview = await renderTerrainPreview(map, MAP_W, MAP_H);
-        if (id !== runId.current) return;
-        previewSeed.current = seed;
-        patchRun(
-          { status: 'ready', sig, set: out.set, tileA: out.tileA, tileB: out.tileB, seamA: out.seamA, seamB: out.seamB, error: null },
-          { preview },
-        );
-      } catch (e) {
-        if (id === runId.current) patchRun({ status: 'error', error: e instanceof Error ? e.message : String(e) });
-      }
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sig, dispatch]);
-
-  // Shuffle: only the test map changes, the tile set stays.
-  useEffect(() => {
-    const cur = latest.current;
-    if (cur.run.status !== 'ready' || cur.run.sig !== sig || previewSeed.current === s.mapSeed) return;
-    const id = ++previewId.current;
-    const seed = s.mapSeed;
-    renderTerrainPreview(randomMap(seed, MAP_W, MAP_H), MAP_W, MAP_H).then(
-      (preview) => {
-        if (id !== previewId.current) return;
-        previewSeed.current = seed;
-        dispatch({ type: 'tiles/terrain', patch: { preview } });
-      },
-      () => undefined,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.mapSeed]);
-}
-
 export function TerrainPanel() {
   useTerrainProcessor();
+  const { t } = useI18n();
+  const { state, dispatch } = useApp();
+  const s = state.tiles.terrain;
+  const { load, error, busy } = useLoadImage();
+  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'tiles/terrain', patch: p });
+  const ready = !!s.a && (s.bTransparent || !!s.b);
+
+  // Dropped/pasted/loaded images fill A first, then B.
+  const addImage = async (blob: Blob, name: string) => {
+    const img = await load(blob, name);
+    if (!img) return;
+    if (!s.a) patch({ a: img });
+    else if (!s.b && !s.bTransparent) patch({ b: img });
+    else patch({ a: img });
+  };
+  const { dragging } = useDropPaste((files) => void (async () => { for (const f of files.slice(0, 2)) await addImage(f, f.name); })());
+  const loadPair = async () => {
+    try {
+      const [ga, gb] = await Promise.all([fetchPublicImage('grass.png'), fetchPublicImage('dirt.png')]);
+      const [a, b] = [await load(ga, 'grass.png'), await load(gb, 'dirt.png')];
+      if (a && b) patch({ a, b, bTransparent: false });
+    } catch {
+      /* missing example files: nothing to show */
+    }
+  };
+
   return (
-    <div className="sprites">
-      <TerrainUpload />
-      <div className="steps-2-3">
-        <TerrainSettings />
-        <TerrainResult />
-      </div>
+    <div className="workbench-page">
+      <DropOverlay show={dragging} />
+      {!s.a && !s.b ? (
+        <EmptyStage
+          title={t('tiles.terrain.drop')}
+          hint={t('tiles.terrain.dropHint')}
+          multiple
+          onFiles={(files) => void (async () => { for (const f of files.slice(0, 2)) await addImage(f, f.name); })()}
+          busy={busy}
+          error={error}
+          examples={[{ key: 'pair', label: t('tiles.terrain.examplePair'), onClick: () => void loadPair() }]}
+          steps={['terrain.how.s1', 'terrain.how.s2', 'terrain.how.s3']}
+        />
+      ) : (
+        <div className="workbench">
+          <aside className="settings" aria-label={t('set.label')}>
+            <TerrainSettings onImage={(b, n) => void addImage(b, n)} />
+          </aside>
+          <div className="main-col">
+            {error && <p className="alert" role="alert">{error}</p>}
+            {ready ? (
+              <>
+                <TerrainStage />
+                <TerrainExport />
+              </>
+            ) : (
+              <section className="stage-card"><div className="stage-body waiting"><p className="on-stage-soft">{t('tiles.terrain.needB')}</p></div></section>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function TextureSlot({ title, image, paste, examples, onImage, onClear, disabled }: {
-  title: string;
-  image: LoadedImage | null;
-  paste: boolean;
-  examples?: { file: string; labelKey: 'tiles.terrain.exampleGrass' | 'tiles.terrain.exampleDirt' }[];
-  onImage: (img: LoadedImage) => void;
-  onClear: () => void;
-  disabled?: boolean;
-}) {
+function TextureSlot({ title, image, onClear, onFile }: { title: string; image: LoadedImage | null; onClear: () => void; onFile: (f: File) => void }) {
   const { t } = useI18n();
-  const { load, error, busy } = useLoadImage();
-  const handle = async (blob: Blob, name: string) => {
-    const img = await load(blob, name);
-    if (img) onImage(img);
-  };
   return (
-    <section className={disabled ? 'texture-slot is-muted' : 'texture-slot'}>
-      <h3>{title}</h3>
+    <div className="slot">
+      <span className="field-label">{title}</span>
       {image ? (
-        <div className="row wrap">
+        <div className="slot-row">
           <div className="asset-thumb"><RgbaCanvas image={image.image} pixelated label={image.name} /></div>
-          <span className="muted asset-dims">{image.name} · {image.image.width}×{image.image.height}</span>
-          <button type="button" className="btn btn-ghost" onClick={onClear}>{t('assets.remove')}</button>
+          <div className="asset-meta">
+            <span>{image.name}</span>
+            <span className="muted">{image.image.width}×{image.image.height}</span>
+          </div>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onClear}>{t('tiles.terrain.removeTexture')}</button>
         </div>
       ) : (
-        !disabled && <ImageDrop label={t('tiles.terrain.drop')} examples={examples} paste={paste} busy={busy} error={error} onImage={(b, n) => void handle(b, n)} />
+        <label className="slot-drop">
+          <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ''; }} />
+          {t('tiles.terrain.chooseFile')}
+        </label>
       )}
-    </section>
+    </div>
   );
 }
 
-function TerrainUpload() {
-  const { t } = useI18n();
-  const { state, dispatch } = useApp();
-  const s = state.tiles.terrain;
-  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'tiles/terrain', patch: p });
-  return (
-    <Step n={1} title={t('tiles.terrain.stepUpload')}>
-      <p className="hint">{t('tiles.terrain.intro')}</p>
-      <div className="slots">
-        <TextureSlot
-          title={t('tiles.terrain.textureA')}
-          image={s.a}
-          paste={!s.a}
-          examples={[{ file: 'grass.png', labelKey: 'tiles.terrain.exampleGrass' }]}
-          onImage={(a) => patch({ a })}
-          onClear={() => patch({ a: null })}
-        />
-        <div className="slot-b">
-          <TextureSlot
-            title={t('tiles.terrain.textureB')}
-            image={s.b}
-            paste={!!s.a && !s.b && !s.bTransparent}
-            examples={[{ file: 'dirt.png', labelKey: 'tiles.terrain.exampleDirt' }]}
-            onImage={(b) => patch({ b })}
-            onClear={() => patch({ b: null })}
-            disabled={s.bTransparent}
-          />
-          <Check checked={s.bTransparent} onChange={(bTransparent) => patch({ bTransparent })} label={t('tiles.terrain.bTransparent')} />
-          <small className="hint">{t('tiles.terrain.bTransparentHint')}</small>
-        </div>
-      </div>
-    </Step>
-  );
-}
-
-function TerrainSettings() {
+function TerrainSettings({ onImage }: { onImage: (b: Blob, name: string) => void }) {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
   const s = state.tiles.terrain;
   const patch = (p: Partial<TerrainState>) => dispatch({ type: 'tiles/terrain', patch: p });
   const setStyle = (p: Partial<EdgeStyleForm>) => patch({ style: { ...s.style, ...p } });
-  const has = !!s.a;
   return (
-    <Step n={2} title={t('step.settings')} muted={!has}>
-      {!has ? (
-        <p className="muted">{t('tiles.terrain.needTexture')}</p>
-      ) : (
-        <div className="settings-block">
-          <Group legend={t('settings.mode')}>
-            <Segmented<ArtMode>
-              name="terrain-mode"
-              label={t('settings.mode')}
-              value={s.mode}
-              onChange={(mode) => patch({ mode })}
-              options={[
-                { value: 'pixel', label: t('settings.mode.pixel') },
-                { value: 'cartoon', label: t('settings.mode.cartoon') },
-              ]}
-            />
-          </Group>
-          {/* A new tile size restarts the edge style from its defaults for that size. */}
-          <TileSizeField value={s.tileSize} onChange={(tileSize) => patch({ tileSize, style: edgeStyleForm(tileSize, s.style.seed) })} />
-          <Group legend={t('tiles.layout')}>
-            <Segmented<TileLayout>
-              name="terrain-layout"
-              label={t('tiles.layout')}
-              value={s.layout}
-              onChange={(layout) => patch({ layout })}
-              options={[
-                { value: 'blob47', label: t('tiles.layout.blob47') },
-                { value: 'dual16', label: t('tiles.layout.dual16') },
-              ]}
-            />
-            <small className="hint">{t(s.layout === 'blob47' ? 'tiles.layout.blob47Hint' : 'tiles.layout.dual16Hint')}</small>
-          </Group>
-          <Group legend={t('tiles.edge.title')} hint={t('tiles.edge.hint')}>
-            <div className="row wrap">
-              <Field label={t('tiles.edge.margin')}>
-                <NumberInput value={s.style.margin} min={0} max={64} onChange={(margin) => setStyle({ margin })} />
-              </Field>
-              <Field label={t('tiles.edge.blur')}>
-                <NumberInput value={s.style.blur} min={1} max={64} onChange={(blur) => setStyle({ blur })} />
-              </Field>
-            </div>
-            <div className="row wrap">
-              <Field label={t('tiles.edge.noiseAmp')}>
-                <NumberInput value={s.style.noiseAmp} min={0} max={64} onChange={(noiseAmp) => setStyle({ noiseAmp })} />
-              </Field>
-              <Field label={t('tiles.edge.noiseCells')}>
-                <NumberInput value={s.style.noiseCells} min={1} max={32} onChange={(noiseCells) => setStyle({ noiseCells })} />
-              </Field>
-            </div>
-            <div className="row wrap">
-              <Field label={t('tiles.edge.seed')}>
-                <NumberInput value={s.style.seed} min={0} max={999999} onChange={(seed) => setStyle({ seed })} />
-              </Field>
-              <button type="button" className="btn" onClick={() => setStyle({ seed: Math.floor(Math.random() * 100000) })}>{t('tiles.edge.randomSeed')}</button>
-            </div>
-            <Field label={t('tiles.edge.outline')} hint={s.mode === 'pixel' ? t('tiles.edge.outlineHint') : t('tiles.edge.outlinePixelOnly')}>
-              <select value={s.style.outline} disabled={s.mode !== 'pixel'} onChange={(e) => setStyle({ outline: e.target.value as EdgeStyleForm['outline'] })}>
-                <option value="none">{t('tiles.edge.outline.none')}</option>
-                <option value="auto">{t('tiles.edge.outline.auto')}</option>
-              </select>
-            </Field>
-            <button type="button" className="btn btn-ghost" onClick={() => patch({ style: edgeStyleForm(s.tileSize, s.style.seed) })}>{t('tiles.edge.reset')}</button>
-          </Group>
+    <div className="settings-in">
+      <Section title={t('tiles.terrain.textures')} hint={t('tiles.terrain.intro')}>
+        <TextureSlot title={t('tiles.terrain.textureA')} image={s.a} onClear={() => patch({ a: null })} onFile={(f) => onImage(f, f.name)} />
+        {!s.bTransparent && <TextureSlot title={t('tiles.terrain.textureB')} image={s.b} onClear={() => patch({ b: null })} onFile={(f) => onImage(f, f.name)} />}
+        <Check checked={s.bTransparent} onChange={(bTransparent) => patch({ bTransparent })} label={t('tiles.terrain.bTransparent')} />
+        {s.bTransparent && <p className="hint">{t('tiles.terrain.bTransparentHint')}</p>}
+      </Section>
+
+      <Section title={t('set.style')}>
+        <Segmented<ArtMode>
+          name="terrain-mode"
+          label={t('set.style')}
+          value={s.mode}
+          onChange={(mode) => patch({ mode })}
+          options={[
+            { value: 'pixel', label: t('mode.pixel') },
+            { value: 'cartoon', label: t('mode.cartoon') },
+          ]}
+        />
+      </Section>
+
+      <Section title={t('tiles.tileSize')}>
+        {/* A new tile size restarts the edge style from its defaults for that size. */}
+        <TileSizeField value={s.tileSize} onChange={(tileSize) => patch({ tileSize, style: edgeStyleForm(tileSize, s.style.seed) })} />
+      </Section>
+
+      <Section title={t('tiles.layout')}>
+        <Segmented<TileLayout>
+          name="terrain-layout"
+          label={t('tiles.layout')}
+          value={s.layout}
+          onChange={(layout) => patch({ layout })}
+          options={[
+            { value: 'blob47', label: t('tiles.layout.blob47') },
+            { value: 'dual16', label: t('tiles.layout.dual16') },
+          ]}
+        />
+        <p className="hint">{t(s.layout === 'blob47' ? 'tiles.layout.blob47Hint' : 'tiles.layout.dual16Hint')}</p>
+      </Section>
+
+      <Fold title={t('tiles.edge.title')}>
+        <p className="hint">{t('tiles.edge.hint')}</p>
+        <div className="row">
+          <Field label={t('tiles.edge.margin')}>
+            <NumberInput value={s.style.margin} min={0} max={64} onChange={(margin) => setStyle({ margin })} />
+          </Field>
+          <Field label={t('tiles.edge.blur')}>
+            <NumberInput value={s.style.blur} min={1} max={64} onChange={(blur) => setStyle({ blur })} />
+          </Field>
         </div>
-      )}
-    </Step>
+        <div className="row">
+          <Field label={t('tiles.edge.noiseAmp')}>
+            <NumberInput value={s.style.noiseAmp} min={0} max={64} onChange={(noiseAmp) => setStyle({ noiseAmp })} />
+          </Field>
+          <Field label={t('tiles.edge.noiseCells')}>
+            <NumberInput value={s.style.noiseCells} min={1} max={32} onChange={(noiseCells) => setStyle({ noiseCells })} />
+          </Field>
+        </div>
+        <div className="row">
+          <Field label={t('tiles.edge.seed')}>
+            <NumberInput value={s.style.seed} min={0} max={999999} onChange={(seed) => setStyle({ seed })} />
+          </Field>
+          <button type="button" className="btn btn-sm" onClick={() => setStyle({ seed: Math.floor(Math.random() * 100000) })}>{t('tiles.edge.randomSeed')}</button>
+        </div>
+        <Field label={t('tiles.edge.outline')} hint={s.mode === 'pixel' ? t('tiles.edge.outlineHint') : t('tiles.edge.outlinePixelOnly')}>
+          <select value={s.style.outline} disabled={s.mode !== 'pixel'} onChange={(e) => setStyle({ outline: e.target.value as EdgeStyleForm['outline'] })}>
+            <option value="none">{t('tiles.edge.outline.none')}</option>
+            <option value="auto">{t('tiles.edge.outline.auto')}</option>
+          </select>
+        </Field>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => patch({ style: edgeStyleForm(s.tileSize, s.style.seed) })}>{t('tiles.edge.reset')}</button>
+      </Fold>
+    </div>
   );
 }
 
-function SeamLine({ label, score }: { label: string; score: number | null }) {
+function TerrainStage() {
   const { t } = useI18n();
-  if (score === null) return null;
-  const bad = score > SEAM_WARN;
-  return (
-    <>
-      <dt>{label}</dt>
-      <dd className={bad ? 'is-bad' : 'is-good'}>{score.toFixed(2)} · {bad ? t('tiles.seam.bad') : t('tiles.seam.ok')}</dd>
-    </>
-  );
-}
-
-function TerrainResult() {
-  const { t, tw } = useI18n();
   const { state, dispatch } = useApp();
   const s = state.tiles.terrain;
   const { run } = s;
   const set = run.set;
-  const ready = !!s.a && (s.bTransparent || !!s.b);
   const running = run.status === 'running';
   const pixelated = s.mode === 'pixel';
   const friendlyError = run.error ? (/not implemented/i.test(run.error) ? t('error.notImplemented') : t('error.processing', { message: run.error })) : null;
-  const [busy, setBusy] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const baseName = s.a ? (s.bTransparent || !s.b ? s.a.name : `${s.a.name}-${s.b.name}`) : 'terrain';
-  const [name, setName] = useState<string | null>(null);
-  const exportName = name ?? baseName;
+  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'tiles/terrain', patch: p });
 
-  const downloadZip = async () => {
+  const fixFor = (w: Warning): Fix | null => {
+    switch (w.key) {
+      case 'warn.edgeStyleClamped':
+        return { label: t('tiles.edge.reset'), onClick: () => patch({ style: edgeStyleForm(s.tileSize, s.style.seed) }) };
+      case 'warn.dualOddTile':
+        return { label: t('fix.tileSize', { px: s.tileSize + 1 }), onClick: () => patch({ tileSize: s.tileSize + 1, style: edgeStyleForm(s.tileSize + 1, s.style.seed) }) };
+      case 'warn.notSeamless':
+        return { label: t('fix.learnMore'), href: hrefFor('guide', 'tiles') };
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <section className="stage-card" aria-label={t('stage.label')}>
+      <div className="stage-head">
+        <Segmented<'map' | 'atlas'>
+          name="terrain-view"
+          label={t('stage.views')}
+          value={s.view}
+          onChange={(view) => patch({ view })}
+          options={[
+            { value: 'map', label: t('stage.testMap') },
+            { value: 'atlas', label: t('stage.tileSet') },
+          ]}
+        />
+        {s.view === 'map' && (
+          <button type="button" className="btn btn-sm" onClick={() => patch({ mapSeed: Math.floor(Math.random() * 1_000_000) })}>{t('tiles.terrain.shuffle')}</button>
+        )}
+        {running && <span className="spinner-label" role="status"><i className="spinner" aria-hidden="true" />{t('stage.processing')}</span>}
+      </div>
+      {friendlyError && <p className="alert" role="alert">{friendlyError}</p>}
+      <div className={running ? 'is-stale' : undefined}>
+        {!set ? (
+          <div className="stage-body waiting"><p className="on-stage-soft">{t('stage.waiting')}</p></div>
+        ) : s.view === 'atlas' ? (
+          <TileAtlasView image={set.atlas} tileSize={set.tileSize} cols={set.cols} rows={set.rows} pixelated={pixelated} />
+        ) : (
+          <div className="sheetview">
+            <div className="stage-body scroll-stage">
+              {s.preview && (
+                <div className="sheet-wrap">
+                  <RgbaCanvas image={s.preview} pixelated={pixelated} label={t('stage.testMap')} />
+                </div>
+              )}
+            </div>
+            <p className="hint">{t('tiles.terrain.testMapHint')}</p>
+          </div>
+        )}
+      </div>
+      {set && (
+        <>
+          <StatusLine
+            items={[
+              { label: t('tiles.terrain.tiles'), value: `${set.tiles.length}` },
+              { label: t('tiles.tileSize'), value: `${set.tileSize} px` },
+              ...(run.seamA !== null ? [{ label: t('tiles.seam.a'), value: `${run.seamA.toFixed(2)} ${run.seamA > SEAM_WARN ? t('tiles.seam.bad') : t('tiles.seam.ok')}`, tone: run.seamA > SEAM_WARN ? ('bad' as const) : ('ok' as const) }] : []),
+              ...(run.seamB !== null ? [{ label: t('tiles.seam.b'), value: `${run.seamB.toFixed(2)} ${run.seamB > SEAM_WARN ? t('tiles.seam.bad') : t('tiles.seam.ok')}`, tone: run.seamB > SEAM_WARN ? ('bad' as const) : ('ok' as const) }] : []),
+            ]}
+          />
+          <Warnings warnings={set.warnings} fixFor={fixFor} />
+          <details className="fold-inline">
+            <summary>{t('tiles.terrain.tilesUsed')}</summary>
+            <div className="row wrap">
+              {run.tileA && (
+                <figure className="tile-fig">
+                  <TiledPreview image={run.tileA} pixelated={pixelated} label={t('tiles.seam.a')} />
+                  <figcaption>{t('tiles.seam.a')}</figcaption>
+                </figure>
+              )}
+              {run.tileB && (
+                <figure className="tile-fig">
+                  <TiledPreview image={run.tileB} pixelated={pixelated} label={t('tiles.seam.b')} />
+                  <figcaption>{t('tiles.seam.b')}</figcaption>
+                </figure>
+              )}
+            </div>
+            <p className="hint">{t('tiles.terrain.tilesUsedHint')}</p>
+          </details>
+        </>
+      )}
+    </section>
+  );
+}
+
+type TerrainTarget = 'godot' | 'gdevelop';
+
+function TerrainExport() {
+  const { t } = useI18n();
+  const { state } = useApp();
+  const s = state.tiles.terrain;
+  const set = s.run.set;
+  const running = s.run.status === 'running';
+  const [target, setTarget] = useState<TerrainTarget>('godot');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const name = s.a ? (s.bTransparent || !s.b ? s.a.name : `${s.a.name}-${s.b.name}`) : 'terrain';
+
+  const zip = async () => {
     if (!set) return;
     setBusy(true);
-    setExportError(null);
+    setError(null);
     try {
       const names: [string, string] = [s.a?.name ?? 'base', s.bTransparent ? 'overlay' : (s.b?.name ?? 'overlay')];
-      const zip = await buildTerrainZip(set, exportName, names);
-      downloadBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), `${exportName}-terrain.zip`);
+      const bytes = await buildTerrainZip(set, name, names);
+      downloadBlob(new Blob([bytes as BlobPart], { type: 'application/zip' }), `${name}-terrain.zip`);
     } catch (e) {
-      setExportError(t('error.export', { message: e instanceof Error ? e.message : String(e) }));
+      setError(t('error.export', { message: e instanceof Error ? e.message : String(e) }));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Step
-      n={3}
-      title={t('step.result')}
-      muted={!ready}
-      actions={running ? <span className="spinner-label" role="status"><i className="spinner" aria-hidden="true" />{t('result.processing')}</span> : undefined}
-    >
-      {!ready ? (
-        <p className="muted">{s.a ? t('tiles.terrain.needB') : t('tiles.terrain.needTexture')}</p>
-      ) : (
-        <>
-          {friendlyError && <p className="alert" role="alert">{friendlyError}</p>}
-          {!set && !friendlyError && <p className="muted">{t('result.waiting')}</p>}
-          {set && (
-            <div className={running ? 'is-stale' : undefined}>
-              <div className="result-grid">
-                <section>
-                  <h3>{t('tiles.terrain.atlas')}</h3>
-                  <TileAtlasView image={set.atlas} tileSize={set.tileSize} cols={set.cols} rows={set.rows} pixelated={pixelated} />
-                </section>
-                <section>
-                  <h3>{t('tiles.terrain.testMap')}</h3>
-                  <div className="row wrap toolbar">
-                    <button type="button" className="btn btn-primary" onClick={() => dispatch({ type: 'tiles/terrain', patch: { mapSeed: Math.floor(Math.random() * 1_000_000) } })}>
-                      {t('tiles.terrain.shuffle')}
-                    </button>
-                    <small className="hint">{t('tiles.terrain.testMapHint')}</small>
-                  </div>
-                  {s.preview && (
-                    <div className="stage">
-                      <RgbaCanvas image={s.preview} pixelated={pixelated} label={t('tiles.terrain.testMap')} />
-                    </div>
-                  )}
-                </section>
-              </div>
-              <div className="result-grid">
-                <section className="diag">
-                  <h3>{t('result.diagnostics')}</h3>
-                  <dl>
-                    <dt>{t('tiles.terrain.tiles')}</dt>
-                    <dd>{set.tiles.length} ({set.cols} × {set.rows})</dd>
-                    <dt>{t('tiles.tileSize')}</dt>
-                    <dd>{set.tileSize} px</dd>
-                    <SeamLine label={t('tiles.seam.a')} score={run.seamA} />
-                    <SeamLine label={t('tiles.seam.b')} score={run.seamB} />
-                  </dl>
-                  <small className="hint">{t('tiles.seam.hint')}</small>
-                  <div>
-                    <span className="field-label">{t('diag.warnings')}</span>
-                    {set.warnings.length ? (
-                      <ul className="warnings">{set.warnings.map((w, i) => <li key={i}>{tw(w)}</li>)}</ul>
-                    ) : (
-                      <p className="ok">{t('diag.noWarnings')}</p>
-                    )}
-                  </div>
-                </section>
-                <section>
-                  <h3>{t('tiles.terrain.tilesUsed')}</h3>
-                  <div className="row wrap">
-                    {run.tileA && (
-                      <figure className="tile-fig">
-                        <TiledPreview image={run.tileA} pixelated={pixelated} label={t('tiles.seam.a')} />
-                        <figcaption>{t('tiles.seam.a')}</figcaption>
-                      </figure>
-                    )}
-                    {run.tileB && (
-                      <figure className="tile-fig">
-                        <TiledPreview image={run.tileB} pixelated={pixelated} label={t('tiles.seam.b')} />
-                        <figcaption>{t('tiles.seam.b')}</figcaption>
-                      </figure>
-                    )}
-                  </div>
-                  <small className="hint">{t('tiles.terrain.tilesUsedHint')}</small>
-                </section>
-              </div>
-              <div className="export">
-                <h3>{t('export.title')}</h3>
-                <Field label={t('tiles.exportName')}>
-                  <input type="text" value={exportName} onChange={(e) => setName(e.target.value)} />
-                </Field>
-                <div className="row wrap">
-                  <button type="button" className="btn btn-primary" disabled={busy || running} onClick={() => void downloadZip()}>
-                    {busy ? t('export.working') : t('export.zip')}
-                  </button>
-                  <button type="button" className="btn" disabled={running} onClick={async () => downloadBlob(await rgbaToPngBlob(set.atlas), `${exportName}.png`)}>
-                    {t('export.png')}
-                  </button>
-                </div>
-                <small className="hint">{t('tiles.terrain.exportHint')}</small>
-                {exportError && <p className="alert" role="alert">{exportError}</p>}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </Step>
+    <ExportCard<TerrainTarget>
+      name="terrain-target"
+      options={[
+        { value: 'godot', label: t('engine.godot') },
+        { value: 'gdevelop', label: t('terrain.otherEngines') },
+      ]}
+      value={target}
+      onChange={setTarget}
+      steps={[1, 2, 3].map((n) => t(`terrain.${target}.s${n}` as 'terrain.godot.s1', { name: slug(name) }))}
+      guideHref={hrefFor('guide', 'tiles')}
+      primaryLabel={t('terrain.downloadZip')}
+      onPrimary={() => void zip()}
+      secondaryLabel={t('export.pngOnly')}
+      onSecondary={() => void (async () => set && downloadBlob(await rgbaToPngBlob(set.atlas), `${name}.png`))()}
+      busy={busy}
+      disabled={running || !set}
+      error={error}
+    />
   );
 }

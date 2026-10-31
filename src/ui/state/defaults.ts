@@ -1,6 +1,8 @@
 import type { Asset, AnimDraft, AppState, AssetKind, AutoBg, EdgeStyleForm, GlobalSettings, TerrainState, TileSheetState } from './types.ts';
 import type { RGBAImage } from '../../core/types.ts';
 import { defaultEdgeStyle } from '../../core/tiles/index.ts';
+import { loadJSON } from '../persist.ts';
+import type { ExportTarget } from '../../core/types.ts';
 
 let seq = 0;
 export const newId = (prefix: string): string => `${prefix}${++seq}`;
@@ -15,6 +17,36 @@ export const DEFAULT_GLOBAL: GlobalSettings = {
   maxColors: 0,
   anchorX: 'medianColumn',
 };
+
+export const GLOBAL_KEY = 'align-sprites.settings';
+export const EXPORT_KEY = 'align-sprites.export';
+
+const isNum = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
+
+/** Saved global settings (mode, height, cell, colours…) merged over the defaults; anything invalid is ignored. */
+export function loadGlobal(): GlobalSettings {
+  const raw = loadJSON(GLOBAL_KEY);
+  if (!raw || typeof raw !== 'object') return DEFAULT_GLOBAL;
+  const r = raw as Record<string, unknown>;
+  const g = { ...DEFAULT_GLOBAL };
+  if (r.mode === 'pixel' || r.mode === 'cartoon') g.mode = r.mode;
+  if (typeof r.cellAuto === 'boolean') g.cellAuto = r.cellAuto;
+  if (isNum(r.cellW, 8, 1024)) g.cellW = r.cellW;
+  if (isNum(r.cellH, 8, 1024)) g.cellH = r.cellH;
+  if (isNum(r.padBottom, 0, 256)) g.padBottom = r.padBottom;
+  if (r.targetHeight === null || isNum(r.targetHeight, 4, 1024)) g.targetHeight = r.targetHeight as number | null;
+  if (isNum(r.maxColors, 0, 256)) g.maxColors = r.maxColors;
+  if (r.anchorX === 'medianColumn' || r.anchorX === 'centroid' || r.anchorX === 'bboxCenter') g.anchorX = r.anchorX;
+  return g;
+}
+
+const ENGINES: ExportTarget[] = ['godot', 'gdevelop', 'kaplay', 'generic'];
+
+export function loadExportChoice(): { exportEngine: ExportTarget; exportAll: boolean } {
+  const raw = loadJSON(EXPORT_KEY) as { engine?: unknown; all?: unknown } | null;
+  const engine = ENGINES.find((e) => e === raw?.engine) ?? 'godot';
+  return { exportEngine: engine, exportAll: raw?.all === true };
+}
 
 /** Height proposed when switching to cartoon mode (native size would be the full source resolution). */
 export const CARTOON_DEFAULT_HEIGHT = 128;
@@ -69,7 +101,9 @@ export const initialTileSheet: TileSheetState = {
   removeBg: true,
   bg: { strategy: 'auto', custom: false, color: [255, 255, 255], tolerance: 25 },
   maxColors: 0,
-  targets: { godot: true, tiled: true, png: true },
+  view: 'atlas',
+  format: 'godot',
+  allFormats: false,
   run: { status: 'idle', sig: null, result: null, grid: null, error: null },
 };
 
@@ -81,17 +115,18 @@ export const initialTerrain: TerrainState = {
   tileSize: DEFAULT_TILE_SIZE,
   layout: 'blob47',
   style: edgeStyleForm(DEFAULT_TILE_SIZE),
+  view: 'map',
   mapSeed: 7,
   preview: null,
   run: { status: 'idle', sig: null, set: null, tileA: null, tileB: null, seamA: null, seamB: null, error: null },
 };
 
 export const initialState: AppState = {
-  tab: 'sprites',
   assets: [],
   selectedId: null,
-  global: DEFAULT_GLOBAL,
-  targets: ['godot', 'gdevelop', 'kaplay', 'generic'],
+  global: loadGlobal(),
+  ...loadExportChoice(),
+  stageView: 'animation',
   run: { status: 'idle', results: {}, frameCounts: {}, error: null },
   promptKind: 'sprite',
   prompt: {

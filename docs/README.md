@@ -1,5 +1,7 @@
 # align-sprites guide
 
+> The up-to-date, interactive guide lives in the app: **https://alex-roc.github.io/align-sprites/#/guide**. This file is a reference copy.
+
 **[Open the tool →](https://alex-roc.github.io/align-sprites/)** · [Guía en español](es.md)
 
 AI image models (Gemini / Nano Banana, ChatGPT…) draw nice characters, but their sprite sheets break in game engines: frames of different sizes, characters that jump around between frames, a different scale on every image, "fake" pixel art (blurry ×8 blocks on an irregular grid) and a coloured background instead of transparency. align-sprites fixes that in your browser. Your images are never uploaded anywhere.

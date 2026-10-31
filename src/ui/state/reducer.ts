@@ -5,8 +5,6 @@ export { initialState };
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'tab':
-      return { ...state, tab: action.tab };
     case 'asset/add': {
       const assets = [...state.assets, ...action.assets];
       return { ...state, assets, selectedId: state.selectedId ?? action.assets[0]?.id ?? null };
@@ -28,8 +26,10 @@ export function reducer(state: AppState, action: Action): AppState {
       if (action.patch.mode === 'cartoon' && global.targetHeight === null) global = { ...global, targetHeight: CARTOON_DEFAULT_HEIGHT };
       return { ...state, global };
     }
-    case 'targets':
-      return { ...state, targets: action.targets };
+    case 'export':
+      return { ...state, ...action.patch };
+    case 'stageView':
+      return { ...state, stageView: action.view };
     case 'run/start':
       return { ...state, run: { ...state.run, status: 'running', error: null } };
     case 'run/done':

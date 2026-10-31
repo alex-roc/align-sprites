@@ -25,20 +25,22 @@ export function AnimationsEditor({ anims, frameCount, onChange }: { anims: AnimD
                 <span className="field-label">{t('anims.frames')}</span>
                 <input type="text" value={a.frames} placeholder={t('anims.framesAll')} aria-invalid={!ok} onChange={(e) => update(a.id, { frames: e.target.value })} />
               </label>
-              <label className="field field-narrow">
+              <label className="field">
                 <span className="field-label">{t('anims.fps')}</span>
                 <NumberInput value={a.fps} min={1} max={60} onChange={(fps) => update(a.id, { fps })} />
               </label>
-              <Check checked={a.loop} onChange={(loop) => update(a.id, { loop })} label={t('anims.loop')} />
-              <button type="button" className="btn btn-ghost" disabled={anims.length === 1} onClick={() => onChange(anims.filter((x) => x.id !== a.id))} aria-label={`${t('anims.remove')} ${a.name}`}>
-                {t('anims.remove')}
-              </button>
+              <div className="anim-actions">
+                <Check checked={a.loop} onChange={(loop) => update(a.id, { loop })} label={t('anims.loop')} />
+                <button type="button" className="btn btn-ghost btn-sm" disabled={anims.length === 1} onClick={() => onChange(anims.filter((x) => x.id !== a.id))} aria-label={t('anims.removeNamed', { name: a.name })}>
+                  {t('anims.remove')}
+                </button>
+              </div>
               {!ok && <small className="alert-text">{t('anims.invalid')}</small>}
             </li>
           );
         })}
       </ul>
-      <button type="button" className="btn" onClick={add}>{t('anims.add')}</button>
+      <button type="button" className="btn btn-sm" onClick={add}>{t('anims.add')}</button>
       <small className="hint">{t('anims.help')}</small>
     </div>
   );

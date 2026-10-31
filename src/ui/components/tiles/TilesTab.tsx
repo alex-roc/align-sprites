@@ -5,16 +5,16 @@ import { Segmented } from '../common/Field.tsx';
 import { TerrainPanel } from './TerrainPanel.tsx';
 import { TileSheetPanel } from './TileSheetPanel.tsx';
 
-/** Tiles tab: normalize an AI tile atlas, or compose terrain transition tiles from two textures. */
+/** Tiles: normalize an AI tile atlas, or compose terrain transition tiles from two textures. */
 export function TilesTab() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
   return (
     <div className="tiles">
-      <div className="tiles-head">
+      <div className="subnav">
         <Segmented<TileKind>
           name="tile-kind"
-          label={t('tabs.tiles')}
+          label={t('nav.tiles')}
           value={state.tiles.kind}
           onChange={(kind) => dispatch({ type: 'tiles/kind', kind })}
           options={[

@@ -1,5 +1,7 @@
 # Guía de align-sprites
 
+> La guía actualizada e interactiva está en la app: **https://alex-roc.github.io/align-sprites/#/guide**. Este archivo es una copia de referencia.
+
 **[Abrir la herramienta →](https://alex-roc.github.io/align-sprites/)** · [Guide in English](README.md)
 
 Los modelos de imagen (Gemini / Nano Banana, ChatGPT…) dibujan buenos personajes, pero sus hojas de sprites fallan en los motores de juego. Los frames salen de tamaños distintos y el personaje salta de un frame a otro. Cada imagen trae otra escala, el pixel art es «falso» (bloques ×8 borrosos sobre una cuadrícula irregular) y el fondo viene de color en vez de transparente. align-sprites lo corrige en tu navegador. Tus imágenes no se suben a ningún lado.

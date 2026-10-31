@@ -87,6 +87,7 @@ export function removeBackground(img: RGBAImage, o: BgOptions, mode: ArtMode): R
   }
 
   const zone = o.strategy === 'global' ? cand : floodZone(cand, W, H, o.strategy === 'flood+holes' ? (o.minHole ?? 16) : 0);
+  if (mode === 'pixel') peelHalo(data, zone, dE, W, H, bg, o.tolerance);
 
   for (let p = 0, i = 0; p < W * H; p++, i += 4) {
     if (!zone[p]) continue;
@@ -105,6 +106,61 @@ export function removeBackground(img: RGBAImage, o: BgOptions, mode: ArtMode): R
     out.data[i + 3] = alpha;
   }
   return out;
+}
+
+/** Halo layers peeled in pixel mode (AI resampling blends the key into ~1-2 source px of outline). */
+const HALO_PASSES = 2;
+
+/**
+ * Pixel mode: pixels next to the background that are a blend of the key colour and the nearby foreground
+ * (e.g. dark magenta between a magenta background and a black outline) are too far from the key for the ΔE
+ * tolerance, yet they are mostly background. Estimate their coverage α against the local "clearly foreground"
+ * colour (projection as in unmixWithForeground); α < 0.5 joins the background zone. Mutates `zone`.
+ */
+function peelHalo(data: Uint8ClampedArray, zone: Uint8Array, dE: Float32Array, W: number, H: number, bg: RGBA8, tol: number): void {
+  const solid = tol * 3;
+  for (let pass = 0; pass < HALO_PASSES; pass++) {
+    const add: number[] = [];
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++) {
+        const p = y * W + x;
+        if (zone[p] || data[p * 4 + 3] === 0) continue;
+        // Only the band touching the background.
+        let edge = false;
+        for (let dy = -1; dy <= 1 && !edge; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            const xx = x + dx, yy = y + dy;
+            if (xx >= 0 && yy >= 0 && xx < W && yy < H && zone[yy * W + xx]) {
+              edge = true;
+              break;
+            }
+          }
+        if (!edge) continue;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let dy = -MATTE_RADIUS; dy <= MATTE_RADIUS; dy++)
+          for (let dx = -MATTE_RADIUS; dx <= MATTE_RADIUS; dx++) {
+            const xx = x + dx, yy = y + dy;
+            if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+            const q = yy * W + xx;
+            if (zone[q] || dE[q] < solid || data[q * 4 + 3] < 255) continue;
+            r += data[q * 4];
+            g += data[q * 4 + 1];
+            b += data[q * 4 + 2];
+            n++;
+          }
+        if (!n) continue;
+        const F = [r / n, g / n, b / n];
+        let num = 0, den = 0;
+        for (let c = 0; c < 3; c++) {
+          const fb = F[c] - bg[c];
+          num += (data[p * 4 + c] - bg[c]) * fb;
+          den += fb * fb;
+        }
+        if (den >= 1 && num / den < 0.5) add.push(p);
+      }
+    if (!add.length) return;
+    for (const p of add) zone[p] = 1;
+  }
 }
 
 /** Search radius (px) for the local foreground colour used by the edge matting. */

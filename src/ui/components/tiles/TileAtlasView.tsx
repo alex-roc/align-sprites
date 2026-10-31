@@ -5,7 +5,7 @@ import { RgbaCanvas } from '../common/RgbaCanvas.tsx';
 
 type Zoom = 'fit' | number;
 
-/** Atlas image with the tile grid on top; empty tiles (nothing in them) are crossed out. */
+/** Atlas on the stage with the tile grid on top; empty tiles (nothing in them) are crossed out. */
 export function TileAtlasView({ image, tileSize, cols, rows, empty, pixelated }: {
   image: RGBAImage;
   tileSize: number;
@@ -22,21 +22,9 @@ export function TileAtlasView({ image, tileSize, cols, rows, empty, pixelated }:
   const T = tileSize;
   const emptyTiles = [...(empty ?? [])].map((k) => k.split(':').map(Number) as [number, number]);
   return (
-    <div>
-      <div className="row wrap toolbar">
-        <label className="field field-inline">
-          <span className="field-label">{t('view.zoom')}</span>
-          <select value={String(zoom)} onChange={(e) => setZoom(e.target.value === 'fit' ? 'fit' : Number(e.target.value))}>
-            <option value="fit">{t('view.fit')}</option>
-            {[1, 2, 3, 4, 6, 8].map((z) => (
-              <option key={z} value={z}>{z}×</option>
-            ))}
-          </select>
-        </label>
-        <span className="muted">{t('tiles.atlasInfo', { w: W, h: H, t: T, cols, rows })}</span>
-      </div>
-      <div className="scroll">
-        <div className="stage" style={zoom === 'fit' ? { maxWidth: W * 4 } : { width: W * zoom }}>
+    <div className="sheetview">
+      <div className="stage-body scroll-stage">
+        <div className="sheet-wrap" style={zoom === 'fit' ? { maxWidth: W * 4 } : { width: W * zoom }}>
           <RgbaCanvas image={image} pixelated={pixelated} label={t('tiles.atlasLabel')} />
           <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true" className="overlay">
             {Array.from({ length: cols + 1 }, (_, c) => (
@@ -55,6 +43,19 @@ export function TileAtlasView({ image, tileSize, cols, rows, empty, pixelated }:
           </svg>
         </div>
       </div>
+      <div className="controls">
+        <label className="field field-inline">
+          <span className="field-label">{t('anim.zoom')}</span>
+          <select value={String(zoom)} onChange={(e) => setZoom(e.target.value === 'fit' ? 'fit' : Number(e.target.value))}>
+            <option value="fit">{t('view.fit')}</option>
+            {[1, 2, 3, 4, 6, 8].map((z) => (
+              <option key={z} value={z}>{z}×</option>
+            ))}
+          </select>
+        </label>
+        <span className="muted">{t('tiles.atlasInfo', { w: W, h: H, t: T, cols, rows })}</span>
+      </div>
+      {empty && empty.size > 0 && <p className="hint">{t('tiles.emptyLegend')}</p>}
     </div>
   );
 }

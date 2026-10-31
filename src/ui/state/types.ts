@@ -2,10 +2,10 @@
 // (background, segmentation, animations, relative size); see jobs.ts for how they map to SpriteJob.
 import type { AnchorXMethod, ArtMode, BgOptions, ExportTarget, RGBA8, RGBAImage, SpriteResult, TileLayout, TileSetResult } from '../../core/types.ts';
 import type { TileAtlasResult } from '../../core/tiles/index.ts';
-import type { AtlasExportTargets, TileGridInfo } from '../../worker/api.ts';
+import type { TileGridInfo } from '../../worker/api.ts';
 import type { PromptOptions, TilePromptOptions } from '../../core/prompts/index.ts';
 
-export type TabId = 'sprites' | 'prompts' | 'tiles';
+export type StageView = 'animation' | 'sheet' | 'original';
 export type AssetKind = 'sheet' | 'single';
 export type BgStrategy = 'auto' | 'global' | 'flood';
 export type SegMode = 'auto' | 'grid' | 'single';
@@ -92,6 +92,7 @@ export interface LoadedImage {
 
 export type TileKind = 'sheet' | 'terrain';
 export type TileBgStrategy = 'auto' | BgOptions['strategy'];
+export type TileFormat = 'godot' | 'tiled' | 'png';
 export type RunStatus = 'idle' | 'running' | 'ready' | 'error';
 
 export interface TileSheetState {
@@ -104,7 +105,9 @@ export interface TileSheetState {
   removeBg: boolean;
   bg: { strategy: TileBgStrategy; custom: boolean; color: [number, number, number]; tolerance: number };
   maxColors: number;
-  targets: AtlasExportTargets;
+  view: 'atlas' | 'source';
+  format: TileFormat;
+  allFormats: boolean;
   run: { status: RunStatus; sig: string | null; result: TileAtlasResult | null; grid: TileGridInfo | null; error: string | null };
 }
 
@@ -128,6 +131,7 @@ export interface TerrainState {
   layout: TileLayout;
   style: EdgeStyleForm;
   /** Seed of the random test map (the "shuffle" button changes it). */
+  view: 'atlas' | 'map';
   mapSeed: number;
   /** Test map rendered with the current textures and style. */
   preview: RGBAImage | null;
@@ -150,11 +154,13 @@ export interface TilesState {
 }
 
 export interface AppState {
-  tab: TabId;
   assets: Asset[];
   selectedId: string | null;
   global: GlobalSettings;
-  targets: ExportTarget[];
+  /** Engine chosen in the export panel (persisted); `exportAll` ships every engine instead. */
+  exportEngine: ExportTarget;
+  exportAll: boolean;
+  stageView: StageView;
   run: RunState;
   promptKind: PromptKind;
   prompt: PromptForm;
@@ -163,13 +169,13 @@ export interface AppState {
 }
 
 export type Action =
-  | { type: 'tab'; tab: TabId }
   | { type: 'asset/add'; assets: Asset[] }
   | { type: 'asset/remove'; id: string }
   | { type: 'asset/patch'; id: string; patch: Partial<Omit<Asset, 'id' | 'image'>> }
   | { type: 'asset/select'; id: string }
   | { type: 'global/patch'; patch: Partial<GlobalSettings> }
-  | { type: 'targets'; targets: ExportTarget[] }
+  | { type: 'export'; patch: Partial<{ exportEngine: ExportTarget; exportAll: boolean }> }
+  | { type: 'stageView'; view: StageView }
   | { type: 'run/start' }
   | { type: 'run/done'; results: Record<string, SpriteResult>; frameCounts: Record<string, number> }
   | { type: 'run/error'; message: string }

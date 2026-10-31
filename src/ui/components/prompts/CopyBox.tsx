@@ -28,11 +28,8 @@ export function CopyBox({ text, label }: { text: string; label: string }) {
 
   return (
     <div className="copybox">
-      <label className="field">
-        <span className="field-label">{label}</span>
-        <textarea readOnly value={text} rows={14} />
-      </label>
-      <div className="row">
+      <textarea readOnly value={text} rows={12} aria-label={label} />
+      <div className="row wrap">
         <button type="button" className="btn btn-primary" onClick={() => void copy()}>{t('prompt.copy')}</button>
         <span className="muted" role="status">{copied ? t('prompt.copied') : ''}</span>
       </div>

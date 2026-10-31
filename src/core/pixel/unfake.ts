@@ -3,6 +3,7 @@
 // NOTE: the WASM bundles imagequant (GPL-3.0-or-later), hence this project's licence.
 import initWasm, * as w from '../../vendor/unfake/unfake_wasm.js';
 import type { DsMethod, PixelGrid, RGBA8, RGBAImage } from '../types.ts';
+import { downscaleDominant } from './dominant.ts';
 
 export interface UnfakeCore {
   /** Detect the pixel-art grid of an upscaled image (fractional first, then integer + crop offset). Null if no grid (scale 1). */
@@ -48,6 +49,8 @@ function makeCore(): UnfakeCore {
       return gridFromVec(w.grid_for_scale_vec(u8(img), img.width, img.height, period));
     },
     downscaleGrid(img, g, method = 'dominant', domThreshold = 0.05) {
+      // The WASM 'dominant' breaks ties in random HashMap order: use the deterministic TS port instead.
+      if (method === 'dominant') return downscaleDominant(img, g, domThreshold);
       return unpack(
         w.downscale_grid_packed(u8(img), img.width, img.height, g.periodX, g.periodY, g.offsetX, g.offsetY, METHOD[method], domThreshold),
       );

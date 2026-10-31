@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { decodePng } from '../src/core/export/index.ts';
 import { runBatch, runSpriteJob } from '../src/core/pipeline/index.ts';
 import { autoBgOptions } from '../src/core/bg/index.ts';
 import { alphaBBox, crop } from '../src/core/image.ts';
@@ -124,6 +126,16 @@ describe('sprite pipeline (real AI assets)', () => {
     expect(r.frames.length).toBe(1);
     expect(Math.abs(r.diag.refHeight - 64)).toBeLessThanOrEqual(1);
     expectAligned(r, 2);
+  });
+
+  it('codex knight: no key-coloured halo pixels survive (magenta blended into the outline)', () => {
+    // Decode exactly as the app does (core decodePng: palette/tRNS aware).
+    const img = decodePng(new Uint8Array(readFileSync('samples/codex/knight-walk-pixel.png')));
+    const r = runSpriteJob(core, job('knight', img, { bg: autoBgOptions(img, 'pixel'), segmentation: { kind: 'grid', rows: 2, cols: 3 } }));
+    const d = r.sheet.image.data;
+    const tinted: string[] = [];
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] && d[i] > 140 && d[i + 2] > 140 && d[i + 1] < 130) tinted.push(`${d[i]},${d[i + 1]},${d[i + 2]}@${(i / 4) % r.sheet.image.width},${Math.floor(i / 4 / r.sheet.image.width)}`);
+    expect(tinted).toEqual([]);
   });
 
   it('Personaje.png: 4 views on white, tunic survives', () => {

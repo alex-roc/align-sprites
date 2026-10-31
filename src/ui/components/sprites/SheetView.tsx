@@ -5,7 +5,7 @@ import { RgbaCanvas } from '../common/RgbaCanvas.tsx';
 
 type Zoom = 'fit' | number;
 
-/** Resulting sheet with the cell grid and the feet line of every row. */
+/** Resulting sheet on the stage, with the cell grid and the ground line of every row. */
 export function SheetView({ result }: { result: SpriteResult }) {
   const { t } = useI18n();
   const [zoom, setZoom] = useState<Zoom>('fit');
@@ -14,21 +14,9 @@ export function SheetView({ result }: { result: SpriteResult }) {
   const H = image.height;
   const feet = cell.h - 1 - padBottom + 0.5;
   return (
-    <div>
-      <div className="row wrap toolbar">
-        <label className="field field-inline">
-          <span className="field-label">{t('view.zoom')}</span>
-          <select value={String(zoom)} onChange={(e) => setZoom(e.target.value === 'fit' ? 'fit' : Number(e.target.value))}>
-            <option value="fit">{t('view.fit')}</option>
-            {[1, 2, 3, 4, 6, 8].map((z) => (
-              <option key={z} value={z}>{z}×</option>
-            ))}
-          </select>
-        </label>
-        <span className="muted">{t('sheet.info', { w: W, h: H, cw: cell.w, ch: cell.h, cols, rows })}</span>
-      </div>
-      <div className="scroll">
-        <div className="stage" style={zoom === 'fit' ? { maxWidth: W * 4 } : { width: W * zoom }}>
+    <div className="sheetview">
+      <div className="stage-body scroll-stage">
+        <div className="sheet-wrap" style={zoom === 'fit' ? { maxWidth: W * 4 } : { width: W * zoom }}>
           <RgbaCanvas image={image} pixelated={mode === 'pixel'} label={t('sheet.label')} />
           <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true" className="overlay">
             {Array.from({ length: cols + 1 }, (_, c) => (
@@ -38,14 +26,26 @@ export function SheetView({ result }: { result: SpriteResult }) {
               <line key={`r${r}`} x1={0} x2={W} y1={r * cell.h} y2={r * cell.h} className="grid-line" vectorEffect="non-scaling-stroke" />
             ))}
             {Array.from({ length: rows }, (_, r) => (
-              <line key={`f${r}`} x1={0} x2={W} y1={r * cell.h + feet} y2={r * cell.h + feet} className="feet-line" vectorEffect="non-scaling-stroke" />
+              <line key={`f${r}`} x1={0} x2={W} y1={r * cell.h + feet} y2={r * cell.h + feet} className="ground-line" vectorEffect="non-scaling-stroke" />
             ))}
           </svg>
         </div>
       </div>
+      <div className="controls">
+        <label className="field field-inline">
+          <span className="field-label">{t('anim.zoom')}</span>
+          <select value={String(zoom)} onChange={(e) => setZoom(e.target.value === 'fit' ? 'fit' : Number(e.target.value))}>
+            <option value="fit">{t('view.fit')}</option>
+            {[1, 2, 3, 4, 6, 8].map((z) => (
+              <option key={z} value={z}>{z}×</option>
+            ))}
+          </select>
+        </label>
+        <span className="muted">{t('sheet.info', { w: W, h: H, cw: cell.w, ch: cell.h, cols, rows })}</span>
+      </div>
       <ul className="legend">
         {anims.map((a) => (
-          <li key={a.name + a.row}>{t('sheet.row', { row: a.row, name: a.name, count: a.count, fps: a.fps })}</li>
+          <li key={a.name + a.row}>{t('sheet.row', { row: a.row + 1, name: a.name, count: a.count, fps: a.fps })}</li>
         ))}
       </ul>
     </div>
