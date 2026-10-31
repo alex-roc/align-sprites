@@ -36,3 +36,5 @@ playwright-report/
 tools/godot-validate/out/
 tools/godot-validate/.godot/
 
+
+samples/out/
