@@ -7,6 +7,11 @@ export const CELL_PRESETS = [16, 32, 48, 64, 96, 128, 160, 192, 256];
 
 /** Opaque threshold used to count clipped content. */
 const OPAQUE = 128;
+/**
+ * Clipping this many opaque px or fewer is not reported: footY ignores rows with a single pixel (specks, a
+ * toe tip) by design, so those may fall just below the cell.
+ */
+const CLIP_NOISE_PX = 3;
 
 /**
  * Smallest cell (each axis a multiple of `step`, default 32) that fits every frame when anchored:
@@ -66,7 +71,7 @@ export function packFrames(
         blit(c, f, dx, dy, 'replace');
         if (!warned.has(fi)) {
           const px = clippedPixels(f, dx, dy, cell.w, cell.h);
-          if (px > 0) {
+          if (px > CLIP_NOISE_PX) {
             warned.add(fi);
             warnings.push({ key: 'warn.clipped', params: { frame: fi, px } });
           }

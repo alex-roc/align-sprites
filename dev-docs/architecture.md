@@ -46,6 +46,15 @@ tools/godot-validate/    headless Godot 4 project that loads and checks exported
 
 One ZIP, folder per target: `godot/<name>/` (png + SpriteFrames .tres + AnimatedSprite2D .tscn with the origin at the feet), `gdevelop/<name>/<anim>/…png` + README, `kaplay/<name>.png + .js`, `generic/<name>.png + .json` (Aseprite hash). Godot `.tres` uses relative `path` without uid: copy the folder into the project as is.
 
+## UI (src/ui, src/i18n)
+
+- `src/ui/state/`: `useReducer` store (context in `context.ts`, reducer in `reducer.ts`). `jobs.ts` maps settings → `SpriteJob[]`: GLOBAL settings (mode, cell, shared height, colours, bottom margin, anchor) go to every job; PER-ASSET settings (background, segmentation, animations, relative size) only to their own. `Processor.tsx` re-runs the batch 300 ms after the job signature changes (names are excluded: renaming never re-runs; the export applies the current name).
+- Blank animation frame ranges mean "all frames": resolved with the frame count of the previous run (the untouched default animation is left to the core).
+- `src/worker/client.ts` copies the source pixels and transfers the copies; the worker transfers result buffers back.
+- `src/i18n/en.ts` is the source of keys; `es.ts` is typed against it and `tests/i18n.test.ts` checks keys and `{placeholders}`. Core warnings are translated with `tw()` (`warn.*`).
+- Theme: CSS `light-dark()` + `data-theme` on `<html>`; language and theme are the only persisted UI state (localStorage).
+- Examples for "Try an example" live in `public/examples/` (copies of `samples/real/`).
+
 ## Conventions
 
 - Core functions never mutate their inputs; they return new images.
