@@ -59,6 +59,8 @@ const results = [
   synth('Héroe', 'pixel', { w: 64, h: 96 }, 2, [['idle', 4, 6, true], ['walk', 6, 10, true], ['attack', 3, 12.5, false]]),
   synth('slime', 'cartoon', { w: 32, h: 32 }, 0, [['idle', 2, 4, true]]),
   real(),
+  // One animation with one frame = static sprite: Sprite2D scene, no SpriteFrames.
+  synth('Piedra', 'pixel', { w: 32, h: 32 }, 1, [['default', 1, 8, true]]),
 ];
 
 rmSync(out, { recursive: true, force: true });
@@ -68,8 +70,8 @@ for (const f of buildExport(results, ['godot'])) {
   writeFileSync(p, f.data);
 }
 
-const slugs = ['heroe', 'slime', 'run'];
-const nodes = ['Heroe', 'Slime', 'Run'];
+const slugs = ['heroe', 'slime', 'run', 'piedra'];
+const nodes = ['Heroe', 'Slime', 'Run', 'Piedra'];
 const pairs = [];
 results.forEach((r, i) => {
   const { sheet } = r;
@@ -85,8 +87,11 @@ results.forEach((r, i) => {
       animation: sheet.anims[0].name,
     },
   };
+  const isStatic = sheet.anims.length === 1 && sheet.anims[0].count === 1;
+  if (isStatic) expected.static = true;
   writeFileSync(join(out, `${slugs[i]}.expected.json`), JSON.stringify(expected, null, 2));
-  pairs.push(`res://out/godot/${slugs[i]}/${slugs[i]}.tres`, `res://out/${slugs[i]}.expected.json`);
+  // Static sprites have no .tres: the first path of the pair is the .tscn (only checked for existence there).
+  pairs.push(`res://out/godot/${slugs[i]}/${slugs[i]}.${isStatic ? 'tscn' : 'tres'}`, `res://out/${slugs[i]}.expected.json`);
 });
 
 function godot(args) {

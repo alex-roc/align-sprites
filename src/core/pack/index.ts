@@ -1,6 +1,6 @@
 // Pack normalized frames into a fixed-cell sheet, feet-anchored.
-import { blit, createImage } from '../image.ts';
-import type { AnimSpec, CellSpec, FrameMetrics, PackedSheet, RGBAImage, ArtMode, Warning } from '../types.ts';
+import { blit, createImage, flipImageX } from '../image.ts';
+import type { AnimSpec, CellSpec, FrameMetrics, FrameOffset, PackedSheet, RGBAImage, ArtMode, Warning } from '../types.ts';
 
 /** Cell presets (px). Width and height are chosen independently. */
 export const CELL_PRESETS = [16, 32, 48, 64, 96, 128, 160, 192, 256];
@@ -36,10 +36,40 @@ export function suggestCell(frames: RGBAImage[], metrics: FrameMetrics[], padBot
 }
 
 /**
+ * The placements `packFrames` will make, as parallel frame/metric lists for `suggestCell`: mirrored animations
+ * swap their left/right extents and nudged frames move (anchor and feet shift by the opposite amount).
+ */
+export function placementMetrics(
+  frames: RGBAImage[],
+  metrics: FrameMetrics[],
+  anims: AnimSpec[],
+  offsets?: Record<number, FrameOffset>,
+): { frames: RGBAImage[]; metrics: FrameMetrics[] } {
+  const outF: RGBAImage[] = [];
+  const outM: FrameMetrics[] = [];
+  for (const a of anims) {
+    for (const fi of a.frames) {
+      const f = frames[fi], m = metrics[fi];
+      if (!f || !m) continue;
+      const off = offsets?.[fi];
+      const dx = Math.round(off?.dx ?? 0), dy = Math.round(off?.dy ?? 0);
+      const anchorX = a.flipX ? f.width - 1 - Math.round(m.anchorX) : Math.round(m.anchorX);
+      const bbox = a.flipX ? { ...m.bbox, x: f.width - m.bbox.x - m.bbox.w } : m.bbox;
+      outF.push(f);
+      outM.push({ bbox, footY: m.footY - dy, anchorX: anchorX - dx });
+    }
+  }
+  return { frames: outF, metrics: outM };
+}
+
+/**
  * One row per animation, cols = max frames in any animation. Each frame is pasted so that its anchorX lands
  * on floor(cell.w/2) and its footY on cell.h - 1 - padBottom (integer px). Content outside the cell is
  * clipped and reported as a warning {key:'warn.clipped', params:{frame, px}}.
  * anims: frame indices refer to `frames`. Returns the sheet plus each cell-sized frame in sheet order.
+ * `spec.flipX` mirrors each frame of that animation around its anchor (the anchor stays on column floor(cell.w/2)).
+ * `opts.offsets` nudges a frame (keyed by frame index, so every animation using it gets the same nudge) by
+ * (dx, dy) output px after the feet/anchor alignment; dy > 0 moves it down.
  */
 export function packFrames(
   frames: RGBAImage[],
@@ -47,6 +77,7 @@ export function packFrames(
   cell: CellSpec,
   anims: AnimSpec[],
   mode: ArtMode,
+  opts?: { offsets?: Record<number, FrameOffset> },
 ): { sheet: PackedSheet; cells: RGBAImage[]; warnings: Warning[] } {
   const specs: AnimSpec[] = anims.length
     ? anims
@@ -62,12 +93,15 @@ export function packFrames(
   const cells: RGBAImage[] = [];
   specs.forEach((spec, row) => {
     spec.frames.forEach((fi, col) => {
-      const f = frames[fi];
       const m = metrics[fi];
+      // Mirroring the whole frame maps the anchor column a to width-1-a, so nothing is cut off before pasting.
+      const f = spec.flipX && frames[fi] ? flipImageX(frames[fi]) : frames[fi];
       const c = createImage(cell.w, cell.h);
       if (f && m) {
-        const dx = anchorCol - Math.round(m.anchorX);
-        const dy = footRow - m.footY;
+        const off = opts?.offsets?.[fi];
+        const anchor = spec.flipX ? f.width - 1 - Math.round(m.anchorX) : Math.round(m.anchorX);
+        const dx = anchorCol - anchor + Math.round(off?.dx ?? 0);
+        const dy = footRow - m.footY + Math.round(off?.dy ?? 0);
         blit(c, f, dx, dy, 'replace');
         if (!warned.has(fi)) {
           const px = clippedPixels(f, dx, dy, cell.w, cell.h);

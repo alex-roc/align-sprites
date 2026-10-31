@@ -24,6 +24,11 @@ export function animSlugs(anims: PackedAnim[]): string[] {
   });
 }
 
+/** A sheet with exactly one animation of one frame is a static sprite: exporters skip animation machinery. */
+export function isStatic(sheet: PackedSheet): boolean {
+  return sheet.anims.length === 1 && sheet.anims[0]!.count === 1;
+}
+
 /** Origin at the feet: x = floor(w/2), y = h-1-padBottom (cell px). */
 export function feetOrigin(sheet: PackedSheet): { x: number; y: number } {
   return { x: Math.floor(sheet.cell.w / 2), y: sheet.cell.h - 1 - sheet.padBottom };

@@ -18,6 +18,10 @@ src/core/pipeline/       runSpriteJob / runBatch (orchestration)
 src/core/export/         PNG/ZIP + Godot, GDevelop, Kaplay, generic (Aseprite JSON)
 src/core/prompts/        prompt templates + guide grid image
 src/core/tiles/          tile atlas normalizer + terrain transition composer (phase 2)
+src/core/inspect/        inspectImage: bg + sheet/single + frame count + source height on a <= 512 px copy
+src/core/frames/         findDuplicateFrames, frameDifference, flipCellX (frame editor helpers)
+src/core/palette/        PALETTES presets, hex helpers, paletteFromImage, remapToPalette, applyColorMap, imageColors
+src/core/kit/            buildKitExport: sprites + tiles of a session, per engine
 src/worker/              Comlink worker implementing PipelineApi (src/worker/api.ts)
 src/ui/, src/i18n/       React UI; every UI string lives in src/i18n (en + es, same keys)
 src/vendor/unfake/       vendored unfake.js WASM (MIT; bundles imagequant, GPL-3.0 → project is GPL-3.0-or-later)
@@ -44,7 +48,15 @@ tools/godot-validate/    headless Godot 4 project that loads and checks exported
 
 ## Export
 
-One ZIP, folder per target: `godot/<name>/` (png + SpriteFrames .tres + AnimatedSprite2D .tscn with the origin at the feet), `gdevelop/<name>/<anim>/…png` + README, `kaplay/<name>.png + .js`, `generic/<name>.png + .json` (Aseprite hash). Godot `.tres` uses relative `path` without uid: copy the folder into the project as is.
+One ZIP, folder per target: `godot/<name>/` (png + SpriteFrames .tres + AnimatedSprite2D .tscn with the origin at the feet), `gdevelop/<name>/<anim>/…png` + README, `kaplay/<name>.png + .js` (single-frame sheets export as static sprites, see below), `generic/<name>.png + .json` (Aseprite hash). Godot `.tres` uses relative `path` without uid: copy the folder into the project as is.
+
+## Inspect, frames, palette, kit (src/core)
+
+- `inspectImage(img, mode)` reduces the image to a longest side of 512 px (nearest), runs `autoBgOptions` + `removeBackground` + `findFrames` and returns `{bg, kind, frameCount, sourceHeight}` (height rescaled to ORIGINAL px, ~20-40 ms for 1500 px sheets). Regions under 10 % of the largest bbox area are parts (a sword held away from the body), not frames, so such a character stays `single`.
+- `frames/`: `findDuplicateFrames(cells, tolerance = 0.45)` groups packed cells by `frameDifference` (share of differing pixels, RGB/alpha delta > 24, over the pixels opaque in either frame), comparing each cell with the first of every group (no chaining). 0.45 was measured on the Codex samples: fox repeats 0.29-0.37, nearest distinct poses (knight) 0.55 (see `DUPLICATE_TOLERANCE`). `flipCellX` mirrors a cell around column `floor(w/2)`; `AnimSpec.flipX` is applied by `packFrames` on the frame itself (mirror around its anchor, nothing is cut), and `placementMetrics` makes `cell: 'auto'` account for mirrored/nudged placements.
+- `SpriteJob.frameOffsets` (keyed by detected frame index, so every animation using the frame gets the same nudge) goes to `packFrames(..., { offsets })`. `SpriteJob.palette` (pixel only) remaps every frame to the nearest ΔE colour with `remapToPalette` (no dithering) and wins over `maxColors`; cartoon ignores it (it would posterize the antialiasing). `colorMap` is applied last, to every frame and to `diag.palette`. Tiles take `palette` in `normalizeTileAtlas` options and `composeTransitions(..., { palette })`.
+- `palette/`: presets with the published hex values (PICO-8, Sweetie 16, Endesga 32, Game Boy; checked against lospec). `kit/buildKitExport(kit, target)` reuses the per-engine exporters: `<target>/sprites/…` (the usual export), `<target>/tiles/…` (Godot `.tres`; GDevelop/generic atlas PNG + Tiled `.tsx`; Kaplay atlas PNG + `loadSprite(name, png, { sliceX, sliceY })` snippet) and `<target>/README.txt` (en + es: sprite heights, frame sizes, animations, tile size, palette).
+- A sheet with ONE animation of ONE frame is a static sprite (`isStatic` in `export/common.ts`): Godot exports a `Sprite2D` scene (no SpriteFrames), GDevelop a single PNG + README, Kaplay a plain `loadSprite`.
 
 ## UI (src/ui, src/i18n)
 

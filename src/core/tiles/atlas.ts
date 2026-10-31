@@ -4,9 +4,10 @@ import { detectBackground, removeBackground } from '../bg/index.ts';
 import { distanceTo } from '../color.ts';
 import { blit, createImage, crop, resizeNearest } from '../image.ts';
 import { encodePng, slug } from '../export/index.ts';
+import { remapToPalette } from '../palette/index.ts';
 import { binarizeAlpha, sharedPalette, type UnfakeCore } from '../pixel/index.ts';
 import { resampleArea } from '../resample/index.ts';
-import type { ArtMode, BgOptions, ExportFile, RGBAImage, Rect, Warning } from '../types.ts';
+import type { ArtMode, BgOptions, ExportFile, RGBA8, RGBAImage, Rect, Warning } from '../types.ts';
 
 // ---------------------------------------------------------------- grid detection
 
@@ -248,6 +249,8 @@ export interface TileAtlasOptions {
   trimGutters?: boolean;
   /** Pixel mode: shared palette across all tiles. */
   maxColors?: number;
+  /** Pixel mode: fixed palette; every tile pixel is remapped to its nearest colour. Wins over maxColors. */
+  palette?: RGBA8[];
 }
 
 export interface TileAtlasResult {
@@ -370,9 +373,11 @@ export function normalizeTileAtlas(core: UnfakeCore | null, img: RGBAImage, o: T
   }
 
   let outImages = images;
-  if (o.mode === 'pixel' && core && (o.maxColors ?? 0) > 0) {
+  const fixed = o.mode === 'pixel' && o.palette?.length ? o.palette : null;
+  if (fixed || (o.mode === 'pixel' && core && (o.maxColors ?? 0) > 0)) {
     const idx = tiles.map((t, i) => (t.empty ? -1 : i)).filter((i) => i >= 0);
-    const { images: q } = sharedPalette(core, idx.map((i) => images[i]), o.maxColors!);
+    const src = idx.map((i) => images[i]);
+    const q = fixed ? remapToPalette(src, fixed) : sharedPalette(core!, src, o.maxColors!).images;
     outImages = [...images];
     idx.forEach((i, k) => (outImages[i] = q[k]));
   }

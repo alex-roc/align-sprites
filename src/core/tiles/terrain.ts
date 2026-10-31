@@ -10,6 +10,7 @@
 // from tiles equals the one-shot render of the whole map (see renderTerrainMap and tests/tiles-terrain.test.ts).
 import { createImage, blit, crop, resizeNearest } from '../image.ts';
 import { encodePng, slug } from '../export/index.ts';
+import { remapToPalette } from '../palette/index.ts';
 import { resampleArea } from '../resample/index.ts';
 import type { UnfakeCore } from '../pixel/index.ts';
 import type { ArtMode, EdgeStyle, ExportFile, GodotPeeringBit, RGBA8, RGBAImage, TileInfo, TileLayout, TileSetResult, Warning } from '../types.ts';
@@ -431,10 +432,14 @@ export interface TerrainKit {
 }
 
 /** Reduces the textures and prepares the shared rendering state (also used by renderTerrainMap). */
-export function prepareTerrain(core: UnfakeCore | null, a: RGBAImage, b: RGBAImage | null, T: number, s: EdgeStyle, mode: ArtMode): TerrainKit {
+export function prepareTerrain(
+  core: UnfakeCore | null, a: RGBAImage, b: RGBAImage | null, T: number, s: EdgeStyle, mode: ArtMode, palette?: RGBA8[],
+): TerrainKit {
   const warnings: Warning[] = [];
-  const tileA = makeSeamlessTile(core, a, T, mode);
-  const tileB = b ? makeSeamlessTile(core, b, T, mode) : null;
+  // Pixel mode with a fixed palette: the textures are remapped first, so the automatic outline and the preview use palette colours.
+  const fixed = mode === 'pixel' && palette?.length ? palette : null;
+  const tileA = fixed ? remapToPalette([makeSeamlessTile(core, a, T, mode)], fixed)[0] : makeSeamlessTile(core, a, T, mode);
+  const tileB = b ? (fixed ? remapToPalette([makeSeamlessTile(core, b, T, mode)], fixed)[0] : makeSeamlessTile(core, b, T, mode)) : null;
   const scoreA = seamScore(tileA);
   if (scoreA > SEAM_WARN) warnings.push({ key: 'warn.notSeamless', params: { which: 'A', score: Math.round(scoreA * 100) / 100 } });
   if (tileB) {
@@ -470,11 +475,22 @@ export function renderTerrainMap(kit: TerrainKit, cells: ArrayLike<number>, w: n
  * blob47: 8×6 atlas, tile i = BLOB47_MASKS[i] at (i % 8, floor(i / 8)), plain A at (7,5).
  * dual16: 4×4 atlas, TileMapDual "Standard" positions (DUAL16_POS), tiles offset by half a tile.
  * Warnings: warn.notSeamless {which, score}, warn.edgeStyleClamped {margin, blur, noiseAmp}, warn.dualOddTile.
+ * `opts.palette` (pixel mode): textures and the final atlas are remapped to that fixed palette.
  */
 export function composeTransitions(
   core: UnfakeCore | null, a: RGBAImage, b: RGBAImage | null, T: number, layout: TileLayout, s: EdgeStyle, mode: ArtMode,
+  opts?: { palette?: RGBA8[] },
 ): TileSetResult {
-  const kit = prepareTerrain(core, a, b, T, s, mode);
+  const result = composeRaw(core, a, b, T, layout, s, mode, opts?.palette);
+  const fixed = mode === 'pixel' && opts?.palette?.length ? opts.palette : null;
+  // Blending can still create off-palette colours (outline, antialiasing of the masks): snap the atlas itself.
+  return fixed ? { ...result, atlas: remapToPalette([result.atlas], fixed)[0] } : result;
+}
+
+function composeRaw(
+  core: UnfakeCore | null, a: RGBAImage, b: RGBAImage | null, T: number, layout: TileLayout, s: EdgeStyle, mode: ArtMode, palette?: RGBA8[],
+): TileSetResult {
+  const kit = prepareTerrain(core, a, b, T, s, mode, palette);
   const { ctx } = kit;
   const warnings = [...kit.warnings];
   const tiles: TileInfo[] = [];

@@ -1,6 +1,6 @@
 // Godot 4: SpriteFrames .tres (AtlasTexture per frame) + AnimatedSprite2D .tscn with the origin at the feet.
 import type { ExportFile, SpriteResult } from '../types.ts';
-import { feetOrigin, fl, frameRect, sheetPng, slug } from './common.ts';
+import { feetOrigin, fl, frameRect, isStatic, sheetPng, slug } from './common.ts';
 
 /** Godot string literal (double quoted, escaped). */
 function gdString(s: string): string {
@@ -39,12 +39,55 @@ y comprueba que ${name}.png se importe como Texture2D.
 `;
 }
 
+function readmeStatic(name: string): string {
+  return `${name} - Godot 4
+
+[EN]
+1. Copy this whole folder (${name}/) into your Godot project, e.g. res://sprites/${name}/.
+   Keep the files together: ${name}.tscn loads ${name}.png by relative path.
+2. Drag ${name}.tscn into your scene (a Sprite2D).
+   Its origin is at the character's feet: placing it at a position puts the feet there.
+If ${name}.tscn shows an error, reimport / rescan the project (Project > Reload Current Project)
+and make sure ${name}.png is imported as Texture2D.
+
+[ES]
+1. Copia esta carpeta completa (${name}/) a tu proyecto de Godot, p. ej. res://sprites/${name}/.
+   Mantén los archivos juntos: ${name}.tscn carga ${name}.png con ruta relativa.
+2. Arrastra ${name}.tscn a tu escena (un Sprite2D).
+   Su origen está en los pies del personaje: al colocarlo en una posición, los pies quedan ahí.
+Si ${name}.tscn da error, reimporta / reescanea el proyecto (Proyecto > Recargar proyecto actual)
+y comprueba que ${name}.png se importe como Texture2D.
+`;
+}
+
+/** Static sprite (one animation, one frame): `<name>.png` + a Sprite2D `.tscn`, no SpriteFrames. */
+function godotStatic(r: SpriteResult): ExportFile[] {
+  const name = slug(r.name);
+  const dir = `${name}/`;
+  const o = feetOrigin(r.sheet);
+  const tscn =
+    `[gd_scene load_steps=2 format=3]\n\n` +
+    `[ext_resource type="Texture2D" path="${name}.png" id="1"]\n\n` +
+    `[node name=${gdString(nodeName(r.name))} type="Sprite2D"]\n` +
+    (r.sheet.mode === 'pixel' ? 'texture_filter = 1\n' : '') +
+    `texture = ExtResource("1")\n` +
+    `centered = false\n` +
+    `offset = Vector2(${-o.x}, ${-o.y})\n`;
+  return [
+    { path: `${dir}${name}.png`, data: sheetPng(r) },
+    { path: `${dir}${name}.tscn`, data: tscn },
+    { path: `${dir}README.txt`, data: readmeStatic(name) },
+  ];
+}
+
 /**
  * Godot 4: `<name>/<name>.png`, `.tres` (SpriteFrames, AtlasTexture per frame, relative path, no uid),
  * `.tscn` (AnimatedSprite2D, centered=false, offset=(-floor(w/2), -(h-1-padBottom)) so the origin is at the feet,
  * texture_filter=1 in pixel mode, autoplay first anim). Plus README.txt (en + es).
+ * A single-frame sheet exports as a static Sprite2D instead (png + tscn, no .tres).
  */
 export function godotSpriteFrames(r: SpriteResult): ExportFile[] {
+  if (isStatic(r.sheet)) return godotStatic(r);
   const name = slug(r.name);
   const dir = `${name}/`;
   const { sheet } = r;

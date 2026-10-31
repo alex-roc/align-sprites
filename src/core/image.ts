@@ -114,3 +114,16 @@ export function resizeNearest(img: RGBAImage, w: number, h: number): RGBAImage {
   }
   return out;
 }
+
+/** Horizontal mirror of a whole image (column x → width-1-x). Returns a new image. */
+export function flipImageX(img: RGBAImage): RGBAImage {
+  const { width: w, height: h } = img;
+  const out = createImage(w, h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const s = (y * w + x) * 4;
+      out.data.set(img.data.subarray(s, s + 4), (y * w + (w - 1 - x)) * 4);
+    }
+  }
+  return out;
+}

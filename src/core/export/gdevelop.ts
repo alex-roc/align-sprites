@@ -2,7 +2,7 @@
 // spritesheet strip per animation for the built-in Piskel editor ("Import as spritesheet"), and a README.
 import { blit, createImage } from '../image.ts';
 import type { ExportFile, RGBAImage, SpriteResult } from '../types.ts';
-import { animFrames, animSlugs, feetOrigin, fl, slug } from './common.ts';
+import { animFrames, animSlugs, feetOrigin, fl, isStatic, sheetPng, slug } from './common.ts';
 import { encodePng } from './png.ts';
 
 function pad(i: number, n: number): string {
@@ -17,11 +17,43 @@ function strip(frames: RGBAImage[]): RGBAImage {
   return out;
 }
 
+/** Static sprite (one animation, one frame): `<name>/<name>.png` + README with the origin, no animation folders. */
+function gdevelopStatic(r: SpriteResult): ExportFile[] {
+  const name = slug(r.name);
+  const { sheet } = r;
+  const o = feetOrigin(sheet);
+  const pixel = sheet.mode === 'pixel';
+  const readme = `${name} - GDevelop 5
+
+Static sprite: ${sheet.cell.w}x${sheet.cell.h} px. Origin point: (${o.x}, ${o.y}) (feet).
+
+[EN]
+1. Create a "Sprite" object named "${name}", open its (single) animation, click "Add images" and select ${name}.png.
+2. Open the "Points" editor and set the point "Origin" to (${o.x}, ${o.y}). The origin is at the feet,
+   so an instance positioned at (x, y) stands on that spot.
+${pixel ? `3. Pixel art: in Project properties, set "Scale mode (also called sampling)" to "Nearest (no antialiasing)",
+   and enable "Pixel rounding" if the camera moves.` : `3. Smooth art: keep the default scale mode ("Linear").`}
+
+[ES]
+1. Crea un objeto "Sprite" llamado "${name}", abre su (única) animación, pulsa "Añadir imágenes" y selecciona ${name}.png.
+2. Abre el editor de "Puntos" y pon el punto "Origin" (Origen) en (${o.x}, ${o.y}). El origen está en los pies,
+   así que una instancia colocada en (x, y) pisa ese punto.
+${pixel ? `3. Pixel art: en las Propiedades del juego, pon "Modo de escalado (también llamado muestreo)" en
+   "Nearest (sin antialiasing)" y activa el "Redondeo de píxeles" si la cámara se mueve.` : `3. Arte suave: deja el modo de escalado por defecto ("Linear").`}
+`;
+  return [
+    { path: `${name}/${name}.png`, data: sheetPng(r) },
+    { path: `${name}/README.txt`, data: readme },
+  ];
+}
+
 /**
  * GDevelop 5: `<name>/<anim>/<anim>_00.png…`, `<name>/spritesheets/<anim>.png` (one row, for Piskel) and
  * README.txt (en + es) with both import methods, the origin point and fps.
+ * A single-frame sheet exports as a static sprite instead (`<name>/<name>.png` + README).
  */
 export function gdevelopFrames(r: SpriteResult): ExportFile[] {
+  if (isStatic(r.sheet)) return gdevelopStatic(r);
   const name = slug(r.name);
   const { sheet } = r;
   const slugs = animSlugs(sheet.anims);

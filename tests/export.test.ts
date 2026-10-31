@@ -195,3 +195,52 @@ describe('buildExport + zip', () => {
     expect(Array.from(png.data)).toEqual(Array.from(results[0]!.sheet.image.data));
   });
 });
+
+describe('static sprites (one animation, one frame)', () => {
+  const cell = { w: 48, h: 64 };
+  const img = { width: 48, height: 64, data: new Uint8ClampedArray(48 * 64 * 4).fill(255) };
+  const stat = (mode: 'pixel' | 'cartoon'): SpriteResult => ({
+    name: 'Roca Grande',
+    sheet: { image: img, cell, cols: 1, rows: 1, padBottom: 2, mode, anims: [{ name: 'default', row: 0, count: 1, fps: 8, loop: true }] },
+    frames: [],
+    diag: { scale: 1, refHeight: 60, metrics: [], regions: [], warnings: [] },
+  });
+
+  it('godot: png + Sprite2D tscn at the feet, no SpriteFrames', () => {
+    const files = godotSpriteFrames(stat('pixel'));
+    expect(files.map((f) => f.path).sort()).toEqual(['roca_grande/README.txt', 'roca_grande/roca_grande.png', 'roca_grande/roca_grande.tscn']);
+    const tscn = text(files, 'roca_grande/roca_grande.tscn');
+    expect(tscn).toContain('type="Sprite2D"');
+    expect(tscn).toContain('[node name="RocaGrande" type="Sprite2D"]');
+    expect(tscn).toContain('texture = ExtResource("1")');
+    expect(tscn).toContain('centered = false');
+    expect(tscn).toContain('offset = Vector2(-24, -61)');
+    expect(tscn).toContain('texture_filter = 1');
+    expect(tscn).not.toContain('AnimatedSprite2D');
+    expect(text(godotSpriteFrames(stat('cartoon')), 'roca_grande/roca_grande.tscn')).not.toContain('texture_filter');
+  });
+
+  it('gdevelop: one png and a README with the origin, no animation folders or strips', () => {
+    const files = gdevelopFrames(stat('pixel'));
+    expect(files.map((f) => f.path).sort()).toEqual(['roca_grande/README.txt', 'roca_grande/roca_grande.png']);
+    expect(text(files, 'roca_grande/README.txt')).toContain('Origin point: (24, 61)');
+  });
+
+  it('kaplay: loadSprite without slice or anims', () => {
+    const js = text(kaplaySnippet(stat('pixel')), 'roca_grande.js');
+    expect(js).toContain('loadSprite("roca_grande", "roca_grande.png");');
+    expect(js).not.toContain('sliceX');
+    expect(js).not.toContain('anims');
+    expect(js).toContain('pos(x, y + 2)');
+  });
+
+  it('generic still exports png + json', () => {
+    expect(genericExport(stat('pixel')).map((f) => f.path)).toContain('roca_grande.json');
+  });
+
+  it('a multi-animation sheet is not static even with one frame per animation', () => {
+    const r = makeResult('x');
+    r.sheet.anims = [{ name: 'a', row: 0, count: 1, fps: 1, loop: true }, { name: 'b', row: 1, count: 1, fps: 1, loop: true }];
+    expect(godotSpriteFrames(r).some((f) => f.path.endsWith('.tres'))).toBe(true);
+  });
+});

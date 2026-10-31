@@ -2,6 +2,7 @@ extends SceneTree
 # Headless checker for align-sprites Godot exports.
 # Usage: godot --headless --path tools/godot-validate --script res://validate.gd -- <res .tres> <res expected.json> [...]
 # expected.json: {cell:{w,h}, texture:{w,h}, anims:[{name,frames,speed,loop}], scene:{path,node,offset:[x,y],texture_filter,animation}}
+# With "static": true the export is a Sprite2D scene (no SpriteFrames): only the scene and its texture are checked.
 
 var failures := 0
 
@@ -38,6 +39,10 @@ func validate_pair(tres_path: String, json_path: String) -> void:
 	var exp = JSON.parse_string(f.get_as_text())
 	if typeof(exp) != TYPE_DICTIONARY:
 		fail("bad JSON " + json_path)
+		return
+
+	if exp.get("static", false):
+		validate_static(exp)
 		return
 
 	var sf = load(tres_path)
@@ -94,4 +99,24 @@ func validate_pair(tres_path: String, json_path: String) -> void:
 		check(node.sprite_frames != null, "sprite_frames not set")
 		check(String(node.animation) == String(sc["animation"]), "animation %s != %s" % [node.animation, sc["animation"]])
 		check(node.autoplay == String(sc["animation"]), "autoplay %s != %s" % [node.autoplay, sc["animation"]])
+	node.free()
+
+
+func validate_static(exp: Dictionary) -> void:
+	var sc: Dictionary = exp["scene"]
+	var packed = load(sc["path"])
+	if not (packed is PackedScene):
+		fail("%s did not load as PackedScene" % sc["path"])
+		return
+	var node = packed.instantiate()
+	check(node is Sprite2D, "scene root is %s, not Sprite2D" % node.get_class())
+	if node is Sprite2D:
+		check(String(node.name) == String(sc["node"]), "node name %s != %s" % [node.name, sc["node"]])
+		var want_off := Vector2(float(sc["offset"][0]), float(sc["offset"][1]))
+		check(node.offset == want_off, "offset %s != %s" % [node.offset, want_off])
+		check(node.centered == false, "centered should be false")
+		check(int(node.texture_filter) == int(sc["texture_filter"]), "texture_filter %d != %d" % [int(node.texture_filter), int(sc["texture_filter"])])
+		check(node.texture != null, "texture not set")
+		if node.texture != null:
+			check(node.texture.get_width() == int(exp["texture"]["w"]) and node.texture.get_height() == int(exp["texture"]["h"]), "texture size %s != %sx%s" % [node.texture.get_size(), exp["texture"]["w"], exp["texture"]["h"]])
 	node.free()
