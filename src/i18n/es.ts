@@ -649,6 +649,7 @@ export const es: Record<MessageKey, string> = {
   'kit.levelPlay': 'Jugar',
   'kit.levelClose': 'Cerrar el nivel',
   'kit.levelKeys': 'Mover: flechas o A y D. Correr: mantén Shift. Saltar: Espacio, W o flecha arriba. Cerrar: Esc.',
+  'kit.levelBackground': 'Fondo con parallax detrás del nivel ({name})',
   'kit.levelBoxes': 'Mostrar la caja de colisión',
   'kit.levelScreen': 'Pantalla {w}×{h}, mostrada a ×{scale}',
   'kit.levelLoading': 'Cargando el nivel…',

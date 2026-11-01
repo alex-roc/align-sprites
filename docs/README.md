@@ -166,7 +166,7 @@ The **Kit** tab joins your sprites, your scenery (tiles and background) and your
 - **Game tile size**: 16, 32, 48 or 64 px, the grid your game is built on. Sprite heights are shown in tiles, and a tile set with another size gets a warning with a button to fix it.
 - **Shared palette**: the same palette as Colours in Sprites. A fixed palette is also applied to your tiles.
 - **Preview at real scale**: your sprites standing on a row of your tiles (on the first solid row of the tile, so grass blades on top do not make them float). If it looks right here, it will in your game.
-- **Test level**: press **Play** to walk, run (hold Shift) and jump with your character on your own tiles, before opening an engine. It runs the real Kaplay library at your game resolution, with the same sheet, animations, feet origin and collision box as the Kaplay export. Choose which animation plays when standing, walking, running and in the air; each one can come from a different image.
+- **Test level**: press **Play** to walk, run (hold Shift) and jump with your character on your own tiles, before opening an engine. It runs the real Kaplay library at your game resolution, with the same sheet, animations, feet origin and collision box as the Kaplay export. Choose which animation plays when standing, walking, running and in the air; each one can come from a different image. Your parallax background (World), if you made one, scrolls behind the level.
 - **Download the kit for …**: one ZIP per engine with `sprites/`, `tiles/`, `items/`, `backgrounds/` (only the parts you made) and a `README.txt` that lists every size and the palette.
 
 ## Troubleshooting

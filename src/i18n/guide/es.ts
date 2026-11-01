@@ -583,7 +583,7 @@ onKeyRelease(["left", "right"], () => hero.play("idle"));
           ],
         },
         { type: 'h3', id: 'kit-level', text: "Nivel de prueba" },
-        { type: 'p', text: "Pulsa **Jugar** en la tarjeta Nivel de prueba para caminar, correr y saltar con tu personaje sobre tu suelo, antes de exportar. Corre en la librería real de Kaplay a la resolución de tu juego, con la misma hoja, animaciones, pies y caja de colisión que tiene la exportación de Kaplay. Si el personaje se ve demasiado grande, flota o va muy rápido, arréglalo aquí y no en tu motor." },
+        { type: 'p', text: "Pulsa **Jugar** en la tarjeta Nivel de prueba para caminar, correr y saltar con tu personaje sobre tu suelo, antes de exportar. Corre en la librería real de Kaplay a la resolución de tu juego, con la misma hoja, animaciones, pies y caja de colisión que tiene la exportación de Kaplay. Si hiciste un fondo con parallax en Escenario, sus capas se mueven detrás del nivel, cada una a su velocidad (puedes apagarlo). Si el personaje se ve demasiado grande, flota o va muy rápido, arréglalo aquí y no en tu motor." },
         { type: 'ul', items: [
           "Elige qué animación se reproduce al estar quieto, caminar, correr y en el aire. Los nombres se adivinan por ti, y cada una puede venir de una imagen distinta.",
           "Elige el tile del suelo. Los sprites se paran en la primera fila sólida del tile, así que las briznas de pasto arriba no los hacen flotar.",

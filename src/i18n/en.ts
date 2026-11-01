@@ -648,6 +648,7 @@ export const en = {
   'kit.levelPlay': 'Play',
   'kit.levelClose': 'Close the level',
   'kit.levelKeys': 'Move: arrow keys or A and D. Run: hold Shift. Jump: Space, W or Up arrow. Close: Esc.',
+  'kit.levelBackground': 'Parallax background behind the level ({name})',
   'kit.levelBoxes': 'Show the collision box',
   'kit.levelScreen': 'Screen {w}×{h}, shown at ×{scale}',
   'kit.levelLoading': 'Loading the level…',

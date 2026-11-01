@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createImage, setPixel } from '../src/core/image.ts';
-import { GAME_RESOLUTIONS, fitScale, integerScaleTo, levelLayout, pickLevelAnims, resolutionByWidth, surfaceInset, tileTopInset } from '../src/core/kit/level.ts';
+import { GAME_RESOLUTIONS, fitScale, integerScaleTo, levelLayout, parallaxCopies, pickLevelAnims, resolutionByWidth, surfaceInset, tileTopInset } from '../src/core/kit/level.ts';
 
 /** A tile whose rows from `top` down are solid; above, `sparse` px of every row are opaque (grass blades). */
 function tileWithTop(size: number, top: number, sparse = 0): ReturnType<typeof createImage> {
@@ -87,5 +87,20 @@ describe('levelLayout reach', () => {
     const hi = levelLayout(640, 360, 32, 4);
     expect(Math.min(...hi.platforms.map((p) => p.top))).toBeLessThan(Math.min(...lo.platforms.map((p) => p.top)));
     expect(lo.floorTop - Math.min(...lo.platforms.map((p) => p.top))).toBe(32);
+  });
+});
+
+describe('parallaxCopies', () => {
+  it('covers the screen with whole copies of the layer', () => {
+    for (const [left, factor] of [[0, 0.5], [137, 0.3], [900, 1], [455, 0]] as const) {
+      const xs = parallaxCopies(left, 640, 300, factor);
+      expect(xs[0]!).toBeLessThanOrEqual(left);
+      expect(xs.at(-1)! + 300).toBeGreaterThanOrEqual(left + 640);
+      xs.forEach((x) => expect(Number.isInteger(x)).toBe(true));
+    }
+  });
+  it('a fixed layer (factor 0) stays put on screen; factor 1 stays put in the world', () => {
+    expect(parallaxCopies(500, 640, 1000, 0)[0]! - 500).toBe(0);
+    expect(parallaxCopies(500, 640, 1000, 1)[0]).toBe(0);
   });
 });

@@ -583,7 +583,7 @@ onKeyRelease(["left", "right"], () => hero.play("idle"));
           ],
         },
         { type: 'h3', id: 'kit-level', text: "Test level" },
-        { type: 'p', text: "Press **Play** in the Test level card to walk, run and jump with your character on your ground, before you export. It runs in the real Kaplay library at your game resolution, with the same sheet, animations, feet and collision box that the Kaplay export has. If the character looks too big, floats, or moves too fast, fix it here and not in your engine." },
+        { type: 'p', text: "Press **Play** in the Test level card to walk, run and jump with your character on your ground, before you export. It runs in the real Kaplay library at your game resolution, with the same sheet, animations, feet and collision box that the Kaplay export has. If you made a parallax background in World, its layers move behind the level at their own speeds (you can turn it off). If the character looks too big, floats, or moves too fast, fix it here and not in your engine." },
         { type: 'ul', items: [
           "Choose which animation plays when standing, walking, running and in the air. The names are guessed for you, and each one can come from a different image.",
           "Pick the ground tile. Sprites stand on the first solid row of the tile, so grass blades on top do not make them float.",

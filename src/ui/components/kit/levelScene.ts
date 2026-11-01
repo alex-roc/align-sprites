@@ -3,7 +3,8 @@
 import { kaplayAnims, kaplayArea } from '../../../core/export/kaplay.ts';
 import { isCenter, isStatic } from '../../../core/export/common.ts';
 import { createImage } from '../../../core/image.ts';
-import { levelLayout, tileTopInset, type GameResolution, type LevelAnims } from '../../../core/kit/level.ts';
+import { levelLayout, parallaxCopies, tileTopInset, type GameResolution, type LevelAnims } from '../../../core/kit/level.ts';
+import type { ParallaxResult } from '../../../core/parallax/build.ts';
 import type { RGBAImage, SpriteResult } from '../../../core/types.ts';
 import { rgbaToCanvas } from '../../lib/image.ts';
 
@@ -19,6 +20,8 @@ export interface LevelConfig {
   actions: LevelActions;
   /** One tile of the ground (a plain one when the student has none). */
   tile: RGBAImage;
+  /** Parallax layers drawn behind the level (far → near), stretched to the screen height when theirs differs. */
+  background?: ParallaxResult | null;
   pixelated: boolean;
 }
 
@@ -108,10 +111,28 @@ export async function startLevel(cfg: LevelConfig): Promise<LevelHandle> {
   );
   assets.push(k.loadSprite('floor', strip(tile, Math.ceil(L.width / T), L.floorRows)));
   L.platforms.forEach((p, i) => assets.push(k.loadSprite(`platform${i}`, strip(tile, p.len, 1))));
+  const layers = cfg.background?.layers ?? [];
+  layers.forEach((l, i) => assets.push(k.loadSprite(`bg${i}`, rgbaToCanvas(l.image))));
   await Promise.all(assets);
   if (stopped) return handle;
 
   k.setGravity(gravity);
+
+  // The student's parallax background behind everything, drawn like the Kaplay export does (z −100).
+  if (layers.length) {
+    const bgScale = H / cfg.background!.height;
+    k.add([
+      k.z(-100),
+      {
+        draw() {
+          const left = k.getCamPos().x - W / 2;
+          layers.forEach((l, i) => {
+            for (const x of parallaxCopies(left, W, Math.round(l.image.width * bgScale), l.factor)) k.drawSprite({ sprite: `bg${i}`, pos: k.vec2(x, 0), scale: bgScale });
+          });
+        },
+      },
+    ]);
+  }
   const solid = (name: string, x: number, top: number, w: number, h: number, oneWay: boolean) =>
     k.add([
       k.sprite(name), k.pos(x, top),

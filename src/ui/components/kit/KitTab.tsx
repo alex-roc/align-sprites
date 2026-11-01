@@ -49,7 +49,11 @@ export function KitTab() {
   const itemsName = items.source?.name ?? 'items';
   const px = state.world.parallax;
   // Only a result that matches the current layer list (a removed layer clears it on the next run).
-  const background = px.run.result && px.run.result.layers.length === px.layers.length ? withFactors(px.run.result, parallaxFactors(px)) : null;
+  // Memoized: the test level restarts when its background object changes.
+  const background = useMemo(
+    () => (px.run.result && px.run.result.layers.length === px.layers.length ? withFactors(px.run.result, parallaxFactors(px)) : null),
+    [px.run.result, px.layers], // eslint-disable-line react-hooks/exhaustive-deps -- px itself changes on every edit
+  );
   const backgroundName = slug(px.name || 'background');
   const running = state.run.status === 'running';
   const engine = state.exportEngine;
@@ -198,7 +202,7 @@ export function KitTab() {
             </section>
           )}
           {sprites.length > 0 && (
-            <TestLevel sprites={sprites.map((s) => ({ id: s.asset.id, name: s.asset.name, result: s.result }))} tiles={levelTiles} gameTile={tileSize} res={resolutionByWidth(g.gameRes)} pixelated={g.mode === 'pixel'} />
+            <TestLevel sprites={sprites.map((s) => ({ id: s.asset.id, name: s.asset.name, result: s.result }))} tiles={levelTiles} background={background ? { result: background, name: backgroundName } : null} gameTile={tileSize} res={resolutionByWidth(g.gameRes)} pixelated={g.mode === 'pixel'} />
           )}
           <ExportCard<ExportTarget>
             name="kit-engine"

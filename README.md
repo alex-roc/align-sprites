@@ -14,7 +14,7 @@ Normalize AI-generated sprites and tiles so they work in **Godot 4**, **GDevelop
 - **Export**: Godot 4 (`SpriteFrames .tres` + `AnimatedSprite2D .tscn` with the origin at the feet, and a `CharacterBody2D` scene with its collision shape), GDevelop 5 (the cut frames as flat numbered PNGs + origin point; optional Piskel spritesheets), Kaplay (`loadSprite` snippet), generic (Aseprite JSON).
 - **World**: turns an AI tile sheet into exact T×T tiles (Godot TileSet, Tiled `.tsx`), composes terrain transitions from two seamless textures (blob 47 with Godot terrains, or dual-grid 16), and makes parallax layers that loop sideways (Godot `Parallax2D` scene).
 - **Items**: fits AI sheets of objects and icons into an exact atlas, one slot per item (Godot `AtlasTexture`s, one PNG per item for GDevelop, Kaplay snippet).
-- **Kit**: sprites, scenery and objects together: shared palettes (presets, from an image or your own, with batch colour swaps), a game resolution and tile size for everything, and a **playable test level** (Kaplay) to check scale, feet and fps before opening an engine.
+- **Kit**: sprites, scenery and objects together: shared palettes (presets, from an image or your own, with batch colour swaps), a game resolution and tile size for everything, and a **playable test level** (Kaplay, with the parallax background behind) to check scale, feet and fps before opening an engine.
 - **Prompts**: templates (en/es) with guide images, grouped like the tabs: Sprites (sheets, top-down 4-direction walks, effects, video clips), World (tile textures, atlases, parallax layers) and Items.
 - **Guide**: an in-app, bilingual guide (`#/guide`) with a before/after slider, a same-height demo and step-by-step import for each engine.
 

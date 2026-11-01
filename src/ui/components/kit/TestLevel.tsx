@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { kaplayAnims } from '../../../core/export/kaplay.ts';
 import { isStatic } from '../../../core/export/common.ts';
 import { fitScale, pickLevelAnims, type GameResolution, type LevelAnims } from '../../../core/kit/level.ts';
+import type { ParallaxResult } from '../../../core/parallax/build.ts';
 import type { RGBAImage, SpriteResult } from '../../../core/types.ts';
 import { useI18n, type MessageKey } from '../../../i18n/index.ts';
 import { cx } from '../../cx.ts';
@@ -38,9 +39,11 @@ function TileThumb({ image }: { image: RGBAImage }) {
  * Test level: the student's character walks, runs and jumps on their ground in a real Kaplay scene, to check the
  * scale, the feet and the animation speed before exporting. Kaplay is imported only when Play is pressed.
  */
-export function TestLevel({ sprites, tiles, gameTile, res, pixelated }: {
+export function TestLevel({ sprites, tiles, background, gameTile, res, pixelated }: {
   sprites: { id: string; name: string; result: SpriteResult }[];
   tiles: LevelTile[];
+  /** The parallax background of World, if any: drawn behind the level unless the student turns it off. */
+  background: { result: ParallaxResult; name: string } | null;
   gameTile: number;
   res: GameResolution;
   pixelated: boolean;
@@ -51,6 +54,7 @@ export function TestLevel({ sprites, tiles, gameTile, res, pixelated }: {
   const [overrides, setOverrides] = useState<Partial<Record<keyof LevelAnims, string>>>({});
   const [tileKey, setTileKey] = useState<string | null>(null);
   const [boxes, setBoxes] = useState(false);
+  const [withBg, setWithBg] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scale, setScale] = useState(1);
@@ -75,6 +79,7 @@ export function TestLevel({ sprites, tiles, gameTile, res, pixelated }: {
   }, [sources, overrides]);
   const tile = tiles.find((x) => x.key === tileKey) ?? tiles[0];
   const ground = useMemo(() => tile?.image ?? plainTile(gameTile), [tile, gameTile]);
+  const bg = withBg ? (background?.result ?? null) : null;
 
   useEffect(() => {
     if (!playing || !actions || !hostRef.current) return;
@@ -84,7 +89,7 @@ export function TestLevel({ sprites, tiles, gameTile, res, pixelated }: {
     setError(null);
     const s = fitScale(res, (host.parentElement?.clientWidth ?? host.clientWidth) - 28, Math.round(window.innerHeight * 0.7));
     setScale(s);
-    startLevel({ parent: host, res, scale: s, actions, tile: ground, pixelated })
+    startLevel({ parent: host, res, scale: s, actions, tile: ground, background: bg, pixelated })
       .then((h) => {
         if (cancelled) return h.stop();
         handleRef.current = h;
@@ -104,7 +109,7 @@ export function TestLevel({ sprites, tiles, gameTile, res, pixelated }: {
       handleRef.current = null;
     };
     // `t` and `boxes` are read once on purpose: the level restarts only when its own inputs change.
-  }, [playing, actions, ground, res, pixelated]);
+  }, [playing, actions, ground, bg, res, pixelated]);
 
   useEffect(() => {
     handleRef.current?.setBoxes(boxes);
@@ -149,6 +154,7 @@ export function TestLevel({ sprites, tiles, gameTile, res, pixelated }: {
                 <p className="muted">{t('kit.levelGroundNone', { tile: gameTile })}</p>
               )}
             </div>
+            {background && <Check checked={withBg} onChange={setWithBg} disabled={playing} label={t('kit.levelBackground', { name: background.name })} />}
           </div>
           <div className="row wrap">
             <button type="button" className="btn btn-primary" onClick={() => setPlaying(!playing)} aria-pressed={playing}>

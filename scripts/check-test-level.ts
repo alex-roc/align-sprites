@@ -1,5 +1,5 @@
 // Browser check of the Kit: loads the hero, the Andes tileset, the items and the parallax examples, checks that the kit
-// ZIP for Godot carries all of them, then opens the test level and checks that a canvas renders and the character
+// ZIP for Godot carries all of them, then opens the test level and checks that a canvas renders with the parallax background behind and the character
 // moves while a key is held. Needs a dev server:
 //   node scripts/check-test-level.ts [http://localhost:5194/align-sprites/]
 // Screenshots go to .playwright-mcp/kit/ (ignored).
@@ -7,6 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 import { unzipSync } from 'fflate';
+import { decode } from 'fast-png';
 
 const base = process.argv[2] ?? 'http://localhost:5194/align-sprites/';
 const out = fileURLToPath(new URL('../.playwright-mcp/kit/', import.meta.url));
@@ -46,6 +47,8 @@ for (const dir of ['godot/sprites/', 'godot/tiles/', 'godot/items/', 'godot/back
 
 await page.getByRole('heading', { name: 'Test level' }).waitFor({ timeout: 60_000 });
 await page.screenshot({ path: out + 'kit.png', fullPage: true });
+const bgCheck = page.getByLabel(/Parallax background behind the level/);
+if (!(await bgCheck.isChecked())) fail('the parallax background is not offered (checked) for the test level');
 await page.getByRole('button', { name: 'Play' }).click();
 const canvas = page.locator('.level-host canvas');
 await canvas.waitFor({ timeout: 30_000 });
@@ -54,6 +57,16 @@ const box = await canvas.boundingBox();
 if (!box || box.width < 100) fail('canvas has no size');
 await page.waitForTimeout(800); // let the character fall onto the floor
 const before = await canvas.screenshot({ path: out + 'level-0.png' });
+// With the background on, the top of the screen is the student's layers, not the plain sky colour.
+const shot = decode(before);
+const ch = shot.channels ?? 4;
+let sky = 0, seen = 0;
+for (let y = 0; y < shot.height / 3; y += 4) for (let x = 0; x < shot.width; x += 4) {
+  const i = (y * shot.width + x) * ch;
+  seen++;
+  if (Math.abs(shot.data[i]! - 124) < 3 && Math.abs(shot.data[i + 1]! - 190) < 3 && Math.abs(shot.data[i + 2]! - 224) < 3) sky++;
+}
+if (sky / seen > 0.5) fail(`the parallax background is not drawn (${Math.round((100 * sky) / seen)} % plain sky at the top)`);
 await page.getByLabel('Show the collision box').check();
 await page.waitForTimeout(200);
 await canvas.screenshot({ path: out + 'level-boxes.png' });
@@ -68,5 +81,5 @@ await canvas.screenshot({ path: out + 'level-jump.png' });
 await page.keyboard.press('Escape');
 await page.waitForFunction(() => document.querySelectorAll('.level-host canvas').length === 0);
 if (errors.length) fail('console errors');
-console.log(`OK: kit ZIP with sprites, tiles, items and background (${entries.length} files); canvas ${Math.round(box.width)}x${Math.round(box.height)} rendered, moved with ArrowRight, closed with Esc`);
+console.log(`OK: kit ZIP with sprites, tiles, items and background (${entries.length} files); canvas ${Math.round(box.width)}x${Math.round(box.height)} rendered with the parallax background, moved with ArrowRight, closed with Esc`);
 await browser.close();

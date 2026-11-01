@@ -124,3 +124,19 @@ export function levelLayout(screenW: number, screenH: number, tile: number, reac
   ].filter((p) => p.col + p.len <= cols && p.top >= 0);
   return { width: cols * tile, height: screenH, floorTop, floorRows, platforms };
 }
+
+// ---------------------------------------------------------------- parallax background
+
+/**
+ * World x of every copy of a looping layer that covers the screen. `left` is the world x of the screen's left edge,
+ * `w` the layer width and `factor` how much the layer follows the camera (0 = fixed to the screen, 1 = moves with the
+ * world). Same maths as the Kaplay export's snippet: in the world the layer is shifted (1 − factor) of the camera, so
+ * on screen it slides by camera × factor. Whole pixels, so pixel art never lands between pixels.
+ */
+export function parallaxCopies(left: number, screenW: number, w: number, factor: number): number[] {
+  if (w <= 0) return [];
+  const offset = Math.round((1 - factor) * left);
+  const out: number[] = [];
+  for (let x = offset + Math.floor((left - offset) / w) * w; x < left + screenW; x += w) out.push(x);
+  return out;
+}

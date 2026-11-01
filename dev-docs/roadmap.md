@@ -22,7 +22,7 @@ Items and parallax backgrounds go in the Kit ZIP (`items/`, `backgrounds/`). Tab
 
 ## 4. Test before exporting — done
 
-Kit → *Test level*: real Kaplay (lazy chunk) at the game resolution, using the Kaplay export's sheet/anims and the collision box; walk, run (Shift) and jump on the student's tiles.
+Kit → *Test level*: real Kaplay (lazy chunk) at the game resolution, using the Kaplay export's sheet/anims and the collision box; walk, run (Shift) and jump on the student's tiles, with their parallax background behind (same maths as the Kaplay export, `parallaxCopies`).
 
 ## 5. More asset types on the same engine — done
 
@@ -44,4 +44,4 @@ Each student pastes their own free Gemini API key; the tool sends prompt + guide
 ## Other ideas
 
 - Custom palette swaps per animation (team colours on only some frames).
-- A Godot demo scene that puts everything in the Kit together; parallax layers behind the test level.
+- A Godot demo scene that puts everything in the Kit together.
