@@ -7,6 +7,8 @@ import type { ItemsResult } from './index.ts';
 export interface ItemsExportOptions {
   /** Put each engine in a `<target>/` folder (default: when there are several targets). */
   prefix?: boolean;
+  /** Folder (with trailing `/`) holding the generic target's individual PNGs, under `<set>/`. Default `items/` (`items/<set>/`). */
+  pngDir?: string;
 }
 
 /** Unique file-safe names for the items of `r` (`names[i]` replaces the default of item i; blanks keep the default). */
@@ -112,7 +114,7 @@ add([
   ];
 }
 
-function generic(r: ItemsResult, set: string, names: string[]): ExportFile[] {
+function generic(r: ItemsResult, set: string, names: string[], pngDir: string): ExportFile[] {
   const items: Record<string, { x: number; y: number; w: number; h: number }> = {};
   names.forEach((n, i) => {
     const c = rectOf(r, i);
@@ -122,20 +124,21 @@ function generic(r: ItemsResult, set: string, names: string[]): ExportFile[] {
   return [
     { path: `${set}.png`, data: encodePng(r.atlas) },
     { path: `${set}.json`, data: JSON.stringify(json, null, 2) + '\n' },
-    ...itemPngs(r, set, names, `items/${set}/`),
+    ...itemPngs(r, set, names, `${pngDir}${set}/`),
   ];
 }
 
-const EXPORTERS: Record<ExportTarget, (r: ItemsResult, set: string, names: string[]) => ExportFile[]> = { godot, gdevelop, kaplay, generic };
+const EXPORTERS: Record<ExportTarget, (r: ItemsResult, set: string, names: string[], pngDir: string) => ExportFile[]> = { godot, gdevelop, kaplay, generic };
 
 /**
  * Items atlas for the requested engines: `godot` = atlas PNG + one AtlasTexture .tres per item (relative path, no uid),
  * `gdevelop` = one PNG per item, `kaplay` = PNG + loadSpriteAtlas snippet, `generic` = atlas PNG + JSON (name → rect)
- * + the individual PNGs. `names` overrides the default item names (parallel to `r.items`).
+ * + the individual PNGs (`items/<set>/`, or `<o.pngDir><set>/`). `names` overrides the default item names (parallel to `r.items`).
  */
 export function itemsExport(r: ItemsResult, setName: string, names: readonly (string | undefined)[], targets: ExportTarget[], o: ItemsExportOptions = {}): ExportFile[] {
   const set = slug(setName);
   const unique = itemNames(r, names);
   const prefix = o.prefix ?? targets.length > 1;
-  return targets.flatMap((t) => EXPORTERS[t](r, set, unique).map((f) => ({ path: prefix ? `${t}/${f.path}` : f.path, data: f.data })));
+  const pngDir = o.pngDir ?? 'items/';
+  return targets.flatMap((t) => EXPORTERS[t](r, set, unique, pngDir).map((f) => ({ path: prefix ? `${t}/${f.path}` : f.path, data: f.data })));
 }

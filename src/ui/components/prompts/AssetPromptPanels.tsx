@@ -76,7 +76,7 @@ export function AtlasPromptPanel() {
       prompt={prompt}
       guide={{ image: guide, file: `guide-atlas-${cols}x${rows}-${p.key}.png`, hint: t('prompt.guideHintAtlas', { cols, rows }) }}
       chat={p.withReference ? t('prompt.step.chatRef') : t('prompt.step.chatText')}
-      next={{ text: t('prompt.nextAtlas'), tab: 'tiles', label: t('prompt.openTilesAtlas') }}
+      next={{ text: t('prompt.nextAtlas'), tab: 'world', section: 'sheet', label: t('prompt.openWorldAtlas') }}
     />
   );
 }
@@ -219,7 +219,7 @@ export function ItemsPromptPanel() {
       prompt={prompt}
       guide={{ image: guide, file: `guide-items-${cols}x${rows}-${p.key}.png`, hint: t('prompt.guideHintItems', { cols, rows }) }}
       chat={p.withReference ? t('prompt.step.chatRef') : t('prompt.step.chatText')}
-      next={{ text: t('prompt.nextItems'), tab: 'tiles', label: t('prompt.openTilesItems') }}
+      next={{ text: t('prompt.nextItems'), tab: 'items', label: t('prompt.openItems') }}
     />
   );
 }
@@ -274,7 +274,7 @@ export function ParallaxPromptPanel() {
       prompt={prompt}
       guide={{ image: guide, file: `guide-parallax-${p.layer}-${p.aspect.replace(':', 'x')}-${p.key}.png`, hint: t(p.layer === 'far' ? 'prompt.guideHintParallaxFar' : 'prompt.guideHintParallax') }}
       chat={p.layer !== 'far' && p.withReference ? t('prompt.step.chatRef') : t('prompt.step.chatText')}
-      next={{ text: t('prompt.nextParallax'), tab: 'tiles', label: t('prompt.openTilesParallax') }}
+      next={{ text: t('prompt.nextParallax'), tab: 'world', section: 'parallax', label: t('prompt.openWorldParallax') }}
     />
   );
 }

@@ -18,7 +18,7 @@ Open: only WebM is tested in CI (Playwright's Chromium has no H.264); the mode i
 
 Game tile size and **game resolution** (with integer-scale table), shared palettes including **My own palette** (edit, paste, import/export .hex/.gpl/.txt), batch colour swaps and palette-to-palette swaps, Kit tab with preview (sprites stand on the first solid row of a tile) and per-engine download.
 
-Open: items and parallax backgrounds are not in the Kit ZIP yet.
+Items and parallax backgrounds go in the Kit ZIP (`items/`, `backgrounds/`). Tabs follow the asset type: Sprites, World (tiles, terrain, parallax), Items.
 
 ## 4. Test before exporting — done
 
@@ -27,8 +27,8 @@ Kit → *Test level*: real Kaplay (lazy chunk) at the game resolution, using the
 ## 5. More asset types on the same engine — done
 
 - Effects anchored at the centre (`SpriteJob.anchor`), sized by their biggest frame.
-- Items and icons → exact atlas (Tiles tab).
-- Parallax backgrounds: looping layers at the game height (Tiles tab, Godot `Parallax2D`).
+- Items and icons → exact atlas (Items tab).
+- Parallax backgrounds: looping layers at the game height (World tab, Godot `Parallax2D`).
 - Automatic collision boxes: Godot `<name>_body.tscn` (`CharacterBody2D` + `CollisionShape2D`), GDevelop mask points, Kaplay `area()`, JSON `meta.collision`.
 
 Open: manual adjustment of the collision box (% of width/height); "space under the feet" is still shown for centred assets.
@@ -44,4 +44,4 @@ Each student pastes their own free Gemini API key; the tool sends prompt + guide
 ## Other ideas
 
 - Custom palette swaps per animation (team colours on only some frames).
-- Kit ZIP with items and parallax layers; a Godot demo scene that puts everything together.
+- A Godot demo scene that puts everything in the Kit together; parallax layers behind the test level.

@@ -11,7 +11,6 @@ import { useDropPaste } from '../../lib/useDropPaste.ts';
 import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
 import type { ItemsState } from '../../state/types.ts';
-import { useItemsProcessor } from '../../state/useItemsProcessor.ts';
 import { useLoadImage } from '../../state/useLoadImage.ts';
 import { DropOverlay } from '../common/DropOverlay.tsx';
 import { EmptyStage } from '../common/EmptyStage.tsx';
@@ -22,24 +21,23 @@ import { RgbaCanvas } from '../common/RgbaCanvas.tsx';
 import { Section } from '../common/Section.tsx';
 import { StatusLine } from '../common/StatusLine.tsx';
 import { Warnings, type Fix } from '../common/Warnings.tsx';
-import { TileAtlasView } from './TileAtlasView.tsx';
-import { TileBgFold } from './TileBgFold.tsx';
-import { TileSizeField } from './TileSizeField.tsx';
+import { TileAtlasView } from '../world/TileAtlasView.tsx';
+import { TileBgFold } from '../world/TileBgFold.tsx';
+import { TileSizeField } from '../world/TileSizeField.tsx';
 
 const TARGETS: ExportTarget[] = ['godot', 'gdevelop', 'kaplay', 'generic'];
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 
 /** Items and icons: an AI image of separate objects becomes an atlas of exact square cells. */
-export function ItemsPanel() {
-  useItemsProcessor();
+export function ItemsTab() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.items;
+  const s = state.items;
   const { load, error, busy } = useLoadImage();
 
   const setSource = async (blob: Blob, name: string) => {
     const img = await load(blob, name);
-    if (img) dispatch({ type: 'tiles/items', patch: { source: img, excluded: [], names: {}, run: { ...s.run, sig: null, result: null, error: null } } });
+    if (img) dispatch({ type: 'items/patch', patch: { source: img, excluded: [], names: {}, run: { ...s.run, sig: null, result: null, error: null } } });
   };
   const { dragging } = useDropPaste((files) => void setSource(files[0], files[0].name));
   const example = async () => {
@@ -82,9 +80,9 @@ export function ItemsPanel() {
 function ItemsSettings({ onReplace }: { onReplace: (f: File) => void }) {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.items;
+  const s = state.items;
   const input = useRef<HTMLInputElement>(null);
-  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'tiles/items', patch: p });
+  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'items/patch', patch: p });
   const src = s.source!;
 
   return (
@@ -166,13 +164,13 @@ function ItemsSettings({ onReplace }: { onReplace: (f: File) => void }) {
 function ItemsStage() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.items;
+  const s = state.items;
   const { run } = s;
   const result = run.result;
   const running = run.status === 'running';
   const src = s.source!;
   const friendlyError = run.error ? (/not implemented/i.test(run.error) ? t('error.notImplemented') : t('error.processing', { message: run.error })) : null;
-  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'tiles/items', patch: p });
+  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'items/patch', patch: p });
   const toggle = (index: number) => patch({ excluded: s.excluded.includes(index) ? s.excluded.filter((i) => i !== index) : [...s.excluded, index] });
 
   const fixFor = (w: Warning): Fix | null => {
@@ -287,7 +285,7 @@ function ItemsStage() {
 function ItemList() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.items;
+  const s = state.items;
   const result = s.run.result!;
   const src = s.source!;
   const thumbs = useMemo(
@@ -297,7 +295,7 @@ function ItemList() {
     }),
     [result, src.image],
   );
-  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'tiles/items', patch: p });
+  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'items/patch', patch: p });
   const setName = (index: number, name: string) => patch({ names: { ...s.names, [index]: name } });
   const toggle = (index: number) => patch({ excluded: s.excluded.includes(index) ? s.excluded.filter((i) => i !== index) : [...s.excluded, index] });
 
@@ -329,13 +327,13 @@ function ItemList() {
 function ItemsExport() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.items;
+  const s = state.items;
   const result = s.run.result;
   const running = s.run.status === 'running';
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const name = s.source?.name ?? 'items';
-  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'tiles/items', patch: p });
+  const patch = (p: Partial<ItemsState>) => dispatch({ type: 'items/patch', patch: p });
   const empty = !result || result.items.length === 0;
 
   const downloadPng = async () => {
@@ -364,7 +362,7 @@ function ItemsExport() {
       value={s.format}
       onChange={(format) => patch({ format })}
       steps={[1, 2, 3].map((n) => t(`items.${s.format}.s${n}` as 'items.godot.s1', { name: slug(name) }))}
-      guideHref={hrefFor('guide', 'tiles')}
+      guideHref={hrefFor('guide', 'items')}
       all={s.allFormats}
       onAll={(allFormats) => patch({ allFormats })}
       allLabel={t('tiles.exportAll')}

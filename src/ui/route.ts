@@ -1,21 +1,8 @@
-// Hash routing: #/sprites, #/tiles, #/kit, #/ai, #/guide, #/guide/<section>. Back/forward work for free.
+// Hash routing on top of the pure parser in lib/routes.ts: the current route as a hook, and navigation.
 import { useMemo, useSyncExternalStore } from 'react';
+import { hrefFor, parseHash, type Route, type TabId } from './lib/routes.ts';
 
-export type TabId = 'sprites' | 'tiles' | 'kit' | 'ai' | 'guide';
-export const TABS: readonly TabId[] = ['sprites', 'tiles', 'kit', 'ai', 'guide'];
-
-export interface Route {
-  tab: TabId;
-  section?: string;
-}
-
-export function parseHash(hash: string): Route {
-  const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  const tab = TABS.find((t) => t === parts[0]) ?? 'sprites';
-  return { tab, section: tab === 'guide' ? parts[1] : undefined };
-}
-
-export const hrefFor = (tab: TabId, section?: string): string => `#/${tab}${section ? `/${section}` : ''}`;
+export { hrefFor, parseHash, TABS, worldTool, WORLD_TOOLS, type Route, type TabId, type WorldTool } from './lib/routes.ts';
 
 export function navigate(tab: TabId, section?: string): void {
   location.hash = hrefFor(tab, section);

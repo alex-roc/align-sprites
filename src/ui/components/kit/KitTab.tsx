@@ -9,6 +9,8 @@ import { GAME_TILES } from '../../persist.ts';
 import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
 import { exportNames } from '../../state/jobs.ts';
+import { parallaxFactors, withFactors } from '../../state/useParallaxProcessor.ts';
+import { slug } from '../../../core/export/common.ts';
 import { ExportCard } from '../common/ExportCard.tsx';
 import { PaletteField, Swatches } from '../common/PaletteField.tsx';
 import { usePaletteSummary } from '../../state/usePaletteSummary.ts';
@@ -36,12 +38,19 @@ export function KitTab() {
   const tileSize = g.gameTile;
   const names = exportNames(state.assets);
   const sprites = state.assets.flatMap((a) => (state.run.results[a.id] ? [{ asset: a, result: { ...state.run.results[a.id], name: names.get(a.id) ?? a.name } }] : []));
-  const sheet = state.tiles.sheet;
+  const sheet = state.world.sheet;
   const atlas = sheet.run.result;
   const atlasName = sheet.source?.name ?? 'tiles';
-  const terrain = state.tiles.terrain;
+  const terrain = state.world.terrain;
   const set = terrain.run.set;
   const terrainName = terrain.a ? (terrain.bTransparent || !terrain.b ? terrain.a.name : `${terrain.a.name}-${terrain.b.name}`) : 'terrain';
+  const items = state.items;
+  const itemsResult = items.run.result && items.run.result.items.length ? items.run.result : null;
+  const itemsName = items.source?.name ?? 'items';
+  const px = state.world.parallax;
+  // Only a result that matches the current layer list (a removed layer clears it on the next run).
+  const background = px.run.result && px.run.result.layers.length === px.layers.length ? withFactors(px.run.result, parallaxFactors(px)) : null;
+  const backgroundName = slug(px.name || 'background');
   const running = state.run.status === 'running';
   const engine = state.exportEngine;
   const fmt = (n: number) => Number(n.toFixed(2)).toLocaleString(lang);
@@ -71,6 +80,8 @@ export function KitTab() {
           sprites: sprites.map((s) => s.result),
           ...(atlas ? { atlas: { result: atlas, name: atlasName } } : {}),
           ...(set ? { terrain: { result: set, name: terrainName, names: [terrain.a?.name ?? 'base', terrain.bTransparent ? 'overlay' : (terrain.b?.name ?? 'overlay')] as [string, string] } } : {}),
+          ...(itemsResult ? { items: { result: itemsResult, name: itemsName, names: itemsResult.items.map((it) => items.names[it.index]) } } : {}),
+          ...(background ? { parallax: { result: background, name: backgroundName } } : {}),
         },
         engine,
       );
@@ -82,7 +93,7 @@ export function KitTab() {
     }
   };
 
-  const empty = !sprites.length && !atlas && !set;
+  const empty = !sprites.length && !atlas && !set && !itemsResult && !background;
   return (
     <div className="workbench-page">
       <div className="workbench">
@@ -126,8 +137,8 @@ export function KitTab() {
                 )}
               </div>
               <div className="kit-block">
-                <h3>{t('kit.tiles')}</h3>
-                {atlas || set ? (
+                <h3>{t('kit.world')}</h3>
+                {atlas || set || background ? (
                   <ul>
                     {atlas && (
                       <li>
@@ -141,9 +152,28 @@ export function KitTab() {
                         <span>{t('kit.terrainLine', { size: set.tileSize, layout: set.layout === 'blob47' ? 'Blob 47' : 'Dual 16', count: set.tiles.length })}</span>
                       </li>
                     )}
+                    {background && (
+                      <li>
+                        <strong>{backgroundName}</strong>
+                        <span>{t('kit.backgroundLine', { count: background.layers.length, height: background.height })}</span>
+                      </li>
+                    )}
                   </ul>
                 ) : (
-                  <p className="muted">{t('kit.noTiles')} <a href={hrefFor('tiles')}>{t('kit.openTiles')}</a></p>
+                  <p className="muted">{t('kit.noWorld')} <a href={hrefFor('world')}>{t('kit.openWorld')}</a></p>
+                )}
+              </div>
+              <div className="kit-block">
+                <h3>{t('kit.items')}</h3>
+                {itemsResult ? (
+                  <ul>
+                    <li>
+                      <strong>{itemsName}</strong>
+                      <span>{t('kit.itemsLine', { count: itemsResult.items.length, size: itemsResult.cellSize })}</span>
+                    </li>
+                  </ul>
+                ) : (
+                  <p className="muted">{t('kit.noItems')} <a href={hrefFor('items')}>{t('kit.openItems')}</a></p>
                 )}
               </div>
               <div className="kit-block">

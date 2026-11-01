@@ -67,7 +67,7 @@ export function TilePromptPanel() {
         <FlowStep n={3} title={t('prompt.step.next')}>
           <p>{t('prompt.step.nextTile')}</p>
           <div className="row wrap">
-            <a className="btn btn-primary" href={hrefFor('tiles')}>{t('prompt.openTiles')}</a>
+            <a className="btn btn-primary" href={hrefFor('world', 'terrain')}>{t('prompt.openTiles')}</a>
           </div>
         </FlowStep>
       </ol>

@@ -1,12 +1,20 @@
-// Headless component: re-runs the batch ~300 ms after any setting that affects the output changes.
+// Headless component: re-runs the sprite batch ~300 ms after any setting that affects the output changes, and hosts
+// the processors of the World and Items tools, so their results stay current (and reach the Kit) whatever tab is open.
 import { useEffect, useMemo, useRef } from 'react';
 import { runBatch } from '../../worker/client.ts';
 import { useApp } from './context.ts';
 import { buildJobs, jobsSignature } from './jobs.ts';
+import { useItemsProcessor } from './useItemsProcessor.ts';
+import { useParallaxProcessor } from './useParallaxProcessor.ts';
+import { useSheetProcessor, useTerrainProcessor } from './useTileProcessors.ts';
 
 const DEBOUNCE_MS = 300;
 
 export function Processor() {
+  useSheetProcessor();
+  useTerrainProcessor();
+  useParallaxProcessor();
+  useItemsProcessor();
   const { state, dispatch } = useApp();
   const bundle = useMemo(() => buildJobs(state.assets, state.global, state.run.frameCounts), [state.assets, state.global, state.run.frameCounts]);
   const signature = useMemo(() => jobsSignature(bundle), [bundle]);

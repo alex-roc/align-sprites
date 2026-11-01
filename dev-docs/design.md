@@ -42,7 +42,7 @@ Radii: 14px for top-level regions (stage, settings column, export), 8px for cont
 ## Layout
 
 ```
-header   [▣ align-sprites]   Sprites  Tiles  Kit  Make with AI  Guide        EN|ES  ◐
+header   [▣ align-sprites]   Sprites  World  Items  Kit  Make with AI  Guide        EN|ES  ◐
 assets   [thumb hero-run ×] [thumb hero ×] [+ Add images]          (only when there are images)
 ┌ settings 360px (scrolls) ┐ ┌ stage (sticky) ───────────────────────────────────────┐
 │ Art style  Pixel|Cartoon │ │ All together | Animation | Final sheet | Original      │
@@ -61,7 +61,7 @@ assets   [thumb hero-run ×] [thumb hero ×] [+ Add images]          (only when 
 
 - Empty state: the stage itself is the drop zone, with the two examples and a three-step "how it works" line.
 - Below 1000px: settings stack under the stage; the stage is no longer sticky.
-- Tiles uses the same frame (settings left, stage right, export below). Make with AI: form left, prompt + guide image right, then "Open the result in Sprites".
+- World (one tool at a time, chosen in the tab and kept in the route) and Items use the same frame (settings left, stage right, export below). Make with AI: form left, prompt + guide image right, then "Open the result in Sprites".
 - A single sprite hides everything animated (fps, play, onion skin, strip, counter, animations, frames, Final sheet); views are Sprite | Original.
 - Kit (`#/kit`): game tile size and shared palette on the left; summary, a real-scale preview (sprites on a row of the kit's tiles) and one download per engine on the right.
-- Routing by hash: `#/sprites`, `#/tiles`, `#/kit`, `#/ai`, `#/guide`, `#/guide/<section>`.
+- Routing by hash: `#/sprites`, `#/world[/<tool>]` (`sheet`, `terrain`, `parallax`; `#/tiles` is an alias), `#/items`, `#/kit`, `#/ai`, `#/guide`, `#/guide/<section>`.

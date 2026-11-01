@@ -28,7 +28,7 @@ export function withFactors(result: ParallaxResult, factors: number[]): Parallax
 
 export function useParallaxProcessor() {
   const { state, dispatch } = useApp();
-  const s = state.tiles.parallax;
+  const s = state.world.parallax;
   const height = parallaxHeight(s, state.global);
   const palette = useMemo(() => fixedPalette(state.global, s.mode), [state.global, s.mode]);
   const sig = useMemo(
@@ -50,11 +50,11 @@ export function useParallaxProcessor() {
     const id = ++runId.current;
     const cur = latest.current;
     if (!sig) {
-      if (cur.run.result) dispatch({ type: 'tiles/parallax', patch: { run: { status: 'idle', sig: null, result: null, error: null } } });
+      if (cur.run.result) dispatch({ type: 'world/parallax', patch: { run: { status: 'idle', sig: null, result: null, error: null } } });
       return;
     }
     if (cur.run.sig === sig && cur.run.status === 'ready') return;
-    const patchRun = (p: Partial<ParallaxState['run']>) => dispatch({ type: 'tiles/parallax', patch: { run: { ...latest.current.run, ...p } } });
+    const patchRun = (p: Partial<ParallaxState['run']>) => dispatch({ type: 'world/parallax', patch: { run: { ...latest.current.run, ...p } } });
     const timer = setTimeout(() => {
       patchRun({ status: 'running', error: null });
       const inputs: ParallaxInput[] = cur.layers.map((l) => ({ image: l.image.image, removeBg: l.removeBg, factor: 0 }));

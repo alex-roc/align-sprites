@@ -5,7 +5,7 @@ import { blobToRGBA, ImageTooLargeError } from '../lib/image.ts';
 import { newId } from './defaults.ts';
 import type { AutoBg, LoadedImage } from './types.ts';
 
-/** Decode one image for the Tiles tab; returns null (and sets a friendly `error`) when it cannot be read. */
+/** Decode one image for the World and Items tabs; returns null (and sets a friendly `error`) when it cannot be read. */
 export function useLoadImage() {
   const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);

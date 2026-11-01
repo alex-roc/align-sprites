@@ -13,7 +13,7 @@ import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
 import type { ParallaxLayerDraft, ParallaxState } from '../../state/types.ts';
 import { useLoadImage } from '../../state/useLoadImage.ts';
-import { parallaxFactors, parallaxHeight, useParallaxProcessor, withFactors } from '../../state/useParallaxProcessor.ts';
+import { parallaxFactors, parallaxHeight, withFactors } from '../../state/useParallaxProcessor.ts';
 import { DropOverlay } from '../common/DropOverlay.tsx';
 import { EmptyStage } from '../common/EmptyStage.tsx';
 import { ExportCard } from '../common/ExportCard.tsx';
@@ -36,12 +36,11 @@ const ROLE_KEYS = {
 const roleKey = (role: string): MessageKey => ROLE_KEYS[role as keyof typeof ROLE_KEYS] ?? 'parallax.role.far';
 
 export function ParallaxPanel() {
-  useParallaxProcessor();
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.parallax;
+  const s = state.world.parallax;
   const { load, error, busy } = useLoadImage();
-  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'tiles/parallax', patch: p });
+  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'world/parallax', patch: p });
 
   /** Adds images as the next layers (far → near), up to 4. */
   const addFiles = async (files: { blob: Blob; name: string }[]) => {
@@ -97,9 +96,9 @@ export function ParallaxPanel() {
 function ParallaxSettings({ onAdd }: { onAdd: (files: File[]) => void }) {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.parallax;
+  const s = state.world.parallax;
   const input = useRef<HTMLInputElement>(null);
-  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'tiles/parallax', patch: p });
+  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'world/parallax', patch: p });
   const roles = layerRoles(s.layers.length);
   const factors = parallaxFactors(s);
   const height = parallaxHeight(s, state.global);
@@ -219,10 +218,10 @@ function ParallaxSettings({ onAdd }: { onAdd: (files: File[]) => void }) {
 function ParallaxStage() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.parallax;
+  const s = state.world.parallax;
   const { run } = s;
   const running = run.status === 'running';
-  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'tiles/parallax', patch: p });
+  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'world/parallax', patch: p });
   const factors = parallaxFactors(s);
   const height = parallaxHeight(s, state.global);
   // A run for a different number of layers is stale (a layer was just added or removed): wait for the next one.
@@ -306,11 +305,11 @@ function ParallaxStage() {
 function ParallaxExport() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.parallax;
+  const s = state.world.parallax;
   const running = s.run.status === 'running';
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'tiles/parallax', patch: p });
+  const patch = (p: Partial<ParallaxState>) => dispatch({ type: 'world/parallax', patch: p });
   const result = s.run.result && s.run.result.layers.length === s.layers.length ? s.run.result : null;
   const name = slug(s.name || 'background');
   const height = parallaxHeight(s, state.global);
@@ -336,7 +335,7 @@ function ParallaxExport() {
       value={s.format}
       onChange={(format) => patch({ format })}
       steps={[1, 2, 3].map((n) => t(`parallax.eng.${s.format}.s${n}` as 'parallax.eng.godot.s1', { name, height }))}
-      guideHref={hrefFor('guide', 'tiles')}
+      guideHref={hrefFor('guide', 'parallax')}
       all={s.allFormats}
       onAll={(allFormats) => patch({ allFormats })}
       allLabel={t('export.all')}

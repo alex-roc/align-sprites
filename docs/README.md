@@ -30,14 +30,14 @@ Tips:
 
 ### More things to ask for
 
-The kind selector also makes prompts (each with its guide image, except video) for:
+The kind selector (grouped as Sprites, World and Items, like the tabs) also makes prompts (each with its guide image, except video) for:
 
 - **Top-down, 4 directions**: one row per direction (down, left, right, up), or 3 rows where the side view is mirrored.
 - **Video clip** for video models (Veo, Kling, Sora, Hailuo…): the character moves in place, with a fixed camera, on flat green, and the clip ends in the starting pose so it loops.
-- **Tile atlas**: tiles on a grid with key-coloured gaps between them, and solid ground tops so characters do not float.
-- **Parallax layers**: one prompt per layer. The far layer is opaque; the others sit on the key colour; all of them repeat sideways.
+- **Tile atlas** (group World): tiles on a grid with key-coloured gaps between them, and solid ground tops so characters do not float.
+- **Parallax layers** (group World): one prompt per layer. The far layer is opaque; the others sit on the key colour; all of them repeat sideways.
 - **Effects** (explosion, hit, magic, smoke, projectile): each frame centred in its cell, with hard edges and no glow.
-- **Items and icons**: separate objects, each centred in its own cell, at the same scale.
+- **Items and icons** (group Items): separate objects, each centred in its own cell, at the same scale.
 
 ### From a video
 
@@ -108,9 +108,9 @@ Then set the time between frames to `1 / fps` and the loop. In *Edit points* (th
 
 `<name>.png` + `<name>.json` in Aseprite's format (with the origin and `meta.collision`), plus one PNG per frame. Phaser reads it as an Aseprite atlas, Unity slices the PNG with *Grid By Cell Size*, and Defold and Construct can import the per-frame PNGs. We know these engines less well: check their documentation. Any engine that slices by frame size works: animation `k` is row `k`, frame `i` is column `i`, origin at the feet.
 
-## 4. Tiles
+## 4. World
 
-The **Tiles** tab has four tools: tile sheet, terrain transitions, items and icons, and parallax background.
+The **World** tab builds the ground and the scenery. It has three tools, in the order of the tab: tile sheet, terrain transitions and parallax background. The tool is part of the address (`#/world/sheet`, `#/world/terrain`, `#/world/parallax`).
 
 ### Tile sheet (clean up an AI tileset)
 
@@ -131,15 +131,6 @@ The **Tiles** tab has four tools: tile sheet, terrain transitions, items and ico
 - **GDevelop 5**: use the **Tilemap** object with the `.tsx` (Tiled) and the atlas PNG. The Dual 16 atlas has no terrain data: paint it by hand using the README table.
 - **Tiled / LDtk**: open the `.tsx` as a tileset.
 
-### Items and icons
-
-An AI image of separate objects (coins, potions, keys, gems, icons) becomes an atlas where every item is centred in a square slot of the size you choose, with the background removed.
-
-- By default every item shares one scale, so a coin stays smaller than a sword. *Each item fills its slot* makes every item as large as possible, which suits icons.
-- Pixel art is never enlarged: items smaller than the slot keep their real size, and larger ones are reduced once, from the original, on the sheet's pixel grid.
-- Click an item in **Original** to cross it out, and name the items in **Atlas**.
-- Export: Godot gets one `AtlasTexture` `.tres` per item, GDevelop one PNG per item, Kaplay a `loadSpriteAtlas` snippet, and Other the atlas PNG, a JSON with the rectangles and the loose PNGs.
-
 ### Parallax background
 
 AI background layers (far sky and mountains, mid hills, near trees and rocks) become layers that repeat sideways at your game height and scroll at different speeds. Make them with the *Parallax layers* prompt, one per layer.
@@ -150,9 +141,18 @@ AI background layers (far sky and mountains, mid hills, near trees and rocks) be
 4. **Make it repeat sideways** joins the right edge to the left edge along a hidden cut, so nothing jumps when the layer repeats. A picture that already wraps around its edge is left as it is; otherwise the tool tries a few join widths and picks one that leaves no floating pieces. Check it in **Repeat check**, and watch the result in **Scroll**.
 5. Export: the layer PNGs plus a Godot 4 scene with one `Parallax2D` per layer (repeat and scroll speed set), a GDevelop README (one *Tiled Sprite* per layer with the official "Parallax for Tiled Sprite" extension), a Kaplay snippet, or a JSON with sizes and speeds.
 
-## 5. Kit
+## 5. Items
 
-The **Kit** tab joins your sprites and tiles so they share one scale.
+In the **Items** tab, an AI image of separate objects (coins, potions, keys, gems, icons) becomes an atlas where every item is centred in a square slot of the size you choose, with the background removed.
+
+- By default every item shares one scale, so a coin stays smaller than a sword. *Each item fills its slot* makes every item as large as possible, which suits icons.
+- Pixel art is never enlarged: items smaller than the slot keep their real size, and larger ones are reduced once, from the original, on the sheet's pixel grid.
+- Click an item in **Original** to cross it out, and name the items in **Atlas**.
+- Export: Godot gets one `AtlasTexture` `.tres` per item, GDevelop one PNG per item, Kaplay a `loadSpriteAtlas` snippet, and Other the atlas PNG, a JSON with the rectangles and the loose PNGs.
+
+## 6. Kit
+
+The **Kit** tab joins your sprites, your scenery (tiles and background) and your objects so they share one scale.
 
 - **Game resolution**: the size of your game's screen before it is scaled up. Choose one that scales to the screen by a whole number, so the pixels stay even:
 
@@ -167,7 +167,7 @@ The **Kit** tab joins your sprites and tiles so they share one scale.
 - **Shared palette**: the same palette as Colours in Sprites. A fixed palette is also applied to your tiles.
 - **Preview at real scale**: your sprites standing on a row of your tiles (on the first solid row of the tile, so grass blades on top do not make them float). If it looks right here, it will in your game.
 - **Test level**: press **Play** to walk, run (hold Shift) and jump with your character on your own tiles, before opening an engine. It runs the real Kaplay library at your game resolution, with the same sheet, animations, feet origin and collision box as the Kaplay export. Choose which animation plays when standing, walking, running and in the air; each one can come from a different image.
-- **Download the kit for …**: one ZIP per engine with `sprites/`, `tiles/` and a `README.txt` that lists every size and the palette.
+- **Download the kit for …**: one ZIP per engine with `sprites/`, `tiles/`, `items/`, `backgrounds/` (only the parts you made) and a `README.txt` that lists every size and the palette.
 
 ## Troubleshooting
 

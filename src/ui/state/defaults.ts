@@ -207,5 +207,6 @@ export const initialState: AppState = {
   },
   tilePrompt: { mode: 'pixel', material: '', tileSize: 32, view: 'top-down' },
   assetPrompts: ASSET_PROMPT_DEFAULTS,
-  tiles: { kind: 'sheet', sheet: initialTileSheet, terrain: initialTerrain, items: initialItems, parallax: initialParallax },
+  world: { sheet: initialTileSheet, terrain: initialTerrain, parallax: initialParallax },
+  items: initialItems,
 };

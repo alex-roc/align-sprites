@@ -18,6 +18,7 @@
     "test:godot:tiles": "node scripts/godot-validate-tiles.mjs",
     "test:godot:items": "node scripts/godot-validate-items.mjs",
     "test:godot:parallax": "node scripts/godot-validate-parallax.mjs",
+    "test:godot:kit": "node scripts/godot-validate-kit.mjs",
     "cli": "node cli/align-sprites.ts"
   },
   "dependencies": {

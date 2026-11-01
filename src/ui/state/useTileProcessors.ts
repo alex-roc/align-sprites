@@ -1,4 +1,4 @@
-// Debounced processors of the Tiles tab: re-run the worker ~300 ms after any setting that changes the output.
+// Debounced processors of the World and Items tabs: re-run the worker ~300 ms after any setting that changes the output.
 import { useEffect, useMemo, useRef } from 'react';
 import { composeTerrain, normalizeTiles, renderTerrainPreview } from '../../worker/client.ts';
 import { randomMap } from '../lib/map.ts';
@@ -14,7 +14,7 @@ export const MAP_H = 10;
 /** Re-runs the atlas normalizer ~300 ms after any setting that affects the output changes. */
 export function useSheetProcessor() {
   const { state, dispatch } = useApp();
-  const s = state.tiles.sheet;
+  const s = state.world.sheet;
   const options = useMemo(() => buildAtlasOptions(s), [s]);
   // The kit's shared palette (when fixed) also applies to the tiles.
   const palette = useMemo(() => fixedPalette(state.global, s.mode), [state.global, s.mode]);
@@ -32,7 +32,7 @@ export function useSheetProcessor() {
     const src = latest.current.source;
     if (!src || !sig) return;
     if (latest.current.run.sig === sig && latest.current.run.status === 'ready') return;
-    const patchRun = (p: Partial<TileSheetState['run']>) => dispatch({ type: 'tiles/sheet', patch: { run: { ...latest.current.run, ...p } } });
+    const patchRun = (p: Partial<TileSheetState['run']>) => dispatch({ type: 'world/sheet', patch: { run: { ...latest.current.run, ...p } } });
     const timer = setTimeout(() => {
       patchRun({ status: 'running', error: null });
       normalizeTiles(src.image, options, paletteRef.current).then(
@@ -55,7 +55,7 @@ type Run = TerrainState['run'];
 /** Composes the tile set ~300 ms after a setting changes, then renders the test map with the current seed. */
 export function useTerrainProcessor() {
   const { state, dispatch } = useApp();
-  const s = state.tiles.terrain;
+  const s = state.world.terrain;
   const b = s.bTransparent ? null : s.b;
   const ready = !!s.a && (s.bTransparent || !!s.b);
   const palette = useMemo(() => fixedPalette(state.global, s.mode), [state.global, s.mode]);
@@ -81,7 +81,7 @@ export function useTerrainProcessor() {
     if (cur.run.sig === sig && cur.run.status === 'ready') return;
     const a = cur.a;
     const other = cur.bTransparent ? null : cur.b;
-    const patchRun = (p: Partial<Run>, extra: Partial<TerrainState> = {}) => dispatch({ type: 'tiles/terrain', patch: { run: { ...latest.current.run, ...p }, ...extra } });
+    const patchRun = (p: Partial<Run>, extra: Partial<TerrainState> = {}) => dispatch({ type: 'world/terrain', patch: { run: { ...latest.current.run, ...p }, ...extra } });
     const timer = setTimeout(async () => {
       patchRun({ status: 'running', error: null });
       try {
@@ -115,7 +115,7 @@ export function useTerrainProcessor() {
       (preview) => {
         if (id !== previewId.current) return;
         previewSeed.current = seed;
-        dispatch({ type: 'tiles/terrain', patch: { preview } });
+        dispatch({ type: 'world/terrain', patch: { preview } });
       },
       () => undefined,
     );

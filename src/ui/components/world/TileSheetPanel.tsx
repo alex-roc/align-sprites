@@ -8,7 +8,6 @@ import { downloadBlob, rgbaToPngBlob } from '../../lib/image.ts';
 import { useDropPaste } from '../../lib/useDropPaste.ts';
 import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
-import { useSheetProcessor } from '../../state/useTileProcessors.ts';
 import type { TileFormat, TileSheetState } from '../../state/types.ts';
 import { useLoadImage } from '../../state/useLoadImage.ts';
 import { DropOverlay } from '../common/DropOverlay.tsx';
@@ -29,15 +28,14 @@ import type { Warning } from '../../../core/types.ts';
 const FORMATS: TileFormat[] = ['godot', 'tiled', 'png'];
 
 export function TileSheetPanel() {
-  useSheetProcessor();
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.sheet;
+  const s = state.world.sheet;
   const { load, error, busy } = useLoadImage();
 
   const setSource = async (blob: Blob, name: string) => {
     const img = await load(blob, name);
-    if (img) dispatch({ type: 'tiles/sheet', patch: { source: img, run: { ...s.run, sig: null, result: null, grid: null } } });
+    if (img) dispatch({ type: 'world/sheet', patch: { source: img, run: { ...s.run, sig: null, result: null, grid: null } } });
   };
   const { dragging } = useDropPaste((files) => void setSource(files[0], files[0].name));
   const example = async () => {
@@ -80,9 +78,9 @@ export function TileSheetPanel() {
 function SheetSettings({ onReplace }: { onReplace: (f: File) => void }) {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.sheet;
+  const s = state.world.sheet;
   const input = useRef<HTMLInputElement>(null);
-  const patch = (p: Partial<TileSheetState>) => dispatch({ type: 'tiles/sheet', patch: p });
+  const patch = (p: Partial<TileSheetState>) => dispatch({ type: 'world/sheet', patch: p });
   const setBg = (p: Partial<TileSheetState['bg']>) => patch({ bg: { ...s.bg, ...p } });
   const src = s.source!;
 
@@ -146,14 +144,14 @@ function SheetSettings({ onReplace }: { onReplace: (f: File) => void }) {
 function SheetStage() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.sheet;
+  const s = state.world.sheet;
   const { run } = s;
   const result = run.result;
   const running = run.status === 'running';
   const src = s.source!;
   const friendlyError = run.error ? (/not implemented/i.test(run.error) ? t('error.notImplemented') : t('error.processing', { message: run.error })) : null;
   const empty = useMemo(() => new Set(result?.tiles.filter((x) => x.empty).map((x) => `${x.col}:${x.row}`) ?? []), [result]);
-  const patch = (p: Partial<TileSheetState>) => dispatch({ type: 'tiles/sheet', patch: p });
+  const patch = (p: Partial<TileSheetState>) => dispatch({ type: 'world/sheet', patch: p });
 
   const fixFor = (w: Warning): Fix | null => {
     switch (w.key) {
@@ -232,13 +230,13 @@ function SheetStage() {
 function SheetExport() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.sheet;
+  const s = state.world.sheet;
   const result = s.run.result;
   const running = s.run.status === 'running';
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const name = s.source?.name ?? 'tiles';
-  const patch = (p: Partial<TileSheetState>) => dispatch({ type: 'tiles/sheet', patch: p });
+  const patch = (p: Partial<TileSheetState>) => dispatch({ type: 'world/sheet', patch: p });
 
   const downloadPng = async () => {
     if (result) downloadBlob(await rgbaToPngBlob(result.atlas), `${name}.png`);
@@ -267,7 +265,7 @@ function SheetExport() {
       value={s.format}
       onChange={(format) => patch({ format })}
       steps={[1, 2, 3].map((n) => t(`tfmt.${s.format}.s${n}` as 'tfmt.godot.s1', { name: slug(name) }))}
-      guideHref={hrefFor('guide', 'tiles')}
+      guideHref={hrefFor('guide', 'world')}
       all={s.allFormats}
       onAll={(allFormats) => patch({ allFormats })}
       allLabel={t('tiles.exportAll')}

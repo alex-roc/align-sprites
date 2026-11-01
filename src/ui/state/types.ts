@@ -127,9 +127,9 @@ export type TilePromptForm = Omit<TilePromptOptions, 'lang'>;
 /** Forms of the other prompt kinds (atlas, directions, effects, items, parallax, video). */
 export type AssetPrompts = { [K in AssetPromptKind]: AssetPromptForm<K> };
 
-// ---------------------------------------------------------------- tiles tab
+// ---------------------------------------------------------------- world and items tabs
 
-/** An image the user brought to the Tiles tab (decoded on the main thread). */
+/** An image the user brought to the World or Items tab (decoded on the main thread). */
 export interface LoadedImage {
   id: string;
   name: string;
@@ -137,7 +137,6 @@ export interface LoadedImage {
   autoBg: AutoBg | null;
 }
 
-export type TileKind = 'sheet' | 'terrain' | 'items' | 'parallax';
 export type TileBgStrategy = 'auto' | BgOptions['strategy'];
 export type TileFormat = 'godot' | 'tiled' | 'png';
 export type RunStatus = 'idle' | 'running' | 'ready' | 'error';
@@ -253,12 +252,11 @@ export interface ParallaxState {
   run: { status: RunStatus; sig: string | null; result: ParallaxResult | null; error: string | null };
 }
 
-export interface TilesState {
-  kind: TileKind;
-  parallax: ParallaxState;
-  items: ItemsState;
+/** World tab: its tools (which one is open is in the route, `#/world/<tool>`). */
+export interface WorldState {
   sheet: TileSheetState;
   terrain: TerrainState;
+  parallax: ParallaxState;
 }
 
 export interface AppState {
@@ -276,7 +274,8 @@ export interface AppState {
   prompt: PromptForm;
   tilePrompt: TilePromptForm;
   assetPrompts: AssetPrompts;
-  tiles: TilesState;
+  world: WorldState;
+  items: ItemsState;
 }
 
 export type Action =
@@ -295,8 +294,7 @@ export type Action =
   | { type: 'prompt/patch'; patch: Partial<PromptForm> }
   | { type: 'tilePrompt/patch'; patch: Partial<TilePromptForm> }
   | { [K in AssetPromptKind]: { type: 'assetPrompt/patch'; kind: K; patch: Partial<AssetPromptForm<K>> } }[AssetPromptKind]
-  | { type: 'tiles/kind'; kind: TileKind }
-  | { type: 'tiles/sheet'; patch: Partial<TileSheetState> }
-  | { type: 'tiles/terrain'; patch: Partial<TerrainState> }
-  | { type: 'tiles/items'; patch: Partial<ItemsState> }
-  | { type: 'tiles/parallax'; patch: Partial<ParallaxState> };
+  | { type: 'world/sheet'; patch: Partial<TileSheetState> }
+  | { type: 'world/terrain'; patch: Partial<TerrainState> }
+  | { type: 'items/patch'; patch: Partial<ItemsState> }
+  | { type: 'world/parallax'; patch: Partial<ParallaxState> };

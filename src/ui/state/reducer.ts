@@ -50,15 +50,13 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, tilePrompt: { ...state.tilePrompt, ...action.patch } };
     case 'assetPrompt/patch':
       return { ...state, assetPrompts: { ...state.assetPrompts, [action.kind]: { ...state.assetPrompts[action.kind], ...action.patch } } };
-    case 'tiles/kind':
-      return { ...state, tiles: { ...state.tiles, kind: action.kind } };
-    case 'tiles/sheet':
-      return { ...state, tiles: { ...state.tiles, sheet: { ...state.tiles.sheet, ...action.patch } } };
-    case 'tiles/parallax':
-      return { ...state, tiles: { ...state.tiles, parallax: { ...state.tiles.parallax, ...action.patch } } };
-    case 'tiles/items':
-      return { ...state, tiles: { ...state.tiles, items: { ...state.tiles.items, ...action.patch } } };
-    case 'tiles/terrain':
-      return { ...state, tiles: { ...state.tiles, terrain: { ...state.tiles.terrain, ...action.patch } } };
+    case 'world/sheet':
+      return { ...state, world: { ...state.world, sheet: { ...state.world.sheet, ...action.patch } } };
+    case 'world/terrain':
+      return { ...state, world: { ...state.world, terrain: { ...state.world.terrain, ...action.patch } } };
+    case 'world/parallax':
+      return { ...state, world: { ...state.world, parallax: { ...state.world.parallax, ...action.patch } } };
+    case 'items/patch':
+      return { ...state, items: { ...state.items, ...action.patch } };
   }
 }

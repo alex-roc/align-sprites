@@ -109,7 +109,7 @@ interface ShellProps {
   /** Title of that step. Default: paste both (prompt and guide) in Gemini or ChatGPT. */
   chatTitle?: string;
   /** Where the result goes: text, tab and button label. */
-  next: { text: string; tab: TabId; label: string };
+  next: { text: string; tab: TabId; section?: string; label: string };
 }
 
 /** Settings column + numbered flow shared by the new prompt kinds: prompt, guide image, chat, bring the result back. */
@@ -148,7 +148,7 @@ export function PromptShell({ settings, prompt, guide, chat, chatTitle, next }: 
         <FlowStep n={n + 1} title={t('prompt.step.next')}>
           <p>{next.text}</p>
           <div className="row wrap">
-            <a className="btn btn-primary" href={hrefFor(next.tab)}>{next.label}</a>
+            <a className="btn btn-primary" href={hrefFor(next.tab, next.section)}>{next.label}</a>
             <a className="link" href={hrefFor('guide', 'generate')}>{t('export.fullGuide')}</a>
           </div>
         </FlowStep>

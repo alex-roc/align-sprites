@@ -9,7 +9,6 @@ import { useDropPaste } from '../../lib/useDropPaste.ts';
 import { hrefFor } from '../../route.ts';
 import { useApp } from '../../state/context.ts';
 import { edgeStyleForm } from '../../state/defaults.ts';
-import { useTerrainProcessor } from '../../state/useTileProcessors.ts';
 import type { EdgeStyleForm, LoadedImage, TerrainState } from '../../state/types.ts';
 import { useLoadImage } from '../../state/useLoadImage.ts';
 import { DropOverlay } from '../common/DropOverlay.tsx';
@@ -29,12 +28,11 @@ import { TiledPreview } from './TiledPreview.tsx';
 const SEAM_WARN = 1.8;
 
 export function TerrainPanel() {
-  useTerrainProcessor();
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.terrain;
+  const s = state.world.terrain;
   const { load, error, busy } = useLoadImage();
-  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'tiles/terrain', patch: p });
+  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'world/terrain', patch: p });
   const ready = !!s.a && (s.bTransparent || !!s.b);
 
   // Dropped/pasted/loaded images fill A first, then B.
@@ -119,8 +117,8 @@ function TextureSlot({ title, image, onClear, onFile }: { title: string; image: 
 function TerrainSettings({ onImage }: { onImage: (b: Blob, name: string) => void }) {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.terrain;
-  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'tiles/terrain', patch: p });
+  const s = state.world.terrain;
+  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'world/terrain', patch: p });
   const setStyle = (p: Partial<EdgeStyleForm>) => patch({ style: { ...s.style, ...p } });
   return (
     <div className="settings-in">
@@ -203,13 +201,13 @@ function TerrainSettings({ onImage }: { onImage: (b: Blob, name: string) => void
 function TerrainStage() {
   const { t } = useI18n();
   const { state, dispatch } = useApp();
-  const s = state.tiles.terrain;
+  const s = state.world.terrain;
   const { run } = s;
   const set = run.set;
   const running = run.status === 'running';
   const pixelated = s.mode === 'pixel';
   const friendlyError = run.error ? (/not implemented/i.test(run.error) ? t('error.notImplemented') : t('error.processing', { message: run.error })) : null;
-  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'tiles/terrain', patch: p });
+  const patch = (p: Partial<TerrainState>) => dispatch({ type: 'world/terrain', patch: p });
 
   const fixFor = (w: Warning): Fix | null => {
     switch (w.key) {
@@ -218,7 +216,7 @@ function TerrainStage() {
       case 'warn.dualOddTile':
         return { label: t('fix.tileSize', { px: s.tileSize + 1 }), onClick: () => patch({ tileSize: s.tileSize + 1, style: edgeStyleForm(s.tileSize + 1, s.style.seed) }) };
       case 'warn.notSeamless':
-        return { label: t('fix.learnMore'), href: hrefFor('guide', 'tiles') };
+        return { label: t('fix.learnMore'), href: hrefFor('guide', 'world') };
       default:
         return null;
     }
@@ -301,7 +299,7 @@ type TerrainTarget = 'godot' | 'gdevelop';
 function TerrainExport() {
   const { t } = useI18n();
   const { state } = useApp();
-  const s = state.tiles.terrain;
+  const s = state.world.terrain;
   const set = s.run.set;
   const running = s.run.status === 'running';
   const [target, setTarget] = useState<TerrainTarget>('godot');
@@ -334,7 +332,7 @@ function TerrainExport() {
       value={target}
       onChange={setTarget}
       steps={[1, 2, 3].map((n) => t(`terrain.${target}.s${n}` as 'terrain.godot.s1', { name: slug(name) }))}
-      guideHref={hrefFor('guide', 'tiles')}
+      guideHref={hrefFor('guide', 'world')}
       primaryLabel={t('terrain.downloadZip')}
       onPrimary={() => void zip()}
       secondaryLabel={t('export.pngOnly')}

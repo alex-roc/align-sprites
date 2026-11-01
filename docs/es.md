@@ -30,14 +30,14 @@ Consejos:
 
 ### Más cosas que puedes pedir
 
-El selector de tipo también arma prompts (cada uno con su imagen guía, menos el de video) para:
+El selector de tipo (agrupado como Sprites, Escenario y Objetos, igual que las pestañas) también arma prompts (cada uno con su imagen guía, menos el de video) para:
 
 - **Cenital, 4 direcciones**: una fila por dirección (abajo, izquierda, derecha, arriba), o 3 filas con la vista de lado en espejo.
 - **Clip de video** para modelos de video (Veo, Kling, Sora, Hailuo…): el personaje se mueve en el lugar, con la cámara fija, sobre verde plano, y el clip termina en la pose del inicio para que se repita.
-- **Atlas de tiles**: tiles en una cuadrícula con huecos del color clave entre ellos, y suelos con la parte de arriba sólida para que los personajes no floten.
-- **Capas de parallax**: un prompt por capa. La capa lejana es opaca; las otras van sobre el color clave; todas se repiten hacia los lados.
+- **Atlas de tiles** (grupo Escenario): tiles en una cuadrícula con huecos del color clave entre ellos, y suelos con la parte de arriba sólida para que los personajes no floten.
+- **Capas de parallax** (grupo Escenario): un prompt por capa. La capa lejana es opaca; las otras van sobre el color clave; todas se repiten hacia los lados.
 - **Efectos** (explosión, golpe, magia, humo, proyectil): cada frame centrado en su celda, con bordes duros y sin resplandor.
-- **Objetos e íconos**: objetos separados, cada uno centrado en su propia celda, a la misma escala.
+- **Objetos e íconos** (grupo Objetos): objetos separados, cada uno centrado en su propia celda, a la misma escala.
 
 ### Desde un video
 
@@ -108,9 +108,9 @@ Luego pon el tiempo entre frames en `1 / fps` y el bucle. En *Editar puntos* (el
 
 `<nombre>.png` con `<nombre>.json` en el formato de Aseprite (con el origen y `meta.collision`), más un PNG por frame. Phaser lo lee como atlas de Aseprite, Unity corta el PNG con *Grid By Cell Size*, y Defold y Construct pueden importar los PNG por frame. Conocemos esos motores menos: revisa su documentación. Sirve cualquier motor que corte por tamaño de frame: la animación `k` es la fila `k`, el frame `i` es la columna `i`, con el origen en los pies.
 
-## 4. Tiles
+## 4. Escenario
 
-La pestaña **Tiles** tiene cuatro herramientas: hoja de tiles, transiciones de terreno, objetos e íconos, y fondo con parallax.
+La pestaña **Escenario** construye el suelo y el paisaje. Tiene tres herramientas, en el orden de la pestaña: hoja de tiles, transiciones de terreno y fondo con parallax. La herramienta forma parte de la dirección (`#/world/sheet`, `#/world/terrain`, `#/world/parallax`).
 
 ### Hoja de tiles (limpiar un tileset de IA)
 
@@ -131,15 +131,6 @@ La pestaña **Tiles** tiene cuatro herramientas: hoja de tiles, transiciones de 
 - **GDevelop 5**: usa el objeto **Tilemap** con el `.tsx` (Tiled) y el PNG del atlas. El atlas Dual 16 no trae datos de terreno: píntalo a mano, usando la tabla del README.
 - **Tiled / LDtk**: abre el `.tsx` como tileset.
 
-### Objetos e íconos
-
-Una imagen de IA con objetos separados (monedas, pociones, llaves, gemas, íconos) se vuelve un atlas donde cada objeto queda centrado en una casilla cuadrada del tamaño que elijas, sin fondo.
-
-- Por defecto todos los objetos comparten una escala, así una moneda sigue siendo más pequeña que una espada. *Cada objeto llena su casilla* agranda cada objeto lo más posible, lo que sirve para íconos.
-- El pixel art nunca se agranda: los objetos más pequeños que la casilla conservan su tamaño real, y los más grandes se reducen una sola vez, desde el original, sobre la cuadrícula de píxeles de la hoja.
-- Haz clic en un objeto en **Original** para tacharlo, y pon nombre a los objetos en **Atlas**.
-- Exportación: Godot recibe un `.tres` (`AtlasTexture`) por objeto, GDevelop un PNG por objeto, Kaplay una llamada `loadSpriteAtlas`, y Otros el PNG del atlas, un JSON con los rectángulos y los PNG sueltos.
-
 ### Fondo con parallax
 
 Capas de fondo hechas con IA (cielo y montañas lejanas, colinas al medio, árboles y rocas cerca) se vuelven capas que se repiten hacia los lados a la altura de tu juego y se mueven a distintas velocidades. Créalas con el prompt *Capas de parallax*, uno por capa.
@@ -150,9 +141,18 @@ Capas de fondo hechas con IA (cielo y montañas lejanas, colinas al medio, árbo
 4. **Hacer que se repita hacia los lados** une el borde derecho con el izquierdo por un corte escondido, así nada salta cuando la capa se repite. Una imagen que ya da la vuelta por su borde se deja como está; si no, la herramienta prueba varios anchos de unión y elige uno que no deje pedazos flotando. Revísalo en **Repetición** y mira el resultado en **Movimiento**.
 5. Exportación: los PNG de las capas más una escena de Godot 4 con un `Parallax2D` por capa (repetición y velocidad listas), un README para GDevelop (un *Tiled Sprite* por capa con la extensión oficial "Parallax for Tiled Sprite"), código para Kaplay, o un JSON con tamaños y velocidades.
 
-## 5. Kit
+## 5. Objetos
 
-La pestaña **Kit** junta tus sprites y tiles para que compartan una escala.
+En la pestaña **Objetos**, una imagen de IA con objetos separados (monedas, pociones, llaves, gemas, íconos) se vuelve un atlas donde cada objeto queda centrado en una casilla cuadrada del tamaño que elijas, sin fondo.
+
+- Por defecto todos los objetos comparten una escala, así una moneda sigue siendo más pequeña que una espada. *Cada objeto llena su casilla* agranda cada objeto lo más posible, lo que sirve para íconos.
+- El pixel art nunca se agranda: los objetos más pequeños que la casilla conservan su tamaño real, y los más grandes se reducen una sola vez, desde el original, sobre la cuadrícula de píxeles de la hoja.
+- Haz clic en un objeto en **Original** para tacharlo, y pon nombre a los objetos en **Atlas**.
+- Exportación: Godot recibe un `.tres` (`AtlasTexture`) por objeto, GDevelop un PNG por objeto, Kaplay una llamada `loadSpriteAtlas`, y Otros el PNG del atlas, un JSON con los rectángulos y los PNG sueltos.
+
+## 6. Kit
+
+La pestaña **Kit** junta tus sprites, tu escenario (tiles y fondo) y tus objetos para que compartan una escala.
 
 - **Resolución del juego**: el tamaño de la pantalla de tu juego antes de ampliarla. Elige una que se amplíe a la pantalla por un número entero, así los píxeles se mantienen parejos:
 
@@ -167,7 +167,7 @@ La pestaña **Kit** junta tus sprites y tiles para que compartan una escala.
 - **Paleta compartida**: la misma paleta de Colores en Sprites. Una paleta fija también se aplica a tus tiles.
 - **Vista previa a escala real**: tus sprites sobre una fila de tus tiles (sobre la primera fila sólida del tile, así las hojas de pasto de arriba no los hacen flotar). Si aquí se ve bien, se verá bien en tu juego.
 - **Nivel de prueba**: pulsa **Jugar** para caminar, correr (con Mayús) y saltar con tu personaje sobre tus propios tiles, antes de abrir un motor. Usa la librería Kaplay real a la resolución de tu juego, con la misma hoja, animaciones, origen en los pies y caja de colisión que la exportación para Kaplay. Elige qué animación se ve al estar quieto, caminar, correr y en el aire; cada una puede venir de una imagen distinta.
-- **Descargar el kit para …**: un ZIP por motor con `sprites/`, `tiles/` y un `README.txt` que lista todos los tamaños y la paleta.
+- **Descargar el kit para …**: un ZIP por motor con `sprites/`, `tiles/`, `items/`, `backgrounds/` (solo las partes que hiciste) y un `README.txt` que lista todos los tamaños y la paleta.
 
 ## Problemas frecuentes
 

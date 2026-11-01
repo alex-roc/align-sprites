@@ -359,10 +359,13 @@ input.asset-name[type='text'] { text-overflow: ellipsis; }
 .guide-canvas { max-width: min(100%, 420px); height: auto; border: 1px solid var(--line); border-radius: var(--r-control); }
 
 /* ---------------------------------------------------------------- small screens */
+/* Up to ~960 px the six tabs do not fit next to the wordmark and the tools: they get their own row. */
+@media (max-width: 960px) {
+  .nav { order: 3; flex-basis: 100%; }
+}
 @media (max-width: 640px) {
   :root { font-size: 15px; }
   .topbar-in { padding: 10px 14px; gap: 8px 12px; }
-  .nav { order: 3; flex-basis: 100%; }
   .page { padding: 14px; }
   .app-footer { padding: 14px; }
   .stage-card { padding: 10px; }
@@ -373,6 +376,11 @@ input.asset-name[type='text'] { text-overflow: ellipsis; }
   .empty-drop strong { font-size: 17px; }
   .how-link { margin-left: 0; }
   .flow-step { grid-template-columns: 1fr; }
+}
+/* Phones: the six tabs in two rows of three (asset tabs, then Kit / AI / Guide) instead of a row that hides some. */
+@media (max-width: 560px) {
+  .nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
+  .nav-link { padding: 7px 6px; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation-duration: 3s; }

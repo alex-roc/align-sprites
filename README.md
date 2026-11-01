@@ -12,9 +12,10 @@ Normalize AI-generated sprites and tiles so they work in **Godot 4**, **GDevelop
 
 - **Sprite sheets and single characters**: removes the background (chroma key with edge matting, or flood from the borders for white backgrounds), finds every frame (auto, grid or single), recovers the real pixel grid of "fake" AI pixel art, resizes every character of a batch to the **same height**, shares one palette, and packs the frames into fixed cells (multiples of 32) with the **feet on the same line** (or centred, for effects). Every sprite gets an automatic **collision box**. Videos (MP4/WebM from video models) become frames too.
 - **Export**: Godot 4 (`SpriteFrames .tres` + `AnimatedSprite2D .tscn` with the origin at the feet, and a `CharacterBody2D` scene with its collision shape), GDevelop 5 (the cut frames as flat numbered PNGs + origin point; optional Piskel spritesheets), Kaplay (`loadSprite` snippet), generic (Aseprite JSON).
-- **Tiles, items and backgrounds**: turns an AI tile sheet into exact T×T tiles (Godot TileSet, Tiled `.tsx`), composes terrain transitions from two seamless textures (blob 47 with Godot terrains, or dual-grid 16), fits item and icon sheets into an exact atlas, and makes parallax layers that loop sideways (Godot `Parallax2D` scene).
-- **Kit**: shared palettes (presets, from an image or your own, with batch colour swaps), a game resolution and tile size for everything, and a **playable test level** (Kaplay) to check scale, feet and fps before opening an engine.
-- **Prompts**: templates (en/es) with guide images for sprite sheets, top-down 4-direction walks, effects, items, tile atlases, parallax layers, textures and video clips.
+- **World**: turns an AI tile sheet into exact T×T tiles (Godot TileSet, Tiled `.tsx`), composes terrain transitions from two seamless textures (blob 47 with Godot terrains, or dual-grid 16), and makes parallax layers that loop sideways (Godot `Parallax2D` scene).
+- **Items**: fits AI sheets of objects and icons into an exact atlas, one slot per item (Godot `AtlasTexture`s, one PNG per item for GDevelop, Kaplay snippet).
+- **Kit**: sprites, scenery and objects together: shared palettes (presets, from an image or your own, with batch colour swaps), a game resolution and tile size for everything, and a **playable test level** (Kaplay) to check scale, feet and fps before opening an engine.
+- **Prompts**: templates (en/es) with guide images, grouped like the tabs: Sprites (sheets, top-down 4-direction walks, effects, video clips), World (tile textures, atlases, parallax layers) and Items.
 - **Guide**: an in-app, bilingual guide (`#/guide`) with a before/after slider, a same-height demo and step-by-step import for each engine.
 
 *Español:* herramienta web gratuita para normalizar sprites y tiles generados con IA (Gemini, ChatGPT…) y usarlos en Godot, GDevelop y Kaplay: celdas fijas, una sola escala, pies alineados y cuadrícula de píxeles real. Ver la [guía dentro de la app](https://alex-roc.github.io/align-sprites/#/guide).
@@ -29,6 +30,7 @@ pnpm test:godot        # headless Godot 4 loads the exported SpriteFrames (skips
 pnpm test:godot:tiles  # headless Godot 4 checks TileSet terrains with set_cells_terrain_connect
 pnpm test:godot:items  # headless Godot 4 loads the item AtlasTextures
 pnpm test:godot:parallax  # headless Godot 4 loads the Parallax2D scene
+pnpm test:godot:kit    # headless Godot 4 loads a whole kit (sprite, tiles, items, background)
 pnpm build
 node scripts/run-samples.ts   # process samples/ → samples/out/ for visual checks
 node scripts/og-image.ts      # rebuild public/og.png (social preview) from tools/og/og.html

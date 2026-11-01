@@ -3,10 +3,13 @@ import { strFromU8, unzipSync } from 'fflate';
 import { zipFiles } from '../src/core/export/index.ts';
 import { createImage } from '../src/core/image.ts';
 import { buildKitExport, type KitInput } from '../src/core/kit/index.ts';
+import { normalizeItems } from '../src/core/items/index.ts';
 import { PALETTES, rgbaToHex } from '../src/core/palette/index.ts';
+import { buildParallax } from '../src/core/parallax/index.ts';
 import { runSpriteJob } from '../src/core/pipeline/index.ts';
 import { composeTransitions, defaultEdgeStyle, normalizeTileAtlas } from '../src/core/tiles/index.ts';
 import type { ExportTarget, RGBAImage, SpriteJob } from '../src/core/types.ts';
+import { makeItemsSheet } from './fixtures/items.ts';
 import { MAGENTA, makeCharacterFrames, makeSheet, rng } from './fixtures/synth.ts';
 import { loadUnfake } from './helpers.ts';
 
@@ -143,5 +146,77 @@ describe('buildKitExport', () => {
     const p = buildKitExport({ sprites: [one] }, 'godot').map((f) => f.path);
     expect(p).toContain('godot/sprites/piedra/piedra.tscn');
     expect(p).not.toContain('godot/sprites/piedra/piedra.tres');
+  });
+});
+
+describe('buildKitExport with items and parallax', () => {
+  const items = normalizeItems(core, makeItemsSheet().img, { cellSize: 32, mode: 'pixel', bg: { color: 'auto', tolerance: 25, strategy: 'flood' } });
+  const layer = (seed: number): RGBAImage => noisy(240, 48, [60 + seed * 20, 90, 120], seed);
+  const bg = buildParallax(null, [0.2, 0.5, 0.8].map((factor, i) => ({ image: layer(i + 1), removeBg: false, factor })), { mode: 'cartoon', height: 48, loop: false, overlap: 0.1 });
+  const kit: KitInput = {
+    sprites: [sprite('slime')],
+    items: { result: items, name: 'Objetos', names: ['coin', 'Poción azul'] },
+    parallax: { result: bg, name: 'Mi Fondo' },
+  };
+  const files = (t: ExportTarget) => buildKitExport(kit, t);
+  const paths = (t: ExportTarget): string[] => files(t).map((f) => f.path);
+  const text = (t: ExportTarget, path: string): string => files(t).find((f) => f.path === path)!.data as string;
+
+  it('godot: items/<set>/ with relative AtlasTextures, backgrounds/<name>/ with the Parallax2D scene', () => {
+    const p = paths('godot');
+    for (const x of [
+      'godot/items/objetos/objetos.png', 'godot/items/objetos/coin.tres', 'godot/items/objetos/pocion_azul.tres', 'godot/items/objetos/README.txt',
+      'godot/backgrounds/mi_fondo/mi_fondo.tscn', 'godot/backgrounds/mi_fondo/mi_fondo_0_far.png', 'godot/backgrounds/mi_fondo/mi_fondo_2_near.png',
+    ]) expect(p).toContain(x);
+    expect(text('godot', 'godot/items/objetos/coin.tres')).toContain('path="objetos.png"');
+    expect(text('godot', 'godot/backgrounds/mi_fondo/mi_fondo.tscn')).toContain('path="mi_fondo_0_far.png"');
+  });
+
+  it('gdevelop: one folder per set, unique PNG names', () => {
+    const p = paths('gdevelop');
+    expect(p).toContain('gdevelop/items/objetos/objetos_coin.png');
+    expect(p).toContain('gdevelop/backgrounds/mi_fondo/mi_fondo_1_mid.png');
+    expect(p).toContain('gdevelop/backgrounds/mi_fondo/README.txt');
+  });
+
+  it('kaplay: atlas + snippet next to each other, layers + snippet in the background folder', () => {
+    const p = paths('kaplay');
+    expect(p).toContain('kaplay/items/objetos.png');
+    expect(p).toContain('kaplay/items/objetos.js');
+    expect(p).toContain('kaplay/backgrounds/mi_fondo/mi_fondo.js');
+    expect(p).toContain('kaplay/backgrounds/mi_fondo/mi_fondo_0_far.png');
+  });
+
+  it('generic: no items/items/ folder; JSON next to the atlas', () => {
+    const p = paths('generic');
+    expect(p).toContain('generic/items/objetos.png');
+    expect(p).toContain('generic/items/objetos.json');
+    expect(p).toContain('generic/items/objetos/objetos_coin.png');
+    expect(p).toContain('generic/backgrounds/mi_fondo/mi_fondo.json');
+    expect(p.some((x) => x.includes('items/items/'))).toBe(false);
+  });
+
+  it('no path collisions and every engine zips', () => {
+    for (const t of ['godot', 'gdevelop', 'kaplay', 'generic'] as ExportTarget[]) {
+      const p = paths(t);
+      expect(new Set(p).size).toBe(p.length);
+      expect(Object.keys(unzipSync(zipFiles(files(t)))).length).toBe(p.length);
+    }
+  });
+
+  it('README lists the objects and the background in en + es', () => {
+    const t = text('godot', 'godot/README.txt');
+    expect(t).toContain(`Items: ${items.items.length} items, 32x32 px slot`);
+    expect(t).toContain(`Objetos: ${items.items.length} objetos, casilla de 32x32 px`);
+    expect(t).toContain('Background: 3 layers, 48 px high, scroll factors 0.2, 0.5, 0.8 (far to near)');
+    expect(t).toContain('Fondo: 3 capas, 48 px de alto, factores de scroll 0.2, 0.5, 0.8 (de lejos a cerca)');
+    expect(t).toContain('items/');
+    expect(t).toContain('backgrounds/');
+  });
+
+  it('README has no objects or background lines without them', () => {
+    const t = buildKitExport({ sprites: [sprite('Héroe')] }, 'godot').find((f) => f.path === 'godot/README.txt')!.data as string;
+    expect(t).not.toContain('Items:');
+    expect(t).not.toContain('Background:');
   });
 });

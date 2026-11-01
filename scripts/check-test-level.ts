@@ -1,10 +1,12 @@
-// Browser check of the Kit's test level: loads the hero + the Andes tileset examples, opens the level, and checks that
-// a canvas renders and the character moves while a key is held. Needs a dev server:
+// Browser check of the Kit: loads the hero, the Andes tileset, the items and the parallax examples, checks that the kit
+// ZIP for Godot carries all of them, then opens the test level and checks that a canvas renders and the character
+// moves while a key is held. Needs a dev server:
 //   node scripts/check-test-level.ts [http://localhost:5194/align-sprites/]
 // Screenshots go to .playwright-mcp/kit/ (ignored).
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
+import { unzipSync } from 'fflate';
 
 const base = process.argv[2] ?? 'http://localhost:5194/align-sprites/';
 const out = fileURLToPath(new URL('../.playwright-mcp/kit/', import.meta.url));
@@ -24,10 +26,23 @@ await page.goto(base + '#/sprites');
 await page.evaluate(() => localStorage.setItem('align-sprites.settings', JSON.stringify({ mode: 'pixel', targetHeight: 56 })));
 await page.reload();
 await page.getByRole('button', { name: /Character \+ idle, run and jump/ }).click();
-await page.goto(base + '#/tiles');
+await page.goto(base + '#/world/sheet');
 await page.getByRole('button', { name: /Andean mountains tileset/ }).click();
 await page.waitForTimeout(4000); // the atlas is normalized in the worker
+await page.goto(base + '#/items');
+await page.getByRole('button', { name: 'Items example' }).click();
+await page.goto(base + '#/world/parallax');
+await page.getByRole('button', { name: 'Andes: mountains and trees' }).click();
+await page.waitForTimeout(6000); // items and layers are processed in the worker
 await page.goto(base + '#/kit');
+for (const text of [/items in \d+ px slots/, /Parallax background, 2 layers/]) {
+  await page.getByText(text).waitFor({ timeout: 30_000 }).catch(() => fail(`the kit summary does not show ${text}`));
+}
+const [zipDownload] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download the kit for Godot 4' }).click()]);
+const entries = Object.keys(unzipSync(new Uint8Array(await (await zipDownload.createReadStream()).toArray().then((c) => Buffer.concat(c)))));
+for (const dir of ['godot/sprites/', 'godot/tiles/', 'godot/items/', 'godot/backgrounds/']) {
+  if (!entries.some((e) => e.startsWith(dir))) fail(`the kit ZIP has nothing in ${dir}`);
+}
 
 await page.getByRole('heading', { name: 'Test level' }).waitFor({ timeout: 60_000 });
 await page.screenshot({ path: out + 'kit.png', fullPage: true });
@@ -53,5 +68,5 @@ await canvas.screenshot({ path: out + 'level-jump.png' });
 await page.keyboard.press('Escape');
 await page.waitForFunction(() => document.querySelectorAll('.level-host canvas').length === 0);
 if (errors.length) fail('console errors');
-console.log(`OK: canvas ${Math.round(box.width)}x${Math.round(box.height)} rendered, moved with ArrowRight, closed with Esc`);
+console.log(`OK: kit ZIP with sprites, tiles, items and background (${entries.length} files); canvas ${Math.round(box.width)}x${Math.round(box.height)} rendered, moved with ArrowRight, closed with Esc`);
 await browser.close();
